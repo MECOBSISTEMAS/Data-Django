@@ -17,7 +17,7 @@ cleo
 colorama
 comm
 crashtest
-cryptography 
+cptography 
 debugpy 
 decorator 
 defusedxml 
