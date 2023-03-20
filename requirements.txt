@@ -85,9 +85,6 @@ pexpect
 pickleshare
 pkginfo
 platformdirs
-poetry
-poetry-core 
-poetry-plugin-export 
 prometheus-client 
 prompt-toolkit 
 psutil 
