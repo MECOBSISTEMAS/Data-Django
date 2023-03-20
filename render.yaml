@@ -1,6 +1,6 @@
 services:
 - type: web
-  buildCommand: pip install -r requirements.txt && python manage.py migrate
+  buildCommand: "./build.sh"
   startCommand: python manage.py runserver
   env: 'python'
   plan: starter
