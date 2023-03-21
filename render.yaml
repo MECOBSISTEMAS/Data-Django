@@ -1,6 +1,6 @@
 services:
 - type: web
-  buildCommand: "./build.sh"
+  #buildCommand: "./build.sh"
   startCommand: python manage.py runserver
   env: 'python'
   plan: starter
