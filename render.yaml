@@ -1,24 +1,43 @@
 services:
-- type: pserv
-  name: mysql
-  plan: standard
+- type: web
+  name: django
   env: docker
-  autoDeploy: false
+  plan: hobby
   disk:
-    name: mysql
-    mountPath: /var/lib/mysql
+    name: django
+    mountPath: /mnt/disks/django
     sizeGB: 10
+  startCommand: gunicorn --bind 0.0.0.0:8080 myproject.wsgi
   envVars:
-  - fromGroup: mysql
+    - key: DJANGO_SECRET_KEY
+      generateValue: true
+    - key: DJANGO_SETTINGS_MODULE
+      value: myproject.settings
+    - key: DATABASE_URL
+      value: mysql://user:password@mysql:3306/dbname
+  ports:
+    - 8080:8080
+  dependencies:
+    - type: pserv
+      name: mysql
+      plan: hobby
+      env: docker
+      autoDeploy: true
+      disk:
+        name: mysql
+        mountPath: /mnt/disks/mysql
+        sizeGB: 10
+      envVars:
+        - fromGroup: mysql
 
 envVarGroups:
 - name: mysql
   envVars:
-  - key: MYSQL_DATABASE
-    value: mysql
-  - key: MYSQL_USER
-    value: mysql
-  - key: MYSQL_PASSWORD
-    generateValue: true
-  - key: MYSQL_ROOT_PASSWORD
-    generateValue: true
+    - key: MYSQL_DATABASE
+      value: dbname
+    - key: MYSQL_USER
+      value: user
+    - key: MYSQL_PASSWORD
+      generateValue: true
+    - key: MYSQL_ROOT_PASSWORD
+      generateValue: true
