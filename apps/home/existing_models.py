@@ -133,10 +133,10 @@ class Alertas(models.Model):
 
 class Eventos(models.Model):
     id = models.BigAutoField(primary_key=True)
-    nome = models.CharField(max_length=500, db_collation='utf8mb3_general_ci', blank=True, null=True)
+    nome = models.CharField(max_length=500, blank=True, null=True)
     leiloeiro = models.ForeignKey('Pessoas', models.DO_NOTHING)
     dt_evento = models.DateField()
-    tipo = models.CharField(max_length=200, db_collation='utf8mb3_general_ci')
+    tipo = models.CharField(max_length=200)
     
     def __str__(self):
         return f'nome: {self.nome}, leiloeiro: {self.leiloeiro}'

@@ -412,9 +412,9 @@ class Migration(migrations.Migration):
             name='Eventos',
             fields=[
                 ('id', models.BigAutoField(primary_key=True, serialize=False)),
-                ('nome', models.CharField(blank=True, db_collation='utf8mb3_general_ci', max_length=500, null=True)),
+                ('nome', models.CharField(blank=True,  max_length=500, null=True)),
                 ('dt_evento', models.DateField()),
-                ('tipo', models.CharField(db_collation='utf8mb3_general_ci', max_length=200)),
+                ('tipo', models.CharField( max_length=200)),
                 ('leiloeiro', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='home.pessoas')),
             ],
             options={
