@@ -1,26 +1,20 @@
-ARG PYTHON_VERSION=3.10-slim-buster
+FROM python:3.9
+FROM mysql/mysql-server:8.0.24
 
-FROM python:${PYTHON_VERSION}
 
+# set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-RUN mkdir -p /code
+COPY requirements.txt .
+# install python dependencies
+RUN pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
 
-WORKDIR /code
+COPY . .
 
-COPY requirements.txt /tmp/requirements.txt
+# running migrations
+RUN python manage.py migrate
 
-RUN set -ex && \
-    pip install --upgrade pip && \
-    pip install -r /tmp/requirements.txt && \
-    rm -rf /root/.cache/
-
-COPY . /code/
-
-RUN python manage.py collectstatic --noinput
-
-EXPOSE 8000
-
-# replace demo.wsgi with <project_name>.wsgi
-CMD ["gunicorn", "--bind", ":8000", "--workers", "2", "demo.wsgi"]
+# gunicorn
+CMD ["gunicorn", "--config", "gunicorn-cfg.py", "core.wsgi"]
