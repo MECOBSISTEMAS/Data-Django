@@ -71,7 +71,7 @@ dado.comissao,
 sum(dado.repasses) as total_repasse,
 dado.id as dado_id
 from dado
-where dado.dt_credito between "2023-02-1" and "2023-02-03"
+where dado.dt_credito between "{data_inicio}" and "{data_fim}"
 group by dado.id_contrato
 """)
         result = cursor.fetchall()
