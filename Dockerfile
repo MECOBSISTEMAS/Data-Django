@@ -1,19 +1,21 @@
 FROM python:3.9
-FROM mysql/mysql-server:8.0.24
-
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+# Install mysql-client for Python to connect to the MySQL server
+RUN apt-get update && \
+    apt-get install -y default-libmysqlclient-dev
+
+# Copy and install Python dependencies
 COPY requirements.txt .
-# install python dependencies
-#RUN python -m pip install --upgrade pip
 RUN pip install -r requirements.txt
 
+# Copy the application code
 COPY . .
 
-# running migrations
+# Run migrations
 RUN python manage.py migrate
 
 # gunicorn
