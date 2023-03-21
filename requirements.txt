@@ -13,3 +13,4 @@ django-allauth==0.51.0
 django-sslserver
 django-extensions<=3.2.1
 django-widget-tweaks<=1.4.12
+mysqlclient<=2.1.1
