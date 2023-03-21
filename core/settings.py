@@ -4,6 +4,7 @@ Copyright (c) 2019 - present AppSeed.us
 """
 
 import os, environ
+import dj_database_url
 
 env = environ.Env(
     # set casting, default value
@@ -102,16 +103,13 @@ if os.environ.get('DB_ENGINE') and os.environ.get('DB_ENGINE') == "mysql":
     }
 else:
     DATABASES = {
-        'default': {
+        """ 'default': {
             'ENGINE': 'django.db.backends.sqlite3',
             'NAME': 'db.sqlite3',
-        }
+        } """
+        #configure o sqlite para ser executado caso não seja o MySQL
+        'default': {dj_database_url.config(conn_max_age=600)}
     }
-    
-""" TODO:
-DATABASES = {
-    "default":dj_database_url.config(default='postgresql://postgres:admin@localhost:5432/desapeguei_project_db',conn_max_age=600)
-}"""
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
