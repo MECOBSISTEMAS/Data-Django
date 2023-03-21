@@ -2,6 +2,7 @@
 {% block title %} UI Forms {% endblock %}
 {% load widget_tweaks %}
 {% load utils %}
+{% load humanize %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -88,28 +89,28 @@
                   <tbody>
                     {% for querie in sql %}
                     <tr>
-                      <th>{{querie.0}}</th>
-                      <th>{{querie.1}}</th>
-                      <td>{{querie.2}}</td>
-                      <td>{{querie.3}}</td>
-                      <td>{{querie.4}}</td>
-                      <td>{{querie.5}}</td>
-                      <td>{{querie.6}}</td>
-                      <td>{{querie.7|date:'d/m/y'}}</td>
-                      <td>{{querie.8|date:'d/m/y'}}</td>
-                      <td>{{querie.9}}</td>
-                      <td>{{querie.10}}</td>
-                      <td>{{querie.11}}</td>
-                      <td>{{querie.12}}</td>
-                      <td>{{querie.13}}</td>
-                      <td>{{querie.14}}</td>
-                      <td>{{querie.15}}</td>
-                      <td>{{querie.16}}</td>
-                      <td>{{querie.17}}</td>
-                      <td>{{querie.18}}</td>
-                      <td>{{querie.19}}</td>
-                      <td>{{querie.20}}</td>
-                      <td>{{querie.21}}</td>
+                      <th>{{querie.id_vendedor}}</th>
+                      <th>{{querie.id_contrato}}</th>
+                      <td>{{querie.vendedor}}</td>
+                      <td>{{querie.id_comprador}}</td>
+                      <td>{{querie.comprador}}</td>
+                      <td>{{querie.parcelas_contrato}}</td>
+                      <td>{{querie.vl_pago}}</td>
+                      <td>{{querie.dt_vencimento|date:'d/m/y'}}</td>
+                      <td>{{querie.dt_credito|date:'d/m/y'}}</td>
+                      <td>{{querie.banco}}</td>
+                      <td>{{querie.contrato}}</td>
+                      <td>{{querie.evento}}</td>
+                      <td>{{querie.deposito}}</td>
+                      <td>{{querie.calculo}}</td>
+                      <td>{{querie.taxas}}</td>
+                      <td>{{querie.adi}}</td>
+                      <td>{{querie.me}}</td>
+                      <td>{{querie.op}}</td>
+                      <td>{{querie.repasses}}</td>
+                      <td>{{querie.comissao}}</td>
+                      <td>{{querie.total_repasse|intcomma}}</td>
+                      <td>{{querie.id}}</td>
                     </tr>
                     {% endfor %}
                   </tbody>
