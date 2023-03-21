@@ -1,20 +1,24 @@
 services:
-- type: web
-  #buildCommand: "./build.sh"
-  startCommand: python manage.py runserver
-  env: 'python'
-  plan: starter
-  name: Data-Djanto
+- type: pserv
+  name: mysql
+  plan: standard
+  env: docker
+  autoDeploy: false
+  disk:
+    name: mysql
+    mountPath: /var/lib/mysql
+    sizeGB: 10
   envVars:
-    - key: DJANGO_SETTINGS_MODULE
-      value: core.settings
+  - fromGroup: mysql
 
-staticSites:
-- buildCommand: python manage.py collectstatic --noinput
-  publicDir: staticfiles
-  name: Data-Djanto-statics
-
-routes:
-- type: rewrite
-  source: /static/(.*)
-  #destination: https://Data-Djanto-statics.onrender.com/$1
+envVarGroups:
+- name: mysql
+  envVars:
+  - key: MYSQL_DATABASE
+    value: mysql
+  - key: MYSQL_USER
+    value: mysql
+  - key: MYSQL_PASSWORD
+    generateValue: true
+  - key: MYSQL_ROOT_PASSWORD
+    generateValue: true
