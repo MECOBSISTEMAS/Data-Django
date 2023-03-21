@@ -63,7 +63,7 @@ load utils %} {% load humanize %} {% load static %}
 											<input type="file" name="docpicker">
 											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
 										</form>
-                    <h4>Importar Planilha COB e converter para dados brutos</h4>
+                    <h4>Importar Planilha COB e converter para dados</h4>
                     <form action="{% url 'home:upload_planilha_dados_brutos' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
 											{% csrf_token %}
 											<input type="file" name="docpicker">
