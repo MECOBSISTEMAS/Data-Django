@@ -14,6 +14,7 @@ RUN pip install -r requirements.txt
 
 # copy application files
 COPY . .
+COPY config/user.cnf /etc/mysql/my.cnf
 
 # run migrations
 RUN python manage.py migrate
