@@ -81,8 +81,8 @@
                     <tr>
                       <th>Cliente ID</th>
                       <th>Nome do Credor</th>
-                      {% for dia in dias %}
-                      <th>Dia {{dia}}</th>
+                      {% for dia in creditos_dias %}
+                      <th>{{dia|title}}</th>
                       {% endfor %}
                       <th>Total Credito</th>
                     </tr>

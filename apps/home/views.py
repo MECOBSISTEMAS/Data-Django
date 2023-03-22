@@ -7,7 +7,7 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
-from django.db.models import Case, Sum, When, F, Q
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
@@ -99,7 +99,6 @@ def pages(request):
                     SELECT SUM(vl_pago) as total_repasses, comissao, COUNT(*) as qtde
                     FROM calculo_repasse
                     WHERE comissao IS NOT NULL AND comissao != " -" AND comissao != "-" AND comissao != "            -" AND comissao != " - "
-                    #AND dt_credito BETWEEN '2022-08-12' AND '2022-01-23'
                     group by comissao""")
                 result = cursor.fetchall()
                 context['sql'] = result
@@ -198,42 +197,50 @@ def pages(request):
                         Debito.objects.create(cliente=Pessoas.objects.get(id=pagador), vl_debito=valor, dt_debitado=data_credito, descricao=descricao)
                     Credito.objects.create(cliente=Pessoas.objects.get(id=credor), vl_credito=valor, dt_creditado=data_credito, descricao=descricao)
                 elif 'filtrar-credito' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
-                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    dias = []
-                    for dia in dias_de_consulta:
-                        dias.append(f"SUM(CASE WHEN DAY(credito.dt_creditado) = {dia} THEN credito.vl_credito ELSE 0 END) AS dia_{dia}")
-                    context['dias'] = dias_de_consulta
-                    with connection.cursor() as cursor:
-                        cursor.execute(f"""
-                            SELECT cliente_id, nome,
-                            {', '.join(dias)},
-                            SUM(credito.vl_credito) as total_credito
-                            from credito
-                            left join pessoas on pessoas.id = cliente_id
-                            where date(credito.dt_creditado) >= '{data_inicio}' AND date(credito.dt_creditado) <= '{data_fim}'
-                            group by credito.cliente_id
-                            order by cliente_id""")
-                        context['creditos'] = cursor.fetchall()
+                    credito_dias = {}
+                    for i in range((data_fim_dt - data_inicio_dt).days + 1):
+                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                        credito_dias[f'dia_{dia.day}'] = Sum(
+                            Case(
+                                When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                                default=0,
+                                output_field=DecimalField(),
+                            ),
+                        )
+
+                    context['dias'] = list(range(1, (data_fim_dt - data_inicio_dt).days + 2))
+                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    context['creditos_dias'] = credito_dias
+                    
+                    context['creditos'] = Credito.objects.filter(
+                        dt_creditado__gte=data_inicio, 
+                        dt_creditado__lte=data_fim,
+                    ).values(
+                        'cliente_id', 'cliente__nome',
+                        **credito_dias,
+                        total_credito=Sum('vl_credito')
+                    ).order_by('cliente_id')
                     tbody = ""
-                    for resultado in context['creditos']:
-                        cliente_id = resultado[0]
-                        nome = resultado[1]
-                        valores_diarios = resultado[2:-1]
-                        total_credito = resultado[-1]
-                        linha = f"""
-                        <tr>
-                            <td>{cliente_id}</td>
-                            <td>{nome}</td>
-                        """
-                        for dia in valores_diarios:
-                            linha += f"<td>{dia}</td>"
-                        linha += f"<td>{total_credito}</td></tr>"
-                        tbody += linha
+
+                    for credito in context['creditos']:
+                        tbody += "<tr>"
+                        tbody += f"<td>{credito['cliente_id']}</td>"
+                        tbody += f"<td>{credito['cliente__nome']}</td>"
+                        
+                        for dia in range(1, (data_fim_dt - data_inicio_dt).days + 2):
+                            credito_dia = credito[f"dia_{dia}"]
+                            tbody += f"<td>{credito_dia}</td>"
+                        
+                        tbody += f"<td>{credito['total_credito']}</td>"
+                        tbody += "</tr>"
                     context['tbody'] = tbody
+                        
+                            
+
                     
         elif load_template == 'tbl_debito.html':
             if request.method == 'POST':
@@ -249,42 +256,35 @@ def pages(request):
                         Credito.objects.create(cliente=Pessoas.objects.get(id=credor), vl_credito=valor, dt_creditado=data_debito, descricao=descricao)
                     Debito.objects.create(cliente=Pessoas.objects.get(id=pagador), vl_debito=valor, dt_debitado=data_debito, descricao=descricao)
                 elif 'filtrar-debito' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
-                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    dias = []
-                    for dia in dias_de_consulta:
-                        dias.append(f"SUM(CASE WHEN DAY(debito.dt_debitado) = {dia} THEN debito.vl_debito ELSE 0 END) AS dia_{dia}")
-                    context['dias'] = dias_de_consulta
-                    with connection.cursor() as cursor:
-                        cursor.execute(f"""
-                            SELECT cliente_id, nome,
-                            {', '.join(dias)},
-                            SUM(debito.vl_debito) as total_debito
-                            from debito
-                            left join pessoas on pessoas.id = debito.cliente_id
-                            where date(debito.dt_debitado) >= '{data_inicio}' AND date(debito.dt_debitado) <= '{data_fim}'
-                            group by debito.cliente_id
-                            order by cliente_id""")
-                        context['debitos'] = cursor.fetchall()
-                    tbody = ""
-                    for resultado in context['debitos']:
-                        cliente_id = resultado[0]
-                        nome = resultado[1]
-                        valores_diarios = resultado[2:-1]
-                        total_debito = resultado[-1]
-                        linha = f"""
-                        <tr>
-                            <td>{cliente_id}</td>
-                            <td>{nome}</td>
-                        """
-                        for dia in valores_diarios:
-                            linha += f"<td>{dia}</td>"
-                        linha += f"<td>{total_debito}</td></tr>"
-                        tbody += linha
-                    context['tbody'] = tbody
+                    debito_dias = {}
+                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                        debito_dias[f'dia_{dia.day}'] = Sum(
+                            Case(
+                                When(dt_debitado_day=dia.day, then=F('vl_credito')),
+                                default=0,
+                                output_field=IntegerField(),
+                            ),
+                        )
+
+                    context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    context['debitos_dias'] = debito_dias
+                    
+                    context['creditos'] = Credito.objects.filter(
+                        dt_creditado__gte=data_inicio, 
+                        dt_creditado__lte=data_fim,
+                    ).values(
+                        'cliente_id', 'cliente__nome',
+                        **debito_dias,
+                        total_credito=Sum('vl_credito')
+                    ).annotate(
+                        total_debito=Sum('cliente__debitos__vl_debito')
+                    ).order_by('cliente_id')
                     
         elif load_template == 'tbl_taxas.html':
             if request.method == 'POST':
@@ -301,42 +301,37 @@ def pages(request):
                         return HttpResponse("Mais de um cliente encontrado, {}".format(Pessoas.objects.filter(id=cliente_id)))
                     Taxa.objects.create(cliente=cliente, taxas=valor, dt_taxa=data_taxa, descricao=descricao)
                 elif 'filtrar-taxa' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
-                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    dias = []
-                    for dia in dias_de_consulta:
-                        dias.append(f"SUM(CASE WHEN DAY(taxas.dt_taxa) = {dia} THEN taxas.taxas ELSE 0 END) AS dia_{dia}")
-                    context['dias'] = dias_de_consulta
-                    with connection.cursor() as cursor:
-                        cursor.execute(f"""
-                            SELECT cliente_id, nome,
-                            {', '.join(dias)},
-                            SUM(taxas.taxas) as total_taxas
-                            from taxas
-                            left join pessoas on pessoas.id = taxas.cliente_id
-                            where date(taxas.dt_taxa) >= '{data_inicio}' AND date(taxas.dt_taxa) <= '{data_fim}'
-                            group by taxas.cliente_id
-                            order by cliente_id""")
-                        context['taxas'] = cursor.fetchall()
-                    tbody = ""
-                    for resultado in context['taxas']:
-                        cliente_id = resultado[0]
-                        nome = resultado[1]
-                        valores_diarios = resultado[2:-1]
-                        total_taxas = resultado[-1]
-                        linha = f"""
-                        <tr>
-                            <td>{cliente_id}</td>
-                            <td>{nome}</td>
-                        """
-                        for dia in valores_diarios:
-                            linha += f"<td>{dia}</td>"
-                        linha += f"<td>{total_taxas}</td></tr>"
-                        tbody += linha
-                    context['tbody'] = tbody
+                    credito_dias = {}
+                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                        credito_dias[f'dia_{dia.day}'] = Sum(
+                            Case(
+                                When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                                default=0,
+                                output_field=IntegerField(),
+                            ),
+                        )
+
+                    context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    context['creditos_dias'] = credito_dias
+                    
+                    context['creditos'] = Credito.objects.filter(
+                        dt_creditado__gte=data_inicio, 
+                        dt_creditado__lte=data_fim,
+                    ).values(
+                        'cliente_id', 'cliente__nome',
+                        **credito_dias,
+                        total_credito=Sum('vl_credito')
+                    ).annotate(
+                        total_repasse=F('total_credito') + F('cliente__repasses_retidos__vlr_rep_retido'),
+                        total_taxa=Sum('cliente__taxas__taxas'),
+                        total_debito=Sum('cliente__debitos__vl_debito')
+                    ).order_by('cliente_id')
                     
         elif load_template == 'tbl_repasse_retido.html':
             if request.method == 'POST':
@@ -353,42 +348,37 @@ def pages(request):
                     except Pessoas.MultipleObjectsReturned:
                         return HttpResponse("Mais de um cliente encontrado, {}".format(Pessoas.objects.filter(id=cliente_id)))
                 elif 'filtrar-repasse-retido' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
-                    data_fim = request.POST.get('data-fim')  # 2022-08-21:str
+                    data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    dias = []
-                    for dia in dias_de_consulta:
-                        dias.append(f"SUM(CASE WHEN DAY(repasse_retido.dt_rep_retido) = {dia} THEN repasse_retido.vlr_rep_retido ELSE 0 END) AS dia_{dia}")
-                    context['dias'] = dias_de_consulta
-                    with connection.cursor() as cursor:
-                        cursor.execute(f"""
-                            SELECT cliente_id, nome,
-                            {', '.join(dias)},
-                            SUM(repasse_retido.vlr_rep_retido) as total_repasse_retido
-                            from repasse_retido
-                            left join pessoas on pessoas.id = repasse_retido.cliente_id
-                            where date(repasse_retido.dt_rep_retido) >= '{data_inicio}' AND date(repasse_retido.dt_rep_retido) <= '{data_fim}'
-                            group by repasse_retido.cliente_id
-                            order by cliente_id""")
-                        context['repasse_retido'] = cursor.fetchall()
-                    tbody = ""
-                    for resultado in context['repasse_retido']:
-                        cliente_id = resultado[0]
-                        nome = resultado[1]
-                        valores_diarios = resultado[2:-1]
-                        total_repasse_retido = resultado[-1]
-                        linha = f"""
-                        <tr>
-                            <td>{cliente_id}</td>
-                            <td>{nome}</td>
-                        """
-                        for dia in valores_diarios:
-                            linha += f"<td>{dia}</td>"
-                        linha += f"<td>{total_repasse_retido}</td></tr>"
-                        tbody += linha
-                    context['tbody'] = tbody
+                    credito_dias = {}
+                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                        credito_dias[f'dia_{dia.day}'] = Sum(
+                            Case(
+                                When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                                default=0,
+                                output_field=IntegerField(),
+                            ),
+                        )
+
+                    context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    context['creditos_dias'] = credito_dias
+                    
+                    context['creditos'] = Credito.objects.filter(
+                        dt_creditado__gte=data_inicio, 
+                        dt_creditado__lte=data_fim,
+                    ).values(
+                        'cliente_id', 'cliente__nome',
+                        **credito_dias,
+                        total_credito=Sum('vl_credito')
+                    ).annotate(
+                        total_repasse=F('total_credito') + F('cliente__repasses_retidos__vlr_rep_retido'),
+                        total_taxa=Sum('cliente__taxas__taxas'),
+                        total_debito=Sum('cliente__debitos__vl_debito')
+                    ).order_by('cliente_id')
                 
         elif load_template == 'tbl_debito_cessao.html':
             if request.method == 'POST':
@@ -524,71 +514,51 @@ def criar_novo_repasse_retido(request, *args, **kwargs):
     return HttpResponse(" <h1>GET</h1> ")
 
 def filtrar_tabela_quinzenal(request, *args, **kwargs):
+    """
+    1) Faça uma consulta em que me mostre todos os dias de uma determinada data selecionada até o fim, Nessa consulta
+    ela ira mostras os seguintes campos: Vendedor_id (esse campo pode ser encontrado dentro do modelo Dado, dado.id_vendedor), Nome Vendedor (dado.vendedor), Valor Repasse Retido
+    (esta no modelo RepasseRetido e que pode ser associado com o id_vendedor pois o modelo RepasseRetido contem o campo cliente, dt_rep_retido e vlr_rep_retido),
+    e todos os dias entre a data de inicio e data fim selecionada pelo usuario no front-end, para cada dia mostre a soma dos valores de repasse
+    (dado.repasse, dado é chamado dentro do banco de dados e no Django esta Dado), total de creditos (o modelo se chama Credito e o campo é vl_credito
+    e a chave para ser associada é cliente, nele tambem possui o campo dt_creditado) o total de taxa (o modelo se chama Taxa e a tabela taxa, o campo que contem o valoe se chama taxas tambem
+    logo taxas.taxas, la possui tambem possui os campos cliente e dt_taxa), Total Debito (o modelo se chama Debito e a tabela se chama debito, o campo que contem o valor se chama vl_debito,
+    nele tambem contem o cliente e o campo dt_debitado) e no fime me mostre o Total Repasse em que some total de credito e total de repasse retido e subtraia o total de taxa e total de debito"""
     context:dict = dict()
     if request.method == 'POST':
         data_inicio = request.POST.get('data-inicio')
-        data_fim = request.POST.get('data-fim')
         data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+        data_fim = request.POST.get('data-fim')
         data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-        
-        dias_de_consulta = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+        credito_dias = {}
+        for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+            dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+            credito_dias[f'dia_{dia.day}'] = Sum(
+                Case(
+                    When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                    default=0,
+                    output_field=IntegerField(),
+                ),
+            )
 
-        dias = []
-        for dia in dias_de_consulta:
-            dias.append(f"SUM(CASE WHEN DAY(dado.dt_credito) = {dia} THEN dado.repasses ELSE 0 END) AS dia_{dia}")
-            
-        consulta = f"""
-        select
-dado.id_vendedor,
-dado.vendedor,
-coalesce(total_repasse_retido,0) as total_repasse_retido,
-{', '.join(dias)},
-coalesce(total_credito,0) as total_credito,
-coalesce(total_debito,0) as total_debito,
-coalesce(total_taxas,0) as total_taxas,
-sum(dado.repasses)
-	+ coalesce(total_repasse_retido, 0)
-    + coalesce(total_credito, 0)
-    - coalesce(total_debito, 0)
-    - coalesce(total_taxas, 0)
-    as total_repasse
-from dado
-left join (
-	select sum(vl_credito) as total_credito, cliente_id
-    from credito
-    where credito.dt_creditado between "{data_inicio}" and "{data_fim}"
-    group by cliente_id
-) as credito on credito.cliente_id = dado.id_vendedor
-left join (
-	select sum(vl_debito) as total_debito, cliente_id
-    from debito
-    where debito.dt_debitado between "{data_inicio}" and "{data_fim}"
-    group by cliente_id
-) as debito on debito.cliente_id = dado.id_vendedor
-left join (
-	select sum(taxas) as total_taxas, cliente_id
-    from taxas
-    where taxas.dt_taxa between "{data_inicio}" and "{data_fim}"
-    group by cliente_id
-) as taxas on taxas.cliente_id = dado.id_vendedor
-left join (
-	select sum(vlr_rep_retido) as total_repasse_retido, cliente_id
-    from repasse_retido
-    where repasse_retido.dt_rep_retido between "{data_inicio}" and "{data_fim}"
-    group by cliente_id
-) as repasse_retido on repasse_retido.cliente_id = dado.id_vendedor
-where date(dado.dt_credito) BETWEEN '{data_inicio}' AND '{data_fim}'
-group by dado.id_vendedor
-order by dado.id_vendedor
-        """
-    
-        with connection.cursor() as cursor:
-            cursor.execute(consulta)
-            context['data'] = cursor.fetchall()
+        context['dias_de_consulta'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+        #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+        context['creditos_dias'] = credito_dias
+        
+        context['creditos'] = Credito.objects.filter(
+            dt_creditado__gte=data_inicio, 
+            dt_creditado__lte=data_fim,
+        ).values(
+            'cliente_id', 'cliente__nome',
+            **credito_dias,
+            total_credito=Sum('vl_credito')
+        ).annotate(
+            total_repasse=F('total_credito') + F('cliente__repasses_retidos__vlr_rep_retido'),
+            total_taxa=Sum('cliente__taxas__taxas'),
+            total_debito=Sum('cliente__debitos__vl_debito')
+        ).order_by('cliente_id')
         
         request.session['serialized_data'] = json.dumps(context['data'], cls=CustomJSONEncoder)
         
-        context['dias_de_consulta'] = dias_de_consulta
         tbody = ""
         for resultado in context['data']:
             vendedor_id = resultado[0]
@@ -662,38 +632,24 @@ def download_planilha_cob(request, *args, **kwargs):
         filepath = os.path.join(tmpdir, f'planilha_consulta_cob_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
         workbook = openpyxl.Workbook()
         sheet = workbook.active
-        """ 
-        <th>Vendedor ID</th>
-        <th>Contrato ID</th>
-        <th>Vendedor</th>
-        <th>Comprador ID</th>
-        <th>Comprador</th>
-        <th>Parcelas Contrato</th>
-        <th>Valor Pago</th>
-        <th>Data Vencimento</th>
-        <th>Data Credito</th>
-        <th>Banco</th>
-        <th>Contrato</th>
-        <th>Evento</th>
-        <th>Deposito</th>
-        <th>Calculo</th>
-        <th>Taxas</th>
-        <th>ADI</th>
-        <th>ME</th>
-        <th>OP</th>
-        <th>Repasses</th>
-        <th>Comissao</th>
-        <th>Total Repasse</th>
-        <th>Dado ID</th>
-        """
-        lista_header_consulta_sql = ['codigo_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador', 'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco', 'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op', 'repasses', 'comissao', 'total_repasse', 'dado_id']
+        
+        
+        """ .values('id_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador', 
+                            'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco', 
+                            'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op', 
+                            'repasses', 'comissao', 'total_repasse', 'id')) """
+
+        lista_header_consulta_sql = ['id_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador',
+                            'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco',
+                            'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op',
+                            'repasses', 'comissao', 'total_repasse', 'id']
         for i, value in enumerate(lista_header_consulta_sql):
-            sheet[get_column_letter(i+1)+'1'] = str(value)
+            sheet[get_column_letter(i+1) + '1'] = str(value)
         
-        
-        for i, row, in enumerate(json.loads(request.session.get('serialized_data'))):
-            for j, value in enumerate(row):
-                sheet.cell(row=i+2, column=j+1, value=value)
+        for i, row in enumerate(json.loads(request.session.get('serialized_data'))):
+            for j, header in enumerate(lista_header_consulta_sql):
+                value = row.get(header, '')  # obtém o valor do dicionário usando a chave do cabeçalho
+                sheet.cell(row=i+2, column=j+1, value=str(value))
         workbook.save(filepath)
         with open(filepath, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

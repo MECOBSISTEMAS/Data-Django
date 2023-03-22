@@ -46,7 +46,7 @@ class CadCliente(models.Model):
 
 
 class RepasseRetido(models.Model):
-    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True, related_name='repasses_retidos')
     vlr_rep_retido = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     dt_rep_retido = models.DateField(_(""), blank=True, null=True)
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
@@ -66,7 +66,7 @@ class RepasseRetido(models.Model):
     
 class Debito(models.Model):
     vl_debito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True, related_name='debitos')
     dt_debitado = models.DateField(_(""), blank=True, null=True)
     #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
@@ -87,7 +87,7 @@ class Credito(models.Model):
     dt_creditado = models.DateField(_(""), blank=True, null=True)
     vl_credito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
-    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True, related_name='creditos')
     descricao = models.CharField(_(""), max_length=128, blank=True, null=True)
 
     class Meta:
@@ -105,7 +105,7 @@ class Credito(models.Model):
 
 
 class Taxa(models.Model):
-    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True, related_name='taxas')
     taxas = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
