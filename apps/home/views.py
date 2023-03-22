@@ -7,7 +7,8 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, CharField, OuterRef, Subquery
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, CharField, OuterRef, Subquery, Value
+from django.db.models.functions import Coalesce
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
@@ -550,12 +551,12 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
         data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
         data_fim = request.POST.get('data-fim')
         data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-        credito_dias = {}
+        dados_dias = {}
         for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
             dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-            credito_dias[f'dia_{dia.day}'] = Sum(
+            dados_dias[f'dia_{dia.day}'] = Sum(
                 Case(
-                    When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                    When(dt_credito__day=dia.day, then=F('repasses')),
                     default=0,
                     output_field=IntegerField(),
                 ),
@@ -563,53 +564,76 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
 
         context['dias_de_consulta'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
         #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-        context['creditos_dias'] = credito_dias
+        context['dados_dias'] = dados_dias
         
-        context['creditos'] = Credito.objects.filter(
-            dt_creditado__gte=data_inicio, 
-            dt_creditado__lte=data_fim,
-        ).values(
-            'cliente_id', 'cliente__nome',
-            **credito_dias,
-            total_credito=Sum('vl_credito')
-        ).annotate(
-            total_repasse=F('total_credito') + F('cliente__repasses_retidos__vlr_rep_retido'),
-            total_taxa=Sum('cliente__taxas__taxas'),
-            total_debito=Sum('cliente__debitos__vl_debito')
-        ).order_by('cliente_id')
-        
-        request.session['serialized_data'] = json.dumps(context['data'], cls=CustomJSONEncoder)
-        
-        tbody = ""
-        for resultado in context['data']:
-            vendedor_id = resultado[0]
-            nome_vendedor = resultado[1]
-            valor_repasse_retido = resultado[2]
-            #dt_credito = resultado[3]
-            valores_diarios = resultado[3:-4]
-            total_creditos = resultado[-4]
-            total_taxas = resultado[-3]
-            totaL_debitos = resultado[-2]
-            total_repasses = resultado[-1]
+        context['dados'] = Dado.objects.filter(
+    dt_credito__gte=data_inicio, 
+    dt_credito__lte=data_fim,
+).values(
+    'id_vendedor', 'vendedor',
+).annotate(
+    total_repasses_retidos=Coalesce(
+        Subquery(
+            RepasseRetido.objects.filter(
+                cliente_id=OuterRef('id_vendedor')
+            ).values('cliente_id')
+            .annotate(total=Sum('vlr_rep_retido'))
+            .values('total'),
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ),
+        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+    ),
+    **dados_dias,
+    total_credito=Coalesce(
+        Subquery(
+            Credito.objects.filter(
+                cliente_id=OuterRef('id_vendedor')
+            ).values('cliente_id')
+            .annotate(total=Sum('vl_credito'))
+            .values('total'),
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ),
+        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+    ),
+    total_repasse=Sum('repasses'),
+    total_taxa=Coalesce(
+        Subquery(
+            Taxa.objects.filter(
+                cliente_id=OuterRef('id_vendedor')
+            ).values('cliente_id')
+            .annotate(total=Sum('taxas'))
+            .values('total'),
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ),
+        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+    ),
+    total_debito=Coalesce(
+        Subquery(
+            Debito.objects.filter(
+                cliente_id=OuterRef('id_vendedor')
+            ).values('cliente_id')
+            .annotate(total=Sum('vl_debito'))
+            .values('total'),
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ),
+        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+    )
+).order_by('id_vendedor')
 
-            linha = f"""
-            <tr>
-                <td>{vendedor_id}</td>
-                <td>{nome_vendedor}</td>
-                <td>{valor_repasse_retido}</td>
-            """
-            for valor_dia in valores_diarios:
-                linha += f"<td>{valor_dia}</td>"
-            
-            linha += f"""
-            <td>{total_creditos}</td>
-            <td>{totaL_debitos}</td>
-            <td>{total_taxas}</td>
-            <td>{total_repasses}</td>
-            </tr>
-            """
-            tbody += linha
-
+        request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
+        
+        tbody = "<tr>"
+        for dado in context['dados']:
+            tbody += f"<td>{dado['id_vendedor']}</td>"
+            tbody += f"<td>{dado['vendedor']}</td>"
+            tbody += f"<td>{dado['total_repasses_retidos']}</td>"
+            for dia in dados_dias:
+                tbody += f"<td>{dado[dia]}</td>"
+            tbody += f"<td>{dado['total_credito']}</td>"
+            tbody += f"<td>{dado['total_taxa']}</td>"
+            tbody += f"<td>{dado['total_debito']}</td>"
+            tbody += f"<td>{dado['total_repasse']}</td>"
+            tbody += "</tr>"
         context['tbody'] = tbody
         return render(request, 'home/tbl_bootstrap.html', context=context)
     return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
