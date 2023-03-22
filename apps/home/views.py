@@ -558,7 +558,7 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
                 Case(
                     When(dt_credito__day=dia.day, then=F('repasses')),
                     default=0,
-                    output_field=IntegerField(),
+                    output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
                 ),
             )
 
@@ -567,60 +567,62 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
         context['dados_dias'] = dados_dias
         
         context['dados'] = Dado.objects.filter(
-    dt_credito__gte=data_inicio, 
-    dt_credito__lte=data_fim,
-).values(
-    'id_vendedor', 'vendedor',
-).annotate(
-    total_repasses_retidos=Coalesce(
-        Subquery(
-            RepasseRetido.objects.filter(
-                cliente_id=OuterRef('id_vendedor')
-            ).values('cliente_id')
-            .annotate(total=Sum('vlr_rep_retido'))
-            .values('total'),
-            output_field=DecimalField(max_digits=8, decimal_places=2)
-        ),
-        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-    ),
-    **dados_dias,
-    total_credito=Coalesce(
-        Subquery(
-            Credito.objects.filter(
-                cliente_id=OuterRef('id_vendedor')
-            ).values('cliente_id')
-            .annotate(total=Sum('vl_credito'))
-            .values('total'),
-            output_field=DecimalField(max_digits=8, decimal_places=2)
-        ),
-        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-    ),
-    total_repasse=Sum('repasses'),
-    total_taxa=Coalesce(
-        Subquery(
-            Taxa.objects.filter(
-                cliente_id=OuterRef('id_vendedor')
-            ).values('cliente_id')
-            .annotate(total=Sum('taxas'))
-            .values('total'),
-            output_field=DecimalField(max_digits=8, decimal_places=2)
-        ),
-        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-    ),
-    total_debito=Coalesce(
-        Subquery(
-            Debito.objects.filter(
-                cliente_id=OuterRef('id_vendedor')
-            ).values('cliente_id')
-            .annotate(total=Sum('vl_debito'))
-            .values('total'),
-            output_field=DecimalField(max_digits=8, decimal_places=2)
-        ),
-        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-    )
-).order_by('id_vendedor')
+            dt_credito__gte=data_inicio, 
+            dt_credito__lte=data_fim,
+        ).values(
+            'id_vendedor', 'vendedor',
+        ).annotate(
+            total_repasses_retidos=Coalesce(
+                Subquery(
+                    RepasseRetido.objects.filter(
+                        cliente_id=OuterRef('id_vendedor')
+                    ).values('cliente_id')
+                    .annotate(total=Sum('vlr_rep_retido'))
+                    .values('total'),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ),
+                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+            ),
+            **dados_dias,
+            total_credito=Coalesce(
+                Subquery(
+                    Credito.objects.filter(
+                        cliente_id=OuterRef('id_vendedor')
+                    ).values('cliente_id')
+                    .annotate(total=Sum('vl_credito'))
+                    .values('total'),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ),
+                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+            ),
+            total_repasse=Sum('repasses'),
+            total_taxa=Coalesce(
+                Subquery(
+                    Taxa.objects.filter(
+                        cliente_id=OuterRef('id_vendedor')
+                    ).values('cliente_id')
+                    .annotate(total=Sum('taxas'))
+                    .values('total'),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ),
+                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+            ),
+            total_debito=Coalesce(
+                Subquery(
+                    Debito.objects.filter(
+                        cliente_id=OuterRef('id_vendedor')
+                    ).values('cliente_id')
+                    .annotate(total=Sum('vl_debito'))
+                    .values('total'),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ),
+                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+            )
+        ).order_by('id_vendedor')
 
         request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
+        #!request.session['dados_dias'] = json.dumps(dados_dias, cls=CustomJSONEncoder), por algum motivo isso esta dando erro no Sum
+        
         
         tbody = "<tr>"
         for dado in context['dados']:
@@ -663,7 +665,7 @@ def download_planilha_quinzenal(request, *args, **kwargs):
         
         for i, row in enumerate(json.loads(request.session.get('serialized_data'))):
             for j, value in enumerate(row):
-                sheet.cell(row=i+2, column=j+1, value=value)
+                sheet.cell(row=i+2, column=j+1, value=row[value])
         workbook.save(filepath)
         with open(filepath, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')

@@ -118,6 +118,7 @@
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
+                    {{dados}}
                     <h5>Quinzenal</h5>
                     <form method="post" action="{% url 'home:filtrar_tabela_quinzenal' %}">
                       {% csrf_token %}
@@ -142,7 +143,7 @@
                             <th>Nome Vendedor</th>
                             <th>Valor Repasse Retido</th>
                             {% for dia in dados_dias %}
-                              <th>Dia {{dia}}</th>
+                              <th>{{dia}}</th>
                             {% endfor %}
                             <th>Creditos</th>
                             <th>Taxas</th>
