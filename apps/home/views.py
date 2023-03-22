@@ -7,8 +7,9 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
+#import the function Cast
 from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, CharField, OuterRef, Subquery, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
@@ -22,6 +23,9 @@ import json
 import openpyxl
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
+
+
+
 
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
@@ -140,19 +144,22 @@ def pages(request):
             if request.method == 'POST':
                 bancos = request.POST.get('bancos')
                 data = request.POST.get('data')
-                context['repasses_semanais'] = (
-                CadCliente.objects
-                .filter(repasse_semanal=True)
-                .annotate(total_repasses=Subquery(
-                    Dado.objects
-                    .filter(id_vendedor=OuterRef('vendedor_id'), dt_credito=data)
-                    .values('id_vendedor')
-                    .annotate(total=Sum('repasses'))
-                    .values('total')
-                ))
-                .values_list('vendedor_id', 'vendedor__nome', 'total_repasses')
-            )
-
+                context['repasses_semanais'] = CadCliente.objects.filter(
+                     repasse_semanal=True,
+                 ).annotate(
+                     total_repasses=Coalesce(
+                         Subquery(
+                             Dado.objects.filter(
+                                dt_credito="2023-02-28",
+                                id_vendedor=OuterRef('vendedor_id')
+                             ).values('id_vendedor').annotate(
+                                soma_repasses=Sum('repasses')
+                             ).values('soma_repasses')
+                         ),
+                         0,
+                         output_field=DecimalField()
+                     )
+                 ).values('total_repasses', 'vendedor__nome', 'vendedor__id')
                 
                 context['repasses'] = (
                     Dado.objects
@@ -178,15 +185,16 @@ def pages(request):
                         valores_pagos=Sum('vl_pago'),
                         honorarios=Sum('me')
                     )
+                    
                 context['comissionistas_do_mes'] = Dado.objects.filter(
                     dt_credito=data,comissao__isnull=False
                     ).values('comissao').annotate(comissoes=Sum('op'))
+                
                 context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
                     repasses=Sum('repasses')
                 )
-                context['repasses_semanais_vendedores_totais'] = sum([(querie[2] or 0) for querie in context['repasses_semanais']])
-                context['repasses_gera_descontado'] = (context['repasses_geral']['repasses'] or 0) - (context['repasses_semanais_vendedores_totais'] or 0)
-                    #context['repasses_geral'] = sum([float(calculo_repase.repasses) for calculo_repase in Calculo_Repasse.objects.filter(dt_credito=data, banco=bancos)])
+                context['repasses_semanais_vendedores_totais'] = sum([float(querie['total_repasses']) for querie in context['repasses_semanais']])
+                context['repasses_geral_descontado'] = float(context['repasses_geral']['repasses']) - context['repasses_semanais_vendedores_totais']
 
             
         elif load_template == 'form_elements.html':

@@ -81,7 +81,6 @@
                 <div class="card">
                   <div class="card-header">
                     <h5>Julia</h5>
-                    {{repasses_semanais}}
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
@@ -123,16 +122,16 @@
                         <thead>
                           <tr>
                             <th>ID</th>
-                            <th>Repasses</th>
+                            <th>Cliente</th>
                             <th>Valores</th>
                           </tr>
                         </thead>
                         <tbody>
-                          {% for querie in repasses_semanais %}
+                          {% for repasse_semanal in repasses_semanais %}
                           <tr>
-                            <th>{{querie.0}}</th>
-                            <th>{{querie.1}}</th>
-                            <th>{{querie.2}}</th>
+                            <th>{{repasse_semanal.vendedor__id}}</th>
+                            <th>{{repasse_semanal.vendedor__nome}}</th>
+                            <th>{{repasse_semanal.total_repasses}}</th>
                           </tr>
                           {% endfor %}
                           
@@ -141,7 +140,7 @@
                     </div>
 
                     <br>
-                    <h5>Repasses Geral: R$ {{repasses_gera_descontado|intcomma}}</h5>
+                    <h5>Repasses Geral: R$ {{repasses_geral_descontado|intcomma}}</h5>
                   </div>
                 </div>
               </div>
