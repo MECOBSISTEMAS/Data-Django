@@ -7,13 +7,12 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, CharField, OuterRef, Subquery
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.db import connection
 from django.conf import settings
-from django.db.models import Sum
 import random
 #importe letras
 import tempfile
@@ -109,49 +108,72 @@ def pages(request):
         
 
         elif load_template == 'cad_clientes_table_bootstrap.html':
+            if request.method == 'POST':
+                if 'novo-cliente-cadastro' in request.POST:
+                    cliente_id = request.POST.get('cliente_id')
+                    sim = request.POST.get('sim')
+                    nao = request.POST.get('nao')
+                    operacional = request.POST.get('operacional')
+                    tcc = request.POST.get('tcc')
+                    honorarios = request.POST.get('honorarios')
+                    animal = request.POST.get('animal')
+                    evento = request.POST.get('evento')
+                    informar_repasse = request.POST.get('informar_repasse')
+                    
+                    try:
+                        pessoa = Pessoas.objects.get(id=cliente_id)
+                    except Exception as e:
+                        return HttpResponse('Cliente não encontrado, erro: ' + str(e))
+                    if CadCliente.objects.filter(cliente_id=cliente_id).exists():
+                        return HttpResponse('Cliente já cadastrado')
+                    CadCliente.objects.create(
+                        vendedor = pessoa, sim=sim, nao=nao, 
+                        operacional=operacional, tcc=tcc, 
+                        honorarios=honorarios, animal=animal, 
+                        evento=evento, informar_repasse=informar_repasse
+                    )
+                        
             context['cad_clientes'] = CadCliente.objects.all()
             
         elif load_template == 'tbl_julia_bootstrap.html':
             if request.method == 'POST':
                 bancos = request.POST.get('bancos')
                 data = request.POST.get('data')
-                with connection.cursor() as cursor:
-                    cursor.execute(f"""
-                        select distinct comissao as comissionista,
-                        sum(op) as comissoes
-                        from calculo_repasse
-                        where dt_credito = '{data}' and banco='{str(bancos).upper()}' and not isnull(comissao)
-                        group by comissao;
-                        """)
-                    context['comissoes'] = cursor.fetchall()
-                    cursor.execute(f"""
-                        select id_contrato_id,
-                        pessoas.nome,
-                        CASE WHEN id_contrato_id > 12460 OR ISNULL(id_contrato_id)
-                        THEN 'UNICRED' ELSE 'BRADESCO' END as banco,
-                        sum(repasses)
-                        from calculo_repasse
-                        left join contratos on contratos.id=id_contrato_id
-                        left join pessoas on pessoas.id = contratos.vendedor_id
-                        where dt_credito = '{data}'
-                        group by contratos.vendedor_id
-                    """)
-                    context['repasses'] = cursor.fetchall()
-                    cursor.execute(f"""
-                        select vendedor_id, pessoas.nome, total_repasses
-                        from cad_cliente
-                        left join pessoas on pessoas.id = vendedor_id
-                        left join (
-                            select id_vendedor, sum(coalesce(repasses,0)) as total_repasses
-                            from dado
-                            where dado.dt_credito = "{data}"
-                            group by dado.id_vendedor
-                        ) as dado on dado.id_vendedor = cad_cliente.vendedor_id
-                        where repasse_semanal = true""")
-                    context['repasses_semanais'] = cursor.fetchall()
+                context['repasses_semanais'] = (
+                CadCliente.objects
+                .filter(repasse_semanal=True)
+                .annotate(total_repasses=Subquery(
+                    Dado.objects
+                    .filter(id_vendedor=OuterRef('vendedor_id'), dt_credito=data)
+                    .values('id_vendedor')
+                    .annotate(total=Sum('repasses'))
+                    .values('total')
+                ))
+                .values_list('vendedor_id', 'vendedor__nome', 'total_repasses')
+            )
+
+                
+                context['repasses'] = (
+                    Dado.objects
+                    .filter(dt_credito=data, banco=str(bancos).upper())
+                    .values('id_contrato', 'vendedor')
+                    .annotate(
+                        repasses=Sum('repasses')
+                    )
+                    .order_by('vendedor')
+                )    
+                    
+                context['comissoes'] = (
+                    Calculo_Repasse.objects
+                    .filter(dt_credito=data, banco=str(bancos).upper())
+                    .exclude(comissao=None)
+                    .values('comissao')
+                    .annotate(comissoes=Sum('op'))
+                    .distinct()#talvez remover
+                )
                     
                 context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                    banco='UNICRED').aggregate(
+                    id_contrato__gt=12460).aggregate(
                         valores_pagos=Sum('vl_pago'),
                         honorarios=Sum('me')
                     )
@@ -221,20 +243,21 @@ def pages(request):
                         dt_creditado__lte=data_fim,
                     ).values(
                         'cliente_id', 'cliente__nome',
+                    ).annotate(
                         **credito_dias,
                         total_credito=Sum('vl_credito')
                     ).order_by('cliente_id')
+                    
                     tbody = ""
 
+                    tbody = ""
                     for credito in context['creditos']:
                         tbody += "<tr>"
                         tbody += f"<td>{credito['cliente_id']}</td>"
                         tbody += f"<td>{credito['cliente__nome']}</td>"
-                        
-                        for dia in range(1, (data_fim_dt - data_inicio_dt).days + 2):
-                            credito_dia = credito[f"dia_{dia}"]
+                        for dia in credito_dias:
+                            credito_dia = credito[f'{dia}']
                             tbody += f"<td>{credito_dia}</td>"
-                        
                         tbody += f"<td>{credito['total_credito']}</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
@@ -265,7 +288,7 @@ def pages(request):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
                         debito_dias[f'dia_{dia.day}'] = Sum(
                             Case(
-                                When(dt_debitado_day=dia.day, then=F('vl_credito')),
+                                When(dt_debitado__day=dia.day, then=F('vl_debito')),
                                 default=0,
                                 output_field=IntegerField(),
                             ),
@@ -275,16 +298,27 @@ def pages(request):
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
                     context['debitos_dias'] = debito_dias
                     
-                    context['creditos'] = Credito.objects.filter(
-                        dt_creditado__gte=data_inicio, 
-                        dt_creditado__lte=data_fim,
+                    context['debitos'] = Debito.objects.filter(
+                        dt_debitado__gte=data_inicio, 
+                        dt_debitado__lte=data_fim,
                     ).values(
-                        'cliente_id', 'cliente__nome',
-                        **debito_dias,
-                        total_credito=Sum('vl_credito')
+                        'cliente_id', 'cliente__nome'
                     ).annotate(
-                        total_debito=Sum('cliente__debitos__vl_debito')
+                        **debito_dias,
+                        total_debito=Sum('vl_debito')
                     ).order_by('cliente_id')
+                    
+                    tbody = ""
+                    for debito in context['debitos']:
+                        tbody += "<tr>"
+                        tbody += f"<td>{debito['cliente_id']}</td>"
+                        tbody += f"<td>{debito['cliente__nome']}</td>"
+                        for dia in debito_dias:
+                            debito_dia = debito[f'{dia}']
+                            tbody += f"<td>{debito_dia}</td>"
+                        tbody += f"<td>{debito['total_debito']}</td>"
+                        tbody += "</tr>"
+                    context['tbody'] = tbody
                     
         elif load_template == 'tbl_taxas.html':
             if request.method == 'POST':
@@ -293,24 +327,18 @@ def pages(request):
                     valor = request.POST.get('valor')
                     data_taxa = request.POST.get('data-taxa')
                     descricao = request.POST.get('descricao')
-                    try:
-                        cliente = Pessoas.objects.get(id=cliente_id)
-                    except Pessoas.DoesNotExist:
-                        return HttpResponse("Cliente não encontrado")
-                    except Pessoas.MultipleObjectsReturned:
-                        return HttpResponse("Mais de um cliente encontrado, {}".format(Pessoas.objects.filter(id=cliente_id)))
-                    Taxa.objects.create(cliente=cliente, taxas=valor, dt_taxa=data_taxa, descricao=descricao)
-                elif 'filtrar-taxa' in request.POST:
+                    Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao)
+                if 'filtrar-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    credito_dias = {}
+                    taxas_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        credito_dias[f'dia_{dia.day}'] = Sum(
+                        taxas_dias[f'dia_{dia.day}'] = Sum(
                             Case(
-                                When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                                When(dt_taxa__day=dia.day, then=F('taxas')),
                                 default=0,
                                 output_field=IntegerField(),
                             ),
@@ -318,20 +346,29 @@ def pages(request):
 
                     context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    context['creditos_dias'] = credito_dias
+                    context['taxas_dias'] = taxas_dias
                     
-                    context['creditos'] = Credito.objects.filter(
-                        dt_creditado__gte=data_inicio, 
-                        dt_creditado__lte=data_fim,
+                    context['taxas'] = Taxa.objects.filter(
+                        dt_taxa__gte=data_inicio, 
+                        dt_taxa__lte=data_fim,
                     ).values(
-                        'cliente_id', 'cliente__nome',
-                        **credito_dias,
-                        total_credito=Sum('vl_credito')
+                        'cliente_id', 'cliente__nome'
                     ).annotate(
-                        total_repasse=F('total_credito') + F('cliente__repasses_retidos__vlr_rep_retido'),
-                        total_taxa=Sum('cliente__taxas__taxas'),
-                        total_debito=Sum('cliente__debitos__vl_debito')
+                        **taxas_dias,
+                        total_taxa=Sum('taxas')
                     ).order_by('cliente_id')
+                    
+                    tbody = ""
+                    for taxa in context['taxas']:
+                        tbody += "<tr>"
+                        tbody += f"<td>{taxa['cliente_id']}</td>"
+                        tbody += f"<td>{taxa['cliente__nome']}</td>"
+                        for dia in taxas_dias:
+                            taxa_dia = taxa[f'{dia}']
+                            tbody += f"<td>{taxa_dia}</td>"
+                        tbody += f"<td>{taxa['total_taxa']}</td>"
+                        tbody += "</tr>"
+                    context['tbody'] = tbody
                     
         elif load_template == 'tbl_repasse_retido.html':
             if request.method == 'POST':
@@ -352,12 +389,12 @@ def pages(request):
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    credito_dias = {}
+                    repasses_retidos_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        credito_dias[f'dia_{dia.day}'] = Sum(
+                        repasses_retidos_dias[f'dia_{dia.day}'] = Sum(
                             Case(
-                                When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                                When(dt_rep_retido__day=dia.day, then=F('vlr_rep_retido')),
                                 default=0,
                                 output_field=IntegerField(),
                             ),
@@ -365,37 +402,30 @@ def pages(request):
 
                     context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    context['creditos_dias'] = credito_dias
+                    context['repasses_retidos_dias'] = repasses_retidos_dias
                     
-                    context['creditos'] = Credito.objects.filter(
-                        dt_creditado__gte=data_inicio, 
-                        dt_creditado__lte=data_fim,
+                    context['repasses_retidos'] = RepasseRetido.objects.filter(
+                        dt_rep_retido__gte=data_inicio, 
+                        dt_rep_retido__lte=data_fim,
                     ).values(
-                        'cliente_id', 'cliente__nome',
-                        **credito_dias,
-                        total_credito=Sum('vl_credito')
+                        'cliente_id', 'cliente__nome'
                     ).annotate(
-                        total_repasse=F('total_credito') + F('cliente__repasses_retidos__vlr_rep_retido'),
-                        total_taxa=Sum('cliente__taxas__taxas'),
-                        total_debito=Sum('cliente__debitos__vl_debito')
+                        **repasses_retidos_dias,
+                        total_repasse_retido=Sum('vlr_rep_retido')
                     ).order_by('cliente_id')
-                
-        elif load_template == 'tbl_debito_cessao.html':
-            if request.method == 'POST':
-                pass
-                context['nothing'] = None
-                
-            with connection.cursor() as cursor:
-                cursor.execute(
-                    """
-                    SELECT distinct vendedor_id, nome , nu_parcelas, dt_contrato FROM contratos
-                    join pessoas
-                    where (dt_contrato >= '2022-09-01' and dt_contrato <= '2022-09-30')
-                    and repasse = 'S' and pessoas.id=vendedor_id
-                    order by contratos.id desc;
-                    """
-                )
-                context['sql'] = cursor.fetchall()
+                    
+                    tbody = ""
+                    for repasse_retido in context['repasses_retidos']:
+                        tbody += "<tr>"
+                        tbody += f"<td>{repasse_retido['cliente_id']}</td>"
+                        tbody += f"<td>{repasse_retido['cliente__nome']}</td>"
+                        for dia in repasses_retidos_dias:
+                            repasse_retido_dia = repasse_retido[f'{dia}']
+                            tbody += f"<td>{repasse_retido_dia}</td>"
+                        tbody += f"<td>{repasse_retido['total_repasse_retido']}</td>"
+                        tbody += "</tr>"
+                    context['tbody'] = tbody
+
                 
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
@@ -514,15 +544,6 @@ def criar_novo_repasse_retido(request, *args, **kwargs):
     return HttpResponse(" <h1>GET</h1> ")
 
 def filtrar_tabela_quinzenal(request, *args, **kwargs):
-    """
-    1) Faça uma consulta em que me mostre todos os dias de uma determinada data selecionada até o fim, Nessa consulta
-    ela ira mostras os seguintes campos: Vendedor_id (esse campo pode ser encontrado dentro do modelo Dado, dado.id_vendedor), Nome Vendedor (dado.vendedor), Valor Repasse Retido
-    (esta no modelo RepasseRetido e que pode ser associado com o id_vendedor pois o modelo RepasseRetido contem o campo cliente, dt_rep_retido e vlr_rep_retido),
-    e todos os dias entre a data de inicio e data fim selecionada pelo usuario no front-end, para cada dia mostre a soma dos valores de repasse
-    (dado.repasse, dado é chamado dentro do banco de dados e no Django esta Dado), total de creditos (o modelo se chama Credito e o campo é vl_credito
-    e a chave para ser associada é cliente, nele tambem possui o campo dt_creditado) o total de taxa (o modelo se chama Taxa e a tabela taxa, o campo que contem o valoe se chama taxas tambem
-    logo taxas.taxas, la possui tambem possui os campos cliente e dt_taxa), Total Debito (o modelo se chama Debito e a tabela se chama debito, o campo que contem o valor se chama vl_debito,
-    nele tambem contem o cliente e o campo dt_debitado) e no fime me mostre o Total Repasse em que some total de credito e total de repasse retido e subtraia o total de taxa e total de debito"""
     context:dict = dict()
     if request.method == 'POST':
         data_inicio = request.POST.get('data-inicio')
