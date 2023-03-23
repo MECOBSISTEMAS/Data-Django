@@ -193,8 +193,12 @@ def pages(request):
                 context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
                     repasses=Sum('repasses')
                 )
-                context['repasses_semanais_vendedores_totais'] = sum([float(querie['total_repasses']) for querie in context['repasses_semanais']])
-                context['repasses_geral_descontado'] = float(context['repasses_geral']['repasses']) - context['repasses_semanais_vendedores_totais']
+                repasses_geral = context['repasses_geral']['repasses']
+                repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]) or 0)
+                repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
+
+                context['repasses_geral_descontado'] = repasses_geral_descontado
+                #context['repasses_geral_descontado'] = (float(context['repasses_geral']['repasses']) or 0) - (context['repasses_semanais_vendedores_totais'] or 0)
 
             
         elif load_template == 'form_elements.html':
@@ -246,7 +250,7 @@ def pages(request):
                     context['dias'] = list(range(1, (data_fim_dt - data_inicio_dt).days + 2))
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
                     context['creditos_dias'] = credito_dias
-                    
+
                     context['creditos'] = Credito.objects.filter(
                         dt_creditado__gte=data_inicio, 
                         dt_creditado__lte=data_fim,
@@ -257,7 +261,6 @@ def pages(request):
                         total_credito=Sum('vl_credito')
                     ).order_by('cliente_id')
                     
-                    tbody = ""
 
                     tbody = ""
                     for credito in context['creditos']:
@@ -578,12 +581,14 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             dt_credito__gte=data_inicio, 
             dt_credito__lte=data_fim,
         ).values(
-            'id_vendedor', 'vendedor',
+            'id_vendedor', 'vendedor'
         ).annotate(
             total_repasses_retidos=Coalesce(
                 Subquery(
                     RepasseRetido.objects.filter(
-                        cliente_id=OuterRef('id_vendedor')
+                        cliente_id=OuterRef('id_vendedor'),
+                        dt_rep_retido__gte=data_inicio,
+                        dt_rep_retido__lte=data_fim,
                     ).values('cliente_id')
                     .annotate(total=Sum('vlr_rep_retido'))
                     .values('total'),
@@ -595,7 +600,9 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             total_credito=Coalesce(
                 Subquery(
                     Credito.objects.filter(
-                        cliente_id=OuterRef('id_vendedor')
+                        cliente_id=OuterRef('id_vendedor'),
+                        dt_creditado__gte=data_inicio,
+                        dt_creditado__lte=data_fim,
                     ).values('cliente_id')
                     .annotate(total=Sum('vl_credito'))
                     .values('total'),
@@ -603,11 +610,12 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
                 ),
                 Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
             ),
-            total_repasse=Sum('repasses'),
             total_taxa=Coalesce(
                 Subquery(
                     Taxa.objects.filter(
-                        cliente_id=OuterRef('id_vendedor')
+                        cliente_id=OuterRef('id_vendedor'),
+                        dt_taxa__gte=data_inicio,
+                        dt_taxa__lte=data_fim,
                     ).values('cliente_id')
                     .annotate(total=Sum('taxas'))
                     .values('total'),
@@ -618,14 +626,17 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
             total_debito=Coalesce(
                 Subquery(
                     Debito.objects.filter(
-                        cliente_id=OuterRef('id_vendedor')
+                        cliente_id=OuterRef('id_vendedor'),
+                        dt_debitado__gte=data_inicio,
+                        dt_debitado__lte=data_fim,
                     ).values('cliente_id')
                     .annotate(total=Sum('vl_debito'))
                     .values('total'),
                     output_field=DecimalField(max_digits=8, decimal_places=2)
                 ),
                 Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-            )
+            ),
+            total_repasse=Sum(F('repasses')) + F('total_credito') - F('total_debito') - F('total_taxa'),
         ).order_by('id_vendedor')
 
         request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
