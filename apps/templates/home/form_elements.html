@@ -53,11 +53,11 @@
                 <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
               </form>
               <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_cob' %}" role="button">Exportar Consulta .xlsx</a>
-              <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
+              <!-- <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
                 {% csrf_token %}
                 <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
                 <button type="submit" class="btn btn-success">Enviar Planilha</button>
-              </form>
+              </form> -->
               <div class="table-responsive">
                 <table id="table-cob" class="table table-hover">
                   <thead>

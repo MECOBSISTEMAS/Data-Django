@@ -44,20 +44,20 @@ load utils %} {% load humanize %} {% load static %}
                     <h4>Importação de planilhas</h4>
                   </div>
 									<div class="container">
-										<h4>Importar Planilha Cavalos COB</h4>
+										{% comment %} <h4>Importar Planilha Cavalos COB</h4>
 										<form action="{% url 'home:upload_planilha_cavalos_cob' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
 											{% csrf_token %}
 											<input type="file" name="docpicker">
 											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
-										</form>
+										</form> {% endcomment %}
 										<br>
-										<h4>Importar Planilha Cavalos CADCLIENTE</h4>
+										<h4>Importar Planilha CADCLIENTE</h4>
 										<form action="{% url 'home:upload_planilha_cad_clientes' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
                       {% csrf_token %}
 											<input type="file" name="docpicker">
 											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
 										</form>
-                    <h4>Importar Planilha Parcelas Taxas</h4>
+                    <h4>Importar Planilha Taxas</h4>
                     <form action="{% url 'home:upload_planilha_parcelas_taxas' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
 											{% csrf_token %}
 											<input type="file" name="docpicker">
