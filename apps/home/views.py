@@ -636,7 +636,7 @@ def filtrar_tabela_quinzenal(request, *args, **kwargs):
                 ),
                 Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
             ),
-            total_repasse=Sum(F('repasses')) + F('total_credito') - F('total_debito') - F('total_taxa'),
+            total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
         ).order_by('id_vendedor')
 
         request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
