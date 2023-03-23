@@ -229,7 +229,19 @@ def pages(request):
                     if credor == pagador:
                         return HttpResponse("Credor e Pagador não podem ser iguais")
                     if pagador:
-                        Debito.objects.create(cliente=Pessoas.objects.get(id=pagador), vl_debito=valor, dt_debitado=data_credito, descricao=descricao)
+                        try:
+                            pessoa_pagadora = Pessoas.objects.get(id=pagador)
+                        except Pessoas.DoesNotExist:
+                            return HttpResponse("Pessoa não encontrada, tem certeza que ela esta no banco de dados ?")
+                        except Pessoas.MultipleObjectsReturned:
+                            return HttpResponse("Mais de uma pessoa encontrada")
+                        Debito.objects.create(cliente=pessoa_pagadora, vl_debito=valor, dt_debitado=data_credito, descricao=descricao)
+                    try:
+                        pessoa = Pessoas.objects.get(id=credor)
+                    except Pessoas.DoesNotExist:
+                        return HttpResponse("Pessoa não encontrada, tem certeza que ela esta no banco de dados ?")
+                    except Pessoas.MultipleObjectsReturned:
+                        return HttpResponse("Mais de uma pessoa encontrada")
                     Credito.objects.create(cliente=Pessoas.objects.get(id=credor), vl_credito=valor, dt_creditado=data_credito, descricao=descricao)
                 elif 'filtrar-credito' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
@@ -288,8 +300,20 @@ def pages(request):
                     if credor == pagador:
                         return HttpResponse("Credor e Pagador não podem ser iguais")
                     if credor:
-                        Credito.objects.create(cliente=Pessoas.objects.get(id=credor), vl_credito=valor, dt_creditado=data_debito, descricao=descricao)
-                    Debito.objects.create(cliente=Pessoas.objects.get(id=pagador), vl_debito=valor, dt_debitado=data_debito, descricao=descricao)
+                        try:
+                            pessoa_credora = Pessoas.objects.get(id=credor)
+                        except Pessoas.DoesNotExist:
+                            return HttpResponse("Pessoa não encontrada, tem certeza que ela esta no banco de dados ?")
+                        except Pessoas.MultipleObjectsReturned:
+                            return HttpResponse("Mais de uma pessoa encontrada")    
+                        Credito.objects.create(cliente=pessoa_credora, vl_credito=valor, dt_creditado=data_debito, descricao=descricao)
+                    try:
+                        pessoa_pagadora = Pessoas.objects.get(id=pagador)
+                    except Pessoas.DoesNotExist:
+                        return HttpResponse("Pessoa não encontrada, tem certeza que ela esta no banco de dados ?")
+                    except Pessoas.MultipleObjectsReturned:
+                        return HttpResponse("Mais de uma pessoa encontrada")
+                    Debito.objects.create(cliente=pessoa_pagadora, vl_debito=valor, dt_debitado=data_debito, descricao=descricao)
                 elif 'filtrar-debito' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
