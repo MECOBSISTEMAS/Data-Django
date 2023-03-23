@@ -37,6 +37,7 @@ urlpatterns = [
     path("upload_planilha_cad_clientes", views.upload_planilha_cad_clientes, name="upload_planilha_cad_clientes"),
     path("upload_planilha_parcelas_taxas", views.upload_planilha_parcelas_taxas, name="upload_planilha_parcelas_taxas"),
     path("upload_planilha_dados_brutos", views.upload_planilha_dados_brutos, name="upload_planilha_dados_brutos"),
+    path('pagar_dado/<id>', views.pagar_dado, name="pagar_dado"),
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
 

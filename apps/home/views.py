@@ -1094,3 +1094,7 @@ def upload_planilha_dados_brutos(request):
         erros_html = "</ul>"
         return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> erros: {}".format(linhas, erros_html))
     return HttpResponse("HTTP REQUEST")
+
+
+def pagar_dado(request, *args, **kwargs):
+    return HttpResponse(f"{request = } {args = } {kwargs = }")
