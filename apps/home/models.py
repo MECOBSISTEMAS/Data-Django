@@ -217,6 +217,7 @@ class Dado(models.Model):
     repasses = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     comissao = models.CharField(_(""), max_length=128, blank=True, null=True)
     id_excel = models.IntegerField(_(""), blank=True, null=True)
+    #!abaixo estão os campos para identificar quais são os dados aprovados
 
     class Meta:
         verbose_name = _("Dado")
@@ -230,3 +231,15 @@ class Dado(models.Model):
         return reverse("Dado_detail", kwargs={"pk": self.pk})
 
 
+class RepasseAprovado(models.Model):
+    id_vendedor = models.CharField(_(""), max_length=128, blank=True, null=True)
+    def __str__(self):
+        pass
+
+    class Meta:
+        db_table = 'repasses_aprovados'
+        managed = True
+        verbose_name = 'RepasseAprovado'
+        verbose_name_plural = 'RepasseAprovados'
+        managed = True
+        ordering = ['id']

@@ -7,25 +7,19 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
-#import the function Cast
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, CharField, OuterRef, Subquery, Value
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value
 from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.db import connection
 from django.conf import settings
-import random
-#importe letras
 import tempfile
 import os
 import json
 import openpyxl
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
-
-
-
 
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
@@ -49,40 +43,6 @@ def index(request):
     return HttpResponse(html_template.render(context, request))
 
 
-def preencher_tabela_cob(data_inicio, data_fim):
-    with connection.cursor() as cursor:
-        cursor.execute(f"""
-select
-dado.id_vendedor as codigo_vendedor,
-dado.id_contrato,
-dado.vendedor,
-dado.id_comprador,
-dado.comprador,
-dado.parcelas_contrato,
-dado.vl_pago,
-dado.dt_vencimento,
-dado.dt_credito,
-dado.banco,
-dado.contrato,
-dado.evento,
-dado.deposito,
-dado.calculo,
-dado.taxas,
-dado.adi,
-dado.me,
-dado.op,
-dado.repasses,
-dado.comissao,
-sum(dado.repasses) as total_repasse,
-dado.id as dado_id
-from dado
-where dado.dt_credito between "{data_inicio}" and "{data_fim}"
-group by dado.id_contrato
-""")
-        result = cursor.fetchall()
-        return result
-
-
 @login_required(login_url="/login/")
 def pages(request):
     context = {}
@@ -96,23 +56,9 @@ def pages(request):
         if load_template == 'admin':
             return HttpResponseRedirect(reverse('admin:index'))
         context['segment'] = load_template
-
-        if load_template == 'tbl_comissoes_bootstrap.html':
-            with connection.cursor() as cursor:
-                cursor.execute("""
-                    SELECT SUM(vl_pago) as total_repasses, comissao, COUNT(*) as qtde
-                    FROM calculo_repasse
-                    WHERE comissao IS NOT NULL AND comissao != " -" AND comissao != "-" AND comissao != "            -" AND comissao != " - "
-                    group by comissao""")
-                result = cursor.fetchall()
-                context['sql'] = result
-
-        elif load_template == 'tbl_bootstrap.html':
-            if request.method == 'POST':
-                pass
         
 
-        elif load_template == 'cad_clientes_table_bootstrap.html':
+        if load_template == 'cad_clientes_table_bootstrap.html':
             if request.method == 'POST':
                 if 'novo-cliente-cadastro' in request.POST:
                     cliente_id = request.POST.get('cliente_id')
@@ -218,6 +164,111 @@ def pages(request):
                             'repasses', 'comissao', 'total_repasse', 'id'))
                 request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
         
+        elif load_template == 'tbl_bootstrap.html':
+            if request.method == 'POST':
+                if 'filtrar-tabela-repasse-cliente' in request.POST:
+                    print('entrei no elif')
+                    #context:dict = dict()
+                    data_inicio = request.POST.get('data-inicio')
+                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+                    data_fim = request.POST.get('data-fim')
+                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    dados_dias = {}
+                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                        dados_dias[f'dia_{dia.day}'] = Sum(
+                            Case(
+                                When(dt_credito__day=dia.day, then=F('repasses')),
+                                default=0,
+                                output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
+                            ),
+                        )
+
+                    context['dias_de_consulta'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    context['dados_dias'] = dados_dias
+                    
+                    context['dados'] = Dado.objects.filter(
+                        dt_credito__gte=data_inicio, 
+                        dt_credito__lte=data_fim,
+                    ).values(
+                        'id_vendedor', 'vendedor'
+                    ).annotate(
+                        total_repasses_retidos=Coalesce(
+                            Subquery(
+                                RepasseRetido.objects.filter(
+                                    cliente_id=OuterRef('id_vendedor'),
+                                    dt_rep_retido__gte=data_inicio,
+                                    dt_rep_retido__lte=data_fim,
+                                ).values('cliente_id')
+                                .annotate(total=Sum('vlr_rep_retido'))
+                                .values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+                        ),
+                        **dados_dias,
+                        total_credito=Coalesce(
+                            Subquery(
+                                Credito.objects.filter(
+                                    cliente_id=OuterRef('id_vendedor'),
+                                    dt_creditado__gte=data_inicio,
+                                    dt_creditado__lte=data_fim,
+                                ).values('cliente_id')
+                                .annotate(total=Sum('vl_credito'))
+                                .values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+                        ),
+                        total_taxa=Coalesce(
+                            Subquery(
+                                Taxa.objects.filter(
+                                    cliente_id=OuterRef('id_vendedor'),
+                                    dt_taxa__gte=data_inicio,
+                                    dt_taxa__lte=data_fim,
+                                ).values('cliente_id')
+                                .annotate(total=Sum('taxas'))
+                                .values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+                        ),
+                        total_debito=Coalesce(
+                            Subquery(
+                                Debito.objects.filter(
+                                    cliente_id=OuterRef('id_vendedor'),
+                                    dt_debitado__gte=data_inicio,
+                                    dt_debitado__lte=data_fim,
+                                ).values('cliente_id')
+                                .annotate(total=Sum('vl_debito'))
+                                .values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+                        ),
+                        total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
+                    ).order_by('id_vendedor')
+
+                    request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
+                    #!request.session['dados_dias'] = json.dumps(dados_dias, cls=CustomJSONEncoder), por algum motivo isso esta dando erro no Sum
+
+                    tbody = "<tr>"
+                    for dado in context['dados']:
+                        tbody += '<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="{% url "home:aprovar_repasse"  %}">Aprovar Repasse</a></td>'
+                        tbody += f"<td>{dado['id_vendedor']}</td>"
+                        tbody += f"<td>{dado['vendedor']}</td>"
+                        tbody += f"<td>{dado['total_repasses_retidos']}</td>"
+                        for dia in dados_dias:
+                            tbody += f"<td>{dado[dia]}</td>"
+                        tbody += f"<td>{dado['total_credito']}</td>"
+                        tbody += f"<td>{dado['total_taxa']}</td>"
+                        tbody += f"<td>{dado['total_debito']}</td>"
+                        tbody += f"<td>{dado['total_repasse']}</td>"
+                        tbody += "</tr>"
+                    context['tbody'] = tbody
+                    #return render(request, 'home/tbl_bootstrap.html', context=context)
+        
         elif load_template == 'tbl_credito.html':
             if request.method == 'POST':
                 if 'novo-credito' in request.POST:
@@ -286,7 +337,6 @@ def pages(request):
                         tbody += "</tr>"
                     context['tbody'] = tbody
                         
-                            
 
                     
         elif load_template == 'tbl_debito.html':
@@ -474,219 +524,22 @@ def pages(request):
         return HttpResponse(html_template.render(context, request))
 
     except template.TemplateDoesNotExist:
+        pass
 
-        html_template = loader.get_template('home/page-404.html')
-        return HttpResponse(html_template.render(context, request))
+        """ html_template = loader.get_template('home/page-404.html')
+        return HttpResponse(html_template.render(context, request)) """
 
     """ except:
         html_template = loader.get_template('home/page-500.html')
         return HttpResponse(html_template.render(context, request)) """
 
 
-def consulta_por_data(request):
-    context: dict = {}
-    if request.method == 'POST':
-        data_inicio = request.POST.get('data-inicio')  # 2022-08-01:str
-        data_fim = request.POST.get('data-fim')  # 2022-08-21:str
-        date_data_inicio = datetime.strptime(data_inicio, '%Y-%m-%d').date()
-        date_date_fim = datetime.strptime(data_fim, '%Y-%m-%d').date()
-        #selecione todos os contratos em que as suas parcelas estejam dentro do intervalo de datas
-        #contratos = Contratos.objects.filter(parcelas__dt_credito__range=(date_data_inicio, date_date_fim))[:30]
-        contratos = Contratos.objects.filter(
-            parcelas__dt_credito__gte=date_data_inicio, parcelas__dt_credito__lte=date_date_fim)[:100]
-        parcelas = ContratoParcelas.objects.filter(
-            dt_credito__gte=date_data_inicio, dt_credito__lte=date_date_fim)[:100]
-        # Cannot filter a query once a slice has been taken.
-        #parcelas = contratos.filter(dt_credito__gte=date_data_inicio, dt_credito__lte=date_date_fim)
-
-        context = {'contratos': contratos, 'parcelas': parcelas}
-
-        return render(request, 'home/tbl_bootstrap.html', context=context)
-    return HttpResponse('<h1>GET</h1>')
 
 
-def criar_cad_cliente(request):
-    context = {}
-    """ Aplicar os calculos da planilha aqui """
-    if request.method == "POST":
-        return HttpResponse('<h1>POST</h1>')
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT tp_contrato, status ,vl_boleto, vl_pago, vl_parcela, nu_parcelas, dados_arquivo_retorno.dt_credito, contrato_parcelas.dt_credito FROM dados_arquivo_retorno, contratos, contrato_parcelas LIMIT 10")
-        result = cursor.fetchall()
-        context['sql'] = result
-    return HttpResponse('<h1>GET, {}</h1>'.format(context['sql']))
-
-def criar_novo_cadastro_de_credito_e_debito(request, *args, **kwargs):
-    #pegue os valores vindo do form, eles são: credor, pagador, valor, data-credito e descricao
-    if request.method == 'POST':
-        credor = request.POST.get('credor')
-        pagador = request.POST.get('pagador')
-        valor = request.POST.get('valor')
-        data_credito = request.POST.get('data-credito')
-        #data_credito = datetime.strptime(request.POST.get('data-credito'), '%Y-%m-%d').date()
-        descricao = request.POST.get('descricao')
-        pagador = Pessoas.objects.get(id=pagador)
-        credor = Pessoas.objects.get(id=credor)
-        """ Debito.objects.create(
-            cliente = pagador,
-            vl_debito = valor,
-            dt_debitado = data_credito,
-            descricao = descricao,
-        ) """
-        """ Credito.objects.create(
-            cliente = credor,
-            vl_credito = valor,
-            dt_creditado = data_credito,
-            descricao = descricao,
-        ) """
-        return HttpResponseRedirect('/tbl_credito_cessao.html')
-    return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
-
-def criar_nova_taxa(request):
-    if request.method == 'POST':
-        try:
-            cliente = Pessoas.objects.get(id=request.POST.get('id-cliente'))
-        except Pessoas.DoesNotExist:
-            return HttpResponse("<h1>Pessoa não Encontrada</h1>")
-        except Pessoas.MultipleObjectsReturned:
-            return HttpResponse("<h1>Erro: Mais de uma pessoa encontrada</h1>")
-        taxas = request.POST.get('taxas')
-        tipo = request.POST.get('tipo')
-        descricao_taxa = request.POST.get('descricao-taxa')
-        data_taxa = request.POST.get('data-taxa')
-        """ Taxa.objects.create(
-            cliente = cliente,
-            tipo = tipo,
-            descricao = descricao_taxa,
-            taxas = taxas,
-            dt_taxa = data_taxa
-        ) """
-        return HttpResponseRedirect('/tbl_credito_cessao.html')
-    return HttpResponse("<h1>GET OR ANY REQUEST</h1>")
-
-def criar_novo_repasse_retido(request, *args, **kwargs):
-    if request.method == 'POST':
-        id_cliente = request.POST.get('id-cliente')
-        valor = request.POST.get('valor')
-        tipo = request.POST.get('tipo')
-        data_repasse_retido = request.POST.get('data-repasse-retido')
-        """ RepasseRetido.objects.create(
-            cliente=Pessoas.objects.get(id=id_cliente),
-            vlr_rep_retido=valor,
-            tipo = tipo,
-            dt_rep_retido = data_repasse_retido
-        ) """
-        return HttpResponseRedirect('/tbl_credito_cessao.html')
-    return HttpResponse(" <h1>GET</h1> ")
-
-def filtrar_tabela_quinzenal(request, *args, **kwargs):
-    context:dict = dict()
-    if request.method == 'POST':
-        data_inicio = request.POST.get('data-inicio')
-        data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
-        data_fim = request.POST.get('data-fim')
-        data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-        dados_dias = {}
-        for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
-            dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-            dados_dias[f'dia_{dia.day}'] = Sum(
-                Case(
-                    When(dt_credito__day=dia.day, then=F('repasses')),
-                    default=0,
-                    output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
-                ),
-            )
-
-        context['dias_de_consulta'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
-        #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-        context['dados_dias'] = dados_dias
-        
-        context['dados'] = Dado.objects.filter(
-            dt_credito__gte=data_inicio, 
-            dt_credito__lte=data_fim,
-        ).values(
-            'id_vendedor', 'vendedor'
-        ).annotate(
-            total_repasses_retidos=Coalesce(
-                Subquery(
-                    RepasseRetido.objects.filter(
-                        cliente_id=OuterRef('id_vendedor'),
-                        dt_rep_retido__gte=data_inicio,
-                        dt_rep_retido__lte=data_fim,
-                    ).values('cliente_id')
-                    .annotate(total=Sum('vlr_rep_retido'))
-                    .values('total'),
-                    output_field=DecimalField(max_digits=8, decimal_places=2)
-                ),
-                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-            ),
-            **dados_dias,
-            total_credito=Coalesce(
-                Subquery(
-                    Credito.objects.filter(
-                        cliente_id=OuterRef('id_vendedor'),
-                        dt_creditado__gte=data_inicio,
-                        dt_creditado__lte=data_fim,
-                    ).values('cliente_id')
-                    .annotate(total=Sum('vl_credito'))
-                    .values('total'),
-                    output_field=DecimalField(max_digits=8, decimal_places=2)
-                ),
-                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-            ),
-            total_taxa=Coalesce(
-                Subquery(
-                    Taxa.objects.filter(
-                        cliente_id=OuterRef('id_vendedor'),
-                        dt_taxa__gte=data_inicio,
-                        dt_taxa__lte=data_fim,
-                    ).values('cliente_id')
-                    .annotate(total=Sum('taxas'))
-                    .values('total'),
-                    output_field=DecimalField(max_digits=8, decimal_places=2)
-                ),
-                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-            ),
-            total_debito=Coalesce(
-                Subquery(
-                    Debito.objects.filter(
-                        cliente_id=OuterRef('id_vendedor'),
-                        dt_debitado__gte=data_inicio,
-                        dt_debitado__lte=data_fim,
-                    ).values('cliente_id')
-                    .annotate(total=Sum('vl_debito'))
-                    .values('total'),
-                    output_field=DecimalField(max_digits=8, decimal_places=2)
-                ),
-                Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-            ),
-            total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
-        ).order_by('id_vendedor')
-
-        request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
-        #!request.session['dados_dias'] = json.dumps(dados_dias, cls=CustomJSONEncoder), por algum motivo isso esta dando erro no Sum
-        
-        
-        tbody = "<tr>"
-        for dado in context['dados']:
-            tbody += f"<td>{dado['id_vendedor']}</td>"
-            tbody += f"<td>{dado['vendedor']}</td>"
-            tbody += f"<td>{dado['total_repasses_retidos']}</td>"
-            for dia in dados_dias:
-                tbody += f"<td>{dado[dia]}</td>"
-            tbody += f"<td>{dado['total_credito']}</td>"
-            tbody += f"<td>{dado['total_taxa']}</td>"
-            tbody += f"<td>{dado['total_debito']}</td>"
-            tbody += f"<td>{dado['total_repasse']}</td>"
-            tbody += "</tr>"
-        context['tbody'] = tbody
-        return render(request, 'home/tbl_bootstrap.html', context=context)
-    return HttpResponse(" <h1>GET OR ANY REQUEST</h1> ")
 
 def upload_planilha_quinzenal(request, *args, **kwargs):
     if request.method == 'POST':
         planilha = request.FILES.get('docpicker')
-        #arquivo esta recebendo com sucesso, azer os devidos tratamentos
         return HttpResponse(planilha)
     return HttpResponseRedirect('/tbl_credito_cessao.html')
 
@@ -723,11 +576,6 @@ def download_planilha_cob(request, *args, **kwargs):
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         
-        
-        """ .values('id_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador', 
-                            'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco', 
-                            'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op', 
-                            'repasses', 'comissao', 'total_repasse', 'id')) """
 
         lista_header_consulta_sql = ['id_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador',
                             'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco',
@@ -1096,5 +944,5 @@ def upload_planilha_dados_brutos(request):
     return HttpResponse("HTTP REQUEST")
 
 
-def pagar_dado(request, *args, **kwargs):
-    return HttpResponse(f"{request = } {args = } {kwargs = }")
+def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
+    return HttpResponseRedirect(reverse('home:index'))

@@ -19,7 +19,7 @@
             <div class="row align-items-center">
               <div class="col-md-12">
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Tabela para cálculo do repasse quinzenal</h5>
+                  <h5 class="m-b-10">Tabela para saber quais parcelas foram pagas</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
@@ -27,7 +27,7 @@
                   </li>
                   <li class="breadcrumb-item"><a href="#!">Tabelas & Formulários</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Quinzenal</a>
+                    <a href="javascript:">COB Pagas</a>
                   </li>
                 </ul>
               </div>
@@ -41,13 +41,12 @@
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
-                    <h5>Quinzenal</h5>
-                    <h6>Context: {{context.dados}}</h6>
-                    <form method="post">
+                    <h5>COB Parcelas Pagas</h5>
+                    <form method="POST">
                       {% csrf_token %}
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" >
                       data fim <input required type="date" id="data-fim" name="data-fim">
-                      <button type="submit" name="filtrar-tabela-repasse-cliente" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                      <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
                     <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a>
@@ -62,7 +61,6 @@
                       <table class="table table-hover" id="table-contratos">
                         <thead>
                           <tr>
-                            <th>Ações</th>
                             <th>Vendedor ID</th>
                             <th>Nome Vendedor</th>
                             <th>Valor Repasse Retido</th>
@@ -76,7 +74,6 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% comment %} <a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-primary btn-sm" href="{% url 'home:aprovar_repasse'  %}" role="button">Aprovar Repasse</a> {% endcomment %}
                           {{tbody|safe}}
                         </tbody>
                       </table>

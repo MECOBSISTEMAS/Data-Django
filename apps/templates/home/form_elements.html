@@ -62,7 +62,6 @@
                 <table id="table-cob" class="table table-hover">
                   <thead>
                     <tr>
-                      <th>Ações</th>
                       <th>Vendedor ID</th>
                       <th>Contrato ID</th>
                       <th>Vendedor</th>
@@ -90,7 +89,6 @@
                   <tbody>
                     {% for querie in sql %}
                     <tr>
-                      <th><a name="pagar" id="pagar" class="btn btn-success btn-sm" href="{% url 'home:pagar_dado' querie.id %}" role="button">Pagar</a></th>
                       <th>{{querie.id_vendedor}}</th>
                       <th>{{querie.id_contrato}}</th>
                       <td>{{querie.vendedor}}</td>
