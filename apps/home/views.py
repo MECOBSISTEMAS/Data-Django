@@ -34,7 +34,7 @@ class CustomJSONEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-def pegar_pessoa(pessoa_id:int|str) -> Pessoas|HttpResponse:
+def pegar_pessoa(pessoa_id):
     try:
         pessoa = Pessoas.objects.get(id=pessoa_id)
     except Exception as e:
