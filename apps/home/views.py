@@ -863,6 +863,8 @@ def upload_planilha_dados_brutos(request):
         wb = openpyxl.load_workbook(planilha)
         cob = wb.active
         linhas_nulas = 0
+        dados_modificados = 0
+        dados_criados = 0
         linhas = 0
         erros:list[str] = []
         for row in cob.iter_rows(values_only=True):
@@ -898,15 +900,15 @@ def upload_planilha_dados_brutos(request):
             id_excel = row[21]
             
             try:
-                dado = Dado.objects.get(id_vendedor=vendedor_id, id_contrato=contrato_id, comprador=comprador, vl_pago=valor)
+                dado = Dado.objects.get(id_vendedor=vendedor_id, id_contrato=contrato_id,nu_parcela=parcela_paga, comprador=comprador, vl_pago=valor, contrato=contrato, evento=evento)
                 """ altere todos os dados para a atual linha, exceto os id_vendedor=vendedor_id, id_contrato=contrato_id, comprador=comprador, vl_pago=valor """
-                dado.nu_parcela = parcela_paga
+                #dado.nu_parcela = parcela_paga
                 dado.parcelas_contrato = parcelas_contrato
                 dado.dt_vencimento = data_vencimento
                 dado.dt_credito = data_credito
                 dado.banco = banco
-                dado.contrato = contrato
-                dado.evento = evento
+                #dado.contrato = contrato
+                #dado.evento = evento
                 dado.deposito = deposito
                 dado.calculo = calc
                 dado.taxas = taxas
@@ -915,6 +917,8 @@ def upload_planilha_dados_brutos(request):
                 dado.op = op
                 dado.repasses = repasses
                 dado.comissao = comissao
+                dado.save()
+                dados_modificados += 1
             except Dado.DoesNotExist:
                 Dado.objects.create(
                 id_vendedor=vendedor_id,
@@ -938,6 +942,7 @@ def upload_planilha_dados_brutos(request):
                 repasses=repasses,
                 comissao=comissao
             )
+                dados_criados += 1
             except Dado.MultipleObjectsReturned:
                 erros.append(f"Foi encontrado mais de um dado com os mesmos dados na linha {linhas}\n chaves primarias de busca são: id_vendedor={vendedor_id}, id_contrato={contrato_id}, comprador={comprador}, vl_pago={valor}")
             except Exception as e:
@@ -948,7 +953,7 @@ def upload_planilha_dados_brutos(request):
         for erro in erros:
             erros_html += f"<li>{erro}</li>"
         erros_html = "</ul>"
-        return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> erros: {}".format(linhas, erros_html))
+        return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> Dados Criados: {} <br> Dados Modificados : {} <br> erros: {}".format(linhas,dados_criados,dados_modificados, erros_html))
     return HttpResponse("HTTP REQUEST")
 
 
