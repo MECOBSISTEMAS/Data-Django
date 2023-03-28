@@ -27,7 +27,7 @@
                   </li>
                   <li class="breadcrumb-item"><a href="#!">Tabelas & Formulários</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">COB Pagas</a>
+                    <a href="javascript:">Repasses Aprovados</a>
                   </li>
                 </ul>
               </div>
@@ -41,7 +41,7 @@
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
-                    <h5>COB Parcelas Pagas</h5>
+                    <h5>Repasses Aprovados</h5>
                     <form method="POST">
                       {% csrf_token %}
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" >
@@ -49,7 +49,7 @@
                       <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
-                    <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a>
+                    {% comment %} <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a> {% endcomment %}
                     {% comment %} <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">
                       {% csrf_token %}
                       <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
@@ -61,12 +61,12 @@
                       <table class="table table-hover" id="table-contratos">
                         <thead>
                           <tr>
+                            <th>Ações</th>
                             <th>Vendedor ID</th>
                             <th>Nome Vendedor</th>
-                            <th>Valor Repasse Retido</th>
-                            {% for dia in dados_dias %}
-                              <th>{{dia}}</th>
-                            {% endfor %}
+                            <th>Data Consulta Inicial</th>
+                            <th>Data Consulta Final</th>
+                            <th>Total Repasse Retido</th>
                             <th>Creditos</th>
                             <th>Taxas</th>
                             <th>Debitos</th>
@@ -74,7 +74,20 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {{tbody|safe}}
+                          {% for repasse_aprovado in repasses_aprovados %}
+                            <tr>
+                              <th><a name="desaprovar-repasse" id="desaprovar-repasse" class="btn btn-danger btn-sm" href="{% url 'home:desaprovar_repasse' repasse_aprovado.id  %}" role="button">Desaprovar Repasse</a></th>
+                              <th>{{repasse_aprovado.cliente.id}}</th>
+                              <th>{{repasse_aprovado.cliente.nome}}</th>
+                              <th>{{repasse_aprovado.data_inicial|date:'d/m/y'}}</th>
+                              <th>{{repasse_aprovado.data_final|date:'d/m/y'}}</th>
+                              <th>{{repasse_aprovado.total_repasses_retidos}}</th>
+                              <th>{{repasse_aprovado.total_credito}}</th>
+                              <th>{{repasse_aprovado.total_taxa}}</th>
+                              <th>{{repasse_aprovado.total_debito}}</th>
+                              <th>{{repasse_aprovado.total_repasse}}</th>
+                            </tr>
+                          {% endfor %}
                         </tbody>
                       </table>
                     </div>

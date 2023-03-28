@@ -7,13 +7,12 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max
 from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
-from django.db import connection
-from django.conf import settings
+import ast
 import tempfile
 import os
 import json
@@ -24,7 +23,7 @@ from openpyxl.utils import get_column_letter
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado
+from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado, RepasseAprovado
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -34,6 +33,13 @@ class CustomJSONEncoder(json.JSONEncoder):
             return obj.strftime('%Y-%m-%d')
         return super().default(obj)
 
+
+def pegar_pessoa(pessoa_id:int|str) -> Pessoas|HttpResponse:
+    try:
+        pessoa = Pessoas.objects.get(id=pessoa_id)
+    except Exception as e:
+        return HttpResponse('Pessoa não encontrada, erro: ' + str(e))
+    return pessoa
 
 @login_required(login_url="/login/")
 def index(request):
@@ -45,7 +51,7 @@ def index(request):
 
 @login_required(login_url="/login/")
 def pages(request):
-    context = {}
+    context = {'teste':'teste'}
 
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
@@ -167,8 +173,6 @@ def pages(request):
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
                 if 'filtrar-tabela-repasse-cliente' in request.POST:
-                    print('entrei no elif')
-                    #context:dict = dict()
                     data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
@@ -191,8 +195,9 @@ def pages(request):
                     context['dados'] = Dado.objects.filter(
                         dt_credito__gte=data_inicio, 
                         dt_credito__lte=data_fim,
+                        repasse_aprovado=False,
                     ).values(
-                        'id_vendedor', 'vendedor'
+                        'id_vendedor', 'vendedor', id_dado=Max('id')
                     ).annotate(
                         total_repasses_retidos=Coalesce(
                             Subquery(
@@ -255,7 +260,7 @@ def pages(request):
 
                     tbody = "<tr>"
                     for dado in context['dados']:
-                        tbody += '<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="{% url "home:aprovar_repasse"  %}">Aprovar Repasse</a></td>'
+                        tbody += '<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="/aprovar_repasse/{}/{}/{}">Aprovar Repasse</a></td>'.format(dado,data_inicio,data_fim)
                         tbody += f"<td>{dado['id_vendedor']}</td>"
                         tbody += f"<td>{dado['vendedor']}</td>"
                         tbody += f"<td>{dado['total_repasses_retidos']}</td>"
@@ -337,7 +342,10 @@ def pages(request):
                         tbody += "</tr>"
                     context['tbody'] = tbody
                         
-
+        elif load_template == 'tbl_repasses_aprovados.html':
+            if request.method == 'POST':
+                pass
+            context['repasses_aprovados'] = RepasseAprovado.objects.all()
                     
         elif load_template == 'tbl_debito.html':
             if request.method == 'POST':
@@ -945,4 +953,42 @@ def upload_planilha_dados_brutos(request):
 
 
 def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
-    return HttpResponseRedirect(reverse('home:index'))
+    dados_consultados_string = kwargs.get('dados_consultados')
+    #dados_consultados_dict = ast.literal_eval(dados_consultados_string)
+    data_incial = kwargs.get('data_inicial')
+    data_final = kwargs.get('data_final')
+    dados_consultados_string = dados_consultados_string.replace("Decimal('", "'").replace("')", "'")
+    dados_consultados_dict = ast.literal_eval(dados_consultados_string)
+    
+    
+    try:
+        cliente = Pessoas.objects.get(id=dados_consultados_dict.get('id_vendedor'))
+    except Pessoas.DoesNotExist:
+        cliente = Pessoas.objects.create(id=dados_consultados_dict.get('id_vendedor'), nome=dados_consultados_dict.get('vendedor'))
+    except Pessoas.MultipleObjectsReturned:
+        return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {dados_consultados_dict.get('id_vendedor')}")
+    
+    dados = Dado.objects.filter(id_vendedor=dados_consultados_dict.get('id_vendedor'), dt_credito__range=(data_incial, data_final))
+    repasse_aprovado = RepasseAprovado.objects.create(
+        cliente=cliente,
+        total_repasses_retidos=dados_consultados_dict.get('total_repasses_retidos'),
+        total_credito=dados_consultados_dict.get('total_credito'),
+        total_debito=dados_consultados_dict.get('total_debito'),
+        total_taxa=dados_consultados_dict.get('total_taxa'),
+        total_repasse=dados_consultados_dict.get('total_repasse'),
+        data_inicial=data_incial,
+        data_final=data_final,
+    )
+    for dado in dados:
+        dado.repasse_aprovado = True
+        dado.save()
+        repasse_aprovado.dado.add(dado)
+    return HttpResponseRedirect('/tbl_bootstrap.html')
+
+def desaprovar_repasse(request, *args, **kwargs):
+    repasse_aprovado = RepasseAprovado.objects.get(id=kwargs.get('repasse_aprovado_id'))
+    for dado in repasse_aprovado.dado.all():
+        dado.repasse_aprovado = False
+        dado.save()
+    repasse_aprovado.delete()
+    return HttpResponseRedirect('/tbl_repasses_aprovados.html')

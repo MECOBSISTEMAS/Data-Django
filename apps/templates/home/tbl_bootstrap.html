@@ -42,7 +42,7 @@
                 <div class="card">
                   <div class="card-header">
                     <h5>Quinzenal</h5>
-                    <h6>Context: {{context.dados}}</h6>
+                    {% comment %} <h6>{{dados}}</h6> {% endcomment %}
                     <form method="post">
                       {% csrf_token %}
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" >

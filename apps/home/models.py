@@ -218,6 +218,8 @@ class Dado(models.Model):
     comissao = models.CharField(_(""), max_length=128, blank=True, null=True)
     id_excel = models.IntegerField(_(""), blank=True, null=True)
     #!abaixo estão os campos para identificar quais são os dados aprovados
+    repasse_aprovado = models.BooleanField(_("Essa opção serve para identificar se determinado dado foi aprovado para repasse"),
+                                           default=False, blank=True, null=True)
 
     class Meta:
         verbose_name = _("Dado")
@@ -232,9 +234,17 @@ class Dado(models.Model):
 
 
 class RepasseAprovado(models.Model):
-    id_vendedor = models.CharField(_(""), max_length=128, blank=True, null=True)
+    cliente = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
+    dado = models.ManyToManyField(Dado, blank=True)
+    total_repasses_retidos = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    total_credito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    total_debito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    total_taxa = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    total_repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    data_inicial = models.DateField(_(""), blank=True, null=True)
+    data_final = models.DateField(_(""), blank=True, null=True)
     def __str__(self):
-        pass
+        return f'{self.cliente}, {self.total_repasse}'
 
     class Meta:
         db_table = 'repasses_aprovados'
