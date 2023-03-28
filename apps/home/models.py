@@ -251,5 +251,25 @@ class RepasseAprovado(models.Model):
         managed = True
         verbose_name = 'RepasseAprovado'
         verbose_name_plural = 'RepasseAprovados'
-        managed = True
         ordering = ['id']
+
+class ParcelaTaxa(models.Model):
+    id_contrato = models.IntegerField(_(""), blank=True, null=True)
+    comprador = models.CharField(_("Nome do comprador "), max_length=128, blank=True, null=True)
+    vendedor = models.CharField(_("Nome do vendedor "), max_length=128, blank=True, null=True)
+    parcela = models.CharField(_(""), max_length=128, blank=True, null=True)
+    dt_vencimento = models.DateField(_(""), blank=True, null=True)
+    valor = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    tcc = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    desconto_total = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    honorarios = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    
+    def __str__(self):
+        return f'{self.id_contrato}, {self.comprador}'
+
+    class Meta:
+        db_table = 'parcela_taxa'
+        managed = True
+        verbose_name = 'ParcelaTaxa'
+        verbose_name_plural = 'ParcelaTaxas'
