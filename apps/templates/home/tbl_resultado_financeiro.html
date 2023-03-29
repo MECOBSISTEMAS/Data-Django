@@ -2,6 +2,7 @@
 {% block title %} UI Forms {% endblock %}
 {% load widget_tweaks %}
 {% load utils %}
+{% load humanize %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -19,7 +20,7 @@
               <div class="col-md-12">
                 
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Taxa</h5>
+                  <h5 class="m-b-10">Resultado Financeiro</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
@@ -29,7 +30,7 @@
                     <a href="javascript:">Tabelas & Formularios</a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Taxa</a>
+                    <a href="javascript:">Resultado Financeiro</a>
                   </li>
                 </ul>
               </div>
@@ -40,7 +41,7 @@
         <div class="col-xl-12">
           <div class="card">
             <div class="card-header">
-              <h5>Taxas</h5>
+              <h5>Resultado Financeiro</h5>
               <form action="" method="post">
                 {% csrf_token %}
                 <p>
@@ -63,14 +64,6 @@
                   </button>
                 </p>
               </form>
-              <form method="POST" class="form w-100">
-                {% csrf_token %}
-                <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-                <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Taxado">
-                <input required type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
-                <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
-                <button class="btn btn-warning" type="submit" name="nova-taxa">Nova Taxa</button>
-              </form>
             </div>
 
             <div class="card-block table-border-style">
@@ -78,19 +71,30 @@
                 <table class="table table-hover" id="table-taxas">
                   <thead>
                     <tr>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      {% for dia in taxas_dias %}
-                      <th>{{dia}}</th>
-                      {% endfor %}
-                      <th>Total Taxa</th>
+                      <th>Contrato ID</th>
+                      <th>Comprador </th>
+                      <th>Vendedor</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody|safe}}
+                    {% for valor_financeiro_filtro in valores_financeiro_filtro %}
+                    <tr>
+                      <th>{{valor_financeiro_filtro.id_contrato}}</th>
+                      <th>{{valor_financeiro_filtro.comprador}}</th>
+                      <th>{{valor_financeiro_filtro.vendedor}}</th>
+                    </tr>
+                    {% endfor %}
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h5>Valores: R$ {{soma_valores_financeiro.total_valor|intcomma}}</h5>
+              <h5>TCC's: R$ {{soma_valores_financeiro.total_tcc|intcomma}}</h5>
+              <h5>Desconto Totais: R$ {{soma_valores_financeiro.total_desconto|intcomma}}</h5>
+              <h5>Honorarios: R$ {{soma_valores_financeiro.total_honorarios|intcomma}}</h5>
+              <h5>Repasses: R$ {{soma_valores_financeiro.total_repasse|intcomma}}</h5>
             </div>
           </div>
         </div>    

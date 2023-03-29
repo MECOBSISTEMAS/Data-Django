@@ -520,13 +520,27 @@ def pages(request):
                         tbody += "</tr>"
                     context['tbody'] = tbody
 
+        elif load_template == 'tbl_resultado_financeiro.html':
+            if request.method == 'POST':
+                data_inicio = request.POST.get('data-inicio')
+                data_fim = request.POST.get('data-fim')
+                context['soma_valores_financeiro'] = ParcelaTaxa.objects.filter(
+                    dt_vencimento__range=[data_inicio, data_fim]
+                ).aggregate(
+                    total_valor=Sum(Coalesce('valor', 0, output_field=DecimalField(decimal_places=2, max_digits=12))),
+                    total_tcc=Sum(Coalesce('tcc', 0,output_field=DecimalField(decimal_places=2, max_digits=12))),
+                    total_desconto=Sum(Coalesce('desconto_total', 0,output_field=DecimalField(decimal_places=2, max_digits=12))),
+                    total_honorarios=Sum(Coalesce('honorarios', 0,output_field=DecimalField(decimal_places=2, max_digits=12))),
+                    total_repasse=Sum(Coalesce('repasse', 0,output_field=DecimalField(decimal_places=2, max_digits=12))),
+                )
+                context['valores_financeiro_filtro'] = ParcelaTaxa.objects.filter(dt_vencimento__range=[data_inicio, data_fim])
+
         elif load_template == 'tbl_parcela_taxas.html':
             if request.method == 'POST':
                 if 'filtrar-parcela-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
                     context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim))
-                    print(data_inicio, data_fim)
         
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
