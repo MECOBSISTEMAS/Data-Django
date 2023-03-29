@@ -856,18 +856,22 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
             except Exception as e:
                 erros.append(f"Erro na linha {linhas}, {e}")
-            ParcelaTaxa.objects.create(
-                id_contrato=contrato_parcelas_id,
-                comprador=comprador,
-                vendedor=vendedor,
-                parcela=parcela,
-                dt_vencimento=dt_vencimento,
-                valor=valor,
-                tcc=tcc,
-                desconto_total=desconto_total,
-                honorarios=hon,
-                repasse=repasse,
-            )
+            try:
+                parcela_taxa = ParcelaTaxa.objects.get(id_contrato=contrato_parcelas_id, comprador=comprador, vendedor=vendedor, valor=valor)
+                #!modificar todos os outros campos caso seja encontrado no aquivo e salvalo
+            except ParcelaTaxa.DoesNotExist:    
+                ParcelaTaxa.objects.create(
+                    id_contrato=contrato_parcelas_id,
+                    comprador=comprador,
+                    vendedor=vendedor,
+                    parcela=parcela,
+                    dt_vencimento=dt_vencimento,
+                    valor=valor,
+                    tcc=tcc,
+                    desconto_total=desconto_total,
+                    honorarios=hon,
+                    repasse=repasse,
+                )
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
