@@ -23,7 +23,7 @@ from openpyxl.utils import get_column_letter
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
-from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado, RepasseAprovado
+from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado, RepasseAprovado, ParcelaTaxa
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -520,7 +520,14 @@ def pages(request):
                         tbody += "</tr>"
                     context['tbody'] = tbody
 
-                
+        elif load_template == 'tbl_parcela_taxas.html':
+            if request.method == 'POST':
+                if 'filtrar-parcela-taxa' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')
+                    data_fim = request.POST.get('data-fim')
+                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim))
+                    print(data_inicio, data_fim)
+        
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
                 pass
@@ -849,6 +856,18 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
             except Exception as e:
                 erros.append(f"Erro na linha {linhas}, {e}")
+            ParcelaTaxa.objects.create(
+                id_contrato=contrato_parcelas_id,
+                comprador=comprador,
+                vendedor=vendedor,
+                parcela=parcela,
+                dt_vencimento=dt_vencimento,
+                valor=valor,
+                tcc=tcc,
+                desconto_total=desconto_total,
+                honorarios=hon,
+                repasse=repasse,
+            )
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))

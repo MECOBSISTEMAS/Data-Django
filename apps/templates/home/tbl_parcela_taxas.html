@@ -40,7 +40,7 @@
         <div class="col-xl-12">
           <div class="card">
             <div class="card-header">
-              <h5>Taxas</h5>
+              <h5>Parcelas Taxas</h5>
               <form action="" method="post">
                 {% csrf_token %}
                 <p>
@@ -52,7 +52,7 @@
                   />
                   até
                   <input type="date" name="data-fim" id="data-fim" />
-                  <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
+                  <button class="btn btn-primary" type="submit" name="filtrar-parcela-taxa">Filtrar</button>
                   <button
                     type="button"
                     name=""
@@ -63,14 +63,6 @@
                   </button>
                 </p>
               </form>
-              <form method="POST" class="form w-100">
-                {% csrf_token %}
-                <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-                <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Taxado">
-                <input required type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
-                <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
-                <button class="btn btn-warning" type="submit" name="nova-taxa">Nova Taxa</button>
-              </form>
             </div>
 
             <div class="card-block table-border-style">
@@ -78,16 +70,33 @@
                 <table class="table table-hover" id="table-taxas">
                   <thead>
                     <tr>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      {% for dia in taxas_dias %}
-                      <th>{{dia}}</th>
-                      {% endfor %}
-                      <th>Total Taxa</th>
+                      <th>ID Contrato</th>
+                      <th>Comprador</th>
+                      <th>Vendedor</th>
+                      <th>Parcela</th>
+                      <th>Data Vencimento</th>
+                      <th>Valor</th>
+                      <th>TCC</th>
+                      <th>Desconto Total</th>
+                      <th>Hnorarios</th>
+                      <th>Repasse</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody|safe}}
+                    {% for parcela_taxa in parcelas_taxas %}
+                      <tr>
+                        <td>{{parcela_taxa.id_contrato}}</td>
+                        <td>{{parcela_taxa.comprador}}</td>
+                        <td>{{parcela_taxa.vendedor}}</td>
+                        <td>{{parcela_taxa.parcela}}</td>
+                        <td>{{parcela_taxa.dt_vencimento}}</td>
+                        <td>{{parcela_taxa.valor}}</td>
+                        <td>{{parcela_taxa.tcc}}</td>
+                        <td>{{parcela_taxa.desconto_total}}</td>
+                        <td>{{parcela_taxa.honorarios}}</td>
+                        <td>{{parcela_taxa.repasse}}</td>
+                      </tr>
+                    {% endfor %}
                   </tbody>
                 </table>
               </div>
