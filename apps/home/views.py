@@ -92,7 +92,7 @@ def pages(request):
                         
             context['cad_clientes'] = CadCliente.objects.all()
             
-        elif load_template == 'tbl_julia_bootstrap.html':
+        elif load_template == 'tbl_prestacao_diaria.html':
             if request.method == 'POST':
                 bancos = request.POST.get('bancos')
                 data = request.POST.get('data')
