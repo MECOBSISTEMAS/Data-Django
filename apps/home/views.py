@@ -21,6 +21,8 @@ import openpyxl
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
 
+from . import funcoes
+
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
@@ -566,14 +568,54 @@ def pages(request):
                 tbody = ""
                 for valor_financeiro in context['valores_financeiros']:
                     tbody += "<tr>"
-                    tbody += f"<td>{valor_financeiro['id_contrato']}</td>"
-                    tbody += f"<td>{valor_financeiro['comprador']}</td>"
-                    tbody += f"<td>{valor_financeiro['vendedor']}</td>"
                     for dia in financeiro_dias:
                         valor_financeiro_dia = valor_financeiro[f'{dia}']
                         tbody += f"<td>{valor_financeiro_dia}</td>"
                     tbody += "</tr>"
-                context['tbody'] = tbody
+                context['tbody_repasses'] = tbody
+                
+                context['tcc_filtro'] = ParcelaTaxa.objects.filter(
+                    dt_vencimento__range=[data_inicio, data_fim], tcc__isnull=False
+                    ).values('id_contrato', 'comprador', 'vendedor').annotate(
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'tcc'),
+                    )
+                tbody = ""
+                for tcc in context['tcc_filtro']:
+                    tbody += "<tr>"
+                    for dia in financeiro_dias:
+                        tcc_dia = tcc[f'{dia}']
+                        tbody += f"<td>{tcc_dia}</td>"
+                    tbody += "</tr>"
+                context['tbody_tcc'] = tbody
+                
+                context['desconto_total_filtro'] = ParcelaTaxa.objects.filter(
+                    dt_vencimento__range=[data_inicio, data_fim], desconto_total__isnull=False
+                    ).values('id_contrato', 'comprador', 'vendedor').annotate(
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'desconto_total'),
+                    )
+                tbody = ""
+                for desconto_total in context['desconto_total_filtro']:
+                    tbody += "<tr>"
+                    for dia in financeiro_dias:
+                        desconto_total_dia = desconto_total[f'{dia}']
+                        tbody += f"<td>{desconto_total_dia}</td>"
+                    tbody += "</tr>"
+                context['tbody_desconto_total'] = tbody
+                
+                context['honorarios_filtro'] = ParcelaTaxa.objects.filter(
+                    dt_vencimento__range=[data_inicio, data_fim], honorarios__isnull=False
+                    ).values('id_contrato', 'comprador', 'vendedor').annotate(
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'honorarios'),
+                    )
+                tbody = ""
+                for honorarios in context['honorarios_filtro']:
+                    tbody += "<tr>"
+                    for dia in financeiro_dias:
+                        honorarios_dia = honorarios[f'{dia}']
+                        tbody += f"<td>{honorarios_dia}</td>"
+                    tbody += "</tr>"
+                context['tbody_honorarios'] = tbody
+                    
 
         elif load_template == 'tbl_parcela_taxas.html':
             if request.method == 'POST':

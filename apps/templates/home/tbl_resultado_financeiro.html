@@ -67,24 +67,101 @@
             </div>
 
             <div class="card-block table-border-style">
+              <h4>Repasses</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-taxas">
+                <table class="table table-hover" id="table-repasses">
                   <thead>
                     <tr>
-                      <th>Contrato ID</th>
+                      {% comment %} <th>Contrato ID</th>
                       <th>Comprador </th>
-                      <th>Vendedor</th>
+                      <th>Vendedor</th> {% endcomment %}
                       {% for financeiro_dia in financeiro_dias %}
                       <th>{{financeiro_dia}}</th>
                       {% endfor %}
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody|safe}}}
+                    {{tbody_repasses|safe}}
                   </tbody>
                 </table>
               </div>
             </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TCC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_tcc|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>Desconto Totais</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-desconto-totais">
+                  <thead>
+                    <tr>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_desconto_total|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>Honorarios</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-honorarios">
+                  <thead>
+                    <tr>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_honorarios|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            {% comment %} <div class="card-block table-border-style">
+              <h4>Valores</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-valor">
+                  <thead>
+                    <tr>
+                      <th>Contrato ID</th>
+                      <th>Comprador </th>
+                      <th>Vendedor</th>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div> {% endcomment %}
 
             <div class="card-block table-border-style">
               <h5>Valores: R$ {{soma_valores_financeiro.total_valor|intcomma}}</h5>
@@ -107,7 +184,11 @@
 {% block javascripts %}
 <script>
   $(document).ready(function(){
-    $('#table-taxas').DataTable();
+    $('#table-repasses').DataTable();
+    $('#table-tcc').DataTable();
+    $('#table-desconto-totais').DataTable();
+    $('#table-honorarios').DataTable();
+    $('#table-valor').DataTable();
   })
 </script>
 {% endblock javascripts %}
