@@ -12,6 +12,7 @@ from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
+import random
 import ast
 import tempfile
 import os
@@ -68,6 +69,10 @@ def pages(request):
             if request.method == 'POST':
                 if 'novo-cliente-cadastro' in request.POST:
                     cliente_id = request.POST.get('cliente_id')
+                    
+                    nome = request.POST.get('nome')
+                    email = request.POST.get('email')
+                    
                     sim = request.POST.get('sim')
                     nao = request.POST.get('nao')
                     operacional = request.POST.get('operacional')
@@ -77,17 +82,23 @@ def pages(request):
                     evento = request.POST.get('evento') """
                     informar_repasse = request.POST.get('informar_repasse')
                     
-                    try:
-                        pessoa = Pessoas.objects.get(id=cliente_id)
-                    except Exception as e:
-                        return HttpResponse('Cliente não encontrado, erro: ' + str(e))
-                    if CadCliente.objects.filter(cliente_id=cliente_id).exists():
-                        return HttpResponse('Cliente já cadastrado')
+                    if nome and email:
+                        pessoa = Pessoas.objects.create(nome=nome, email=email)
+                        cliente_id = pessoa.id
+                    elif nome:
+                        pessoa = Pessoas.objects.create(nome=nome, email=f"{slugify(nome)}_{random.randint(9,9999)}@fakeemail.br")
+                        cliente_id = pessoa.id
+                    else:
+                        try:
+                            pessoa = Pessoas.objects.get(id=cliente_id)
+                        except Exception as e:
+                            return HttpResponse('Cliente não encontrado, erro: ' + str(e))
+                        if CadCliente.objects.filter(cliente_id=cliente_id).exists():
+                            return HttpResponse('Cliente já cadastrado')
                     CadCliente.objects.create(
                         vendedor = pessoa, sim=sim, nao=nao, 
                         operacional=operacional, tcc=tcc, 
-                        honorarios=honorarios, animal=animal, 
-                        evento=evento, informar_repasse=informar_repasse
+                        honorarios=honorarios, informar_repasse=informar_repasse
                     )
                         
             context['cad_clientes'] = CadCliente.objects.all()
