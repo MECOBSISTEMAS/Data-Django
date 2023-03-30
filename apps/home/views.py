@@ -524,6 +524,23 @@ def pages(request):
             if request.method == 'POST':
                 data_inicio = request.POST.get('data-inicio')
                 data_fim = request.POST.get('data-fim')
+                financeiro_dias = {}
+                for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+                    dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                    financeiro_dias[f'dia_{dia.day}'] = Sum(
+                        Case(
+                            When(dt_vencimento__day=dia.day, then=F('repasse')),
+                            default=0,
+                            output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
+                        ),
+                    )
+                context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+                context['financeiro_dias'] = financeiro_dias
+                context['valores_financeiros'] = ParcelaTaxa.objects.filter(
+                    dt_vencimento__range=[data_inicio, data_fim]
+                ).values('id_contrato', 'comprador', 'vendedor').annotate(
+                    **financeiro_dias,
+                )
                 context['soma_valores_financeiro'] = ParcelaTaxa.objects.filter(
                     dt_vencimento__range=[data_inicio, data_fim]
                 ).aggregate(
@@ -534,6 +551,18 @@ def pages(request):
                     total_repasse=Sum(Coalesce('repasse', 0,output_field=DecimalField(decimal_places=2, max_digits=12))),
                 )
                 context['valores_financeiro_filtro'] = ParcelaTaxa.objects.filter(dt_vencimento__range=[data_inicio, data_fim])
+                
+                tbody = ""
+                for valor_financeiro in context['valores_financeiros']:
+                    tbody += "<tr>"
+                    tbody += f"<td>{valor_financeiro['id_contrato']}</td>"
+                    tbody += f"<td>{valor_financeiro['comprador']}</td>"
+                    tbody += f"<td>{valor_financeiro['vendedor']}</td>"
+                    for dia in financeiro_dias:
+                        valor_financeiro_dia = valor_financeiro[f'{dia}']
+                        tbody += f"<td>{valor_financeiro_dia}</td>"
+                    tbody += "</tr>"
+                context['tbody'] = tbody
 
         elif load_template == 'tbl_parcela_taxas.html':
             if request.method == 'POST':

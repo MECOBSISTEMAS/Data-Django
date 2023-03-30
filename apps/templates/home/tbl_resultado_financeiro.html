@@ -74,16 +74,13 @@
                       <th>Contrato ID</th>
                       <th>Comprador </th>
                       <th>Vendedor</th>
+                      {% for financeiro_dia in financeiro_dias %}
+                      <th>{{financeiro_dia}}</th>
+                      {% endfor %}
                     </tr>
                   </thead>
                   <tbody>
-                    {% for valor_financeiro_filtro in valores_financeiro_filtro %}
-                    <tr>
-                      <th>{{valor_financeiro_filtro.id_contrato}}</th>
-                      <th>{{valor_financeiro_filtro.comprador}}</th>
-                      <th>{{valor_financeiro_filtro.vendedor}}</th>
-                    </tr>
-                    {% endfor %}
+                    {{tbody|safe}}}
                   </tbody>
                 </table>
               </div>
