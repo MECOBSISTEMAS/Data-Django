@@ -73,8 +73,8 @@ def pages(request):
                     operacional = request.POST.get('operacional')
                     tcc = request.POST.get('tcc')
                     honorarios = request.POST.get('honorarios')
-                    animal = request.POST.get('animal')
-                    evento = request.POST.get('evento')
+                    """ animal = request.POST.get('animal')
+                    evento = request.POST.get('evento') """
                     informar_repasse = request.POST.get('informar_repasse')
                     
                     try:
