@@ -434,7 +434,8 @@ def pages(request):
                     valor = request.POST.get('valor')
                     data_taxa = request.POST.get('data-taxa')
                     descricao = request.POST.get('descricao')
-                    Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao)
+                    tipo = request.POST.get('tipo')
+                    Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao, tipo=tipo)
                 if 'filtrar-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
