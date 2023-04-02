@@ -90,11 +90,19 @@
                           <option value="bradesco" name="banco">Bradesco</option>
                           <option value="unicred" name="banco">Unicred</option>
                         </select>
-                        <button class="btn btn-primary">Filtrar</button> 
+                        <button class="btn btn-primary" type="submit" name="filtrar-prestacao-diaria">Filtrar</button> 
                         <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
                       </p>
                     </form>
-                      <h6>Valor pago: R${{valores_pagos_honorarios.valores_pagos|intcomma}} | Honorários: R${{valores_pagos_honorarios.honorarios|intcomma}} <h3/>
+
+                      <h6>Valor pago: R${{valores_pagos_honorarios.valores_pagos|intcomma}} | Honorários: R${{valores_pagos_honorarios.honorarios|intcomma}} <h3/
+                    <form method="POST">
+                      {% csrf_token %}
+                      <button type="submit" name="exportar-xlsx" id="exportar-xlsx" class="btn btn-primary btn-sm">Exportar .xlsx</button>
+                      <button type="submit" name="exportar-pdf" id="exportar-pdf" class="btn btn-primary btn-sm">Exportar PDF</button>
+                    </form>
+                      <h6>Valor pago: R${{valores_pagos_honorarios.valores_pagos|intcomma}} | Honorarios: R${{valores_pagos_honorarios.honorarios|intcomma}} <h3/>
+>>>>>>> ecbf52d91199370ca5ca165e3b820b43296a48cc
                   </div>
                   <div class="card-block table-border-style">
                     <h5>Comissionistas do Mês</h5>
