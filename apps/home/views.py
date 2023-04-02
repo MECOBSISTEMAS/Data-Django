@@ -107,62 +107,67 @@ def pages(request):
             
         elif load_template == 'tbl_prestacao_diaria.html':
             if request.method == 'POST':
-                bancos = request.POST.get('bancos')
-                data = request.POST.get('data')
-                context['repasses_semanais'] = CadCliente.objects.filter(
-                     repasse_semanal=True,
-                 ).annotate(
-                     total_repasses=Coalesce(
-                         Subquery(
-                             Dado.objects.filter(
-                                dt_credito="2023-02-28",
-                                id_vendedor=OuterRef('vendedor_id')
-                             ).values('id_vendedor').annotate(
-                                soma_repasses=Sum('repasses')
-                             ).values('soma_repasses')
-                         ),
-                         0,
-                         output_field=DecimalField()
-                     )
-                 ).values('total_repasses', 'vendedor__nome', 'vendedor__id')
-                
-                context['repasses'] = (
-                    Dado.objects
-                    .filter(dt_credito=data, banco=str(bancos).upper())
-                    .values('id_contrato', 'vendedor')
-                    .annotate(
+                if 'exportar-xlsx' in request.POST:
+                    pass
+                if 'exportar-pdf' in request.POST:
+                    pass
+                if 'filtrar-prestacao-diaria' in request.POST:
+                    bancos = request.POST.get('bancos')
+                    data = request.POST.get('data')
+                    context['repasses_semanais'] = CadCliente.objects.filter(
+                        repasse_semanal=True,
+                    ).annotate(
+                        total_repasses=Coalesce(
+                            Subquery(
+                                Dado.objects.filter(
+                                    dt_credito="2023-02-28",
+                                    id_vendedor=OuterRef('vendedor_id')
+                                ).values('id_vendedor').annotate(
+                                    soma_repasses=Sum('repasses')
+                                ).values('soma_repasses')
+                            ),
+                            0,
+                            output_field=DecimalField()
+                        )
+                    ).values('total_repasses', 'vendedor__nome', 'vendedor__id')
+                    
+                    context['repasses'] = (
+                        Dado.objects
+                        .filter(dt_credito=data, banco=str(bancos).upper())
+                        .values('id_contrato', 'vendedor')
+                        .annotate(
+                            repasses=Sum('repasses')
+                        )
+                        .order_by('vendedor')
+                    )    
+                        
+                    context['comissoes'] = (
+                        Calculo_Repasse.objects
+                        .filter(dt_credito=data, banco=str(bancos).upper())
+                        .exclude(comissao=None)
+                        .values('comissao')
+                        .annotate(comissoes=Sum('op'))
+                        .distinct()#talvez remover
+                    )
+                        
+                    context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
+                        id_contrato__gt=12460).aggregate(
+                            valores_pagos=Sum('vl_pago'),
+                            honorarios=Sum('me')
+                        )
+                        
+                    context['comissionistas_do_mes'] = Dado.objects.filter(
+                        dt_credito=data,comissao__isnull=False
+                        ).values('comissao').annotate(comissoes=Sum('op'))
+                    
+                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
                         repasses=Sum('repasses')
                     )
-                    .order_by('vendedor')
-                )    
-                    
-                context['comissoes'] = (
-                    Calculo_Repasse.objects
-                    .filter(dt_credito=data, banco=str(bancos).upper())
-                    .exclude(comissao=None)
-                    .values('comissao')
-                    .annotate(comissoes=Sum('op'))
-                    .distinct()#talvez remover
-                )
-                    
-                context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                    id_contrato__gt=12460).aggregate(
-                        valores_pagos=Sum('vl_pago'),
-                        honorarios=Sum('me')
-                    )
-                    
-                context['comissionistas_do_mes'] = Dado.objects.filter(
-                    dt_credito=data,comissao__isnull=False
-                    ).values('comissao').annotate(comissoes=Sum('op'))
-                
-                context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
-                    repasses=Sum('repasses')
-                )
-                repasses_geral = context['repasses_geral']['repasses']
-                repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]) or 0)
-                repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
+                    repasses_geral = context['repasses_geral']['repasses']
+                    repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
+                    repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
 
-                context['repasses_geral_descontado'] = repasses_geral_descontado
+                    context['repasses_geral_descontado'] = repasses_geral_descontado
                 #context['repasses_geral_descontado'] = (float(context['repasses_geral']['repasses']) or 0) - (context['repasses_semanais_vendedores_totais'] or 0)
 
             
