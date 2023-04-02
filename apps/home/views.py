@@ -569,6 +569,7 @@ def pages(request):
                 tbody = ""
                 for valor_financeiro in context['valores_financeiros']:
                     tbody += "<tr>"
+                    #!tbody += f"<td>{valor_financeiro['id_contrato']}</td>"
                     for dia in financeiro_dias:
                         valor_financeiro_dia = valor_financeiro[f'{dia}']
                         tbody += f"<td>{valor_financeiro_dia}</td>"
@@ -623,7 +624,14 @@ def pages(request):
                 if 'filtrar-parcela-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
-                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim))
+                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim), aprovada=False)
+                    
+        elif load_template == 'tbl_taxas_aprovadas.html':
+            if request.method == 'POST':
+                if 'filtrar-parcela-taxa-aprovada' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')
+                    data_fim = request.POST.get('data-fim')
+                    context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio, data_fim) , aprovada=True)
         
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
@@ -728,9 +736,6 @@ def upload_planilha_cob(request, *args, **kwargs):
         #arquivo esta recebendo com sucesso, azer os devidos tratamentos
         return HttpResponse(planilha)
     return HttpResponseRedirect('/form_elements.html')
-
-def editar_boleto_avulso(request, *args, **kwargs):
-    return HttpResponse("<h1>FUNCIONOU</h1>")
 
 def upload_planilha_cavalos_cob(request, *args, **kwargs):
     if request.method == 'POST':
@@ -1076,7 +1081,6 @@ def upload_planilha_dados_brutos(request):
         return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> Dados Criados: {} <br> Dados Modificados : {} <br> erros: {}".format(linhas,dados_criados,dados_modificados, erros_html))
     return HttpResponse("HTTP REQUEST")
 
-
 def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
     dados_consultados_string = kwargs.get('dados_consultados')
     #dados_consultados_dict = ast.literal_eval(dados_consultados_string)
@@ -1117,3 +1121,12 @@ def desaprovar_repasse(request, *args, **kwargs):
         dado.save()
     repasse_aprovado.delete()
     return HttpResponseRedirect('/tbl_repasses_aprovados.html')
+
+def aprovar_parcela_taxa(request, *args, **kwargs):
+    parcela_taxa = ParcelaTaxa.objects.get(id=kwargs.get('parcela_taxa_id'))
+    parcela_taxa.aprovada = True
+    parcela_taxa.save()
+    return HttpResponseRedirect('/tbl_parcela_taxas.html')
+
+def desaprovar_parcela_taxa(request, *args, **kwargs):
+    return HttpResponse("Funcionando o Desaprovar Repasse")

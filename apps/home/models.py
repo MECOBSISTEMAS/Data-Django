@@ -264,6 +264,7 @@ class ParcelaTaxa(models.Model):
     desconto_total = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     honorarios = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    aprovada = models.BooleanField(_(""), blank=True, null=True, default=False)
     
     def __str__(self):
         return f'{self.id_contrato}, {self.comprador}'
@@ -273,3 +274,15 @@ class ParcelaTaxa(models.Model):
         managed = True
         verbose_name = 'ParcelaTaxa'
         verbose_name_plural = 'ParcelaTaxas'
+        
+""" class ParcelaTaxaAprovada(models.Model):
+    
+
+    def __str__(self):
+        pass
+
+    class Meta:
+        db_table = 'taxas_parovadas'
+        managed = True
+        verbose_name = 'TaxaAprovada'
+        verbose_name_plural = 'TaxaAprovadas' """

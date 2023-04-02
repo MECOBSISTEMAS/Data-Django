@@ -1,0 +1,121 @@
+{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %}
+
+{% load utils %}
+{% load humanize %}
+
+{% load static %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} {% block content %}
+
+<!-- [ Main Content ] start -->
+<section class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Tabela para saber quais taxas foram aprovadas</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item"><a href="#!">Tabelas & Formulários</a></li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Parcela Taxas Aprovadas</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- [ breadcrumb ] end -->
+        <div class="main-body">
+          <div class="page-wrapper">
+            <div class="row">
+              <div class="col-xl-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Parcela Taxas Aprovadas</h5>
+                    <form method="POST">
+                      {% csrf_token %}
+                      data inicio <input required type="date" id="data-inicio" name="data-inicio" >
+                      data fim <input required type="date" id="data-fim" name="data-fim">
+                      <button type="submit" name="filtrar-parcela-taxa-aprovada" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                      <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
+                    </form>
+                    {% comment %} <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a> {% endcomment %}
+                    {% comment %} <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">
+                      {% csrf_token %}
+                      <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
+                      <button type="submit" class="btn btn-success">Enviar Planilha</button>
+                    </form> {% endcomment %}
+                  </div>
+                  <div class="card-block table-border-style">
+                    <div class="table-responsive">
+                      <table class="table table-hover" id="table-contratos">
+                        <thead>
+                          <tr>
+                            <th>Ações</th>
+                            <th>id Contrato</th>
+                            <th>Comprador</th>
+                            <th>Vendedor</th>
+                            <th>Parcela</th>
+                            <th>Data Vencimento</th>
+                            <th>Valor</th>
+                            <th>TCC</th>
+                            <th>Desconto Total</th>
+                            <th>Honorarios</th>
+                            <th>Repasse</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for parcela_taxa_aprovada in parcelas_taxas_aprovadas %}
+                          <tr>
+                            <th><a name="" id="" class="btn btn-primary btn-sm" href="#" role="button">Desaprovar</a></th>
+                            <th>{{parcela_taxa_aprovada.id_contrato}}</th>
+                            <th>{{parcela_taxa_aprovada.comprador}}</th>
+                            <th>{{parcela_taxa_aprovada.vendedor}}</th>
+                            <th>{{parcela_taxa_aprovada.parcela}}</th>
+                            <th>{{parcela_taxa_aprovada.dt_vencimento}}</th>
+                            <th>{{parcela_taxa_aprovada.valor}}</th>
+                            <th>{{parcela_taxa_aprovada.tcc}}</th>
+                            <th>{{parcela_taxa_aprovada.desconto_total}}</th>
+                            <th>{{parcela_taxa_aprovada.honorarios}}</th>
+                            <th>{{parcela_taxa_aprovada.repasse}}</th>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            <!-- [ Main Content ] end -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-contratos').DataTable();
+    $('#table-parcelas').DataTable();
+    
+  })
+</script>
+{% comment %} <script src="{% static 'assets/js/quinzenal/scripts.js' %}"></script> {% endcomment %}
+{% endblock javascripts %}

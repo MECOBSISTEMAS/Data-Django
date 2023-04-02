@@ -19,7 +19,7 @@
               <div class="col-md-12">
                 
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Taxa</h5>
+                  <h5 class="m-b-10">Parcela Taxas</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
@@ -29,7 +29,7 @@
                     <a href="javascript:">Tabelas & Formularios</a>
                   </li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Taxa</a>
+                    <a href="javascript:">Parcela Taxas</a>
                   </li>
                 </ul>
               </div>
@@ -86,7 +86,7 @@
                   <tbody>
                     {% for parcela_taxa in parcelas_taxas %}
                       <tr>
-                        <th><a href="" class="btn btn-success btn-sm">Aprovar</a></th>
+                        <th><a href="{% url 'home:aprovar_parcela_taxa' parcela_taxa.id %}" class="btn btn-success btn-sm">Aprovar</a></th>
                         <td>{{parcela_taxa.id_contrato}}</td>
                         <td>{{parcela_taxa.comprador}}</td>
                         <td>{{parcela_taxa.vendedor}}</td>

@@ -23,6 +23,7 @@ urlpatterns = [
     path("upload_planilha_parcelas_taxas", views.upload_planilha_parcelas_taxas, name="upload_planilha_parcelas_taxas"),
     path("upload_planilha_dados_brutos", views.upload_planilha_dados_brutos, name="upload_planilha_dados_brutos"),
     path('aprovar_repasse/<dados_consultados>/<data_inicial>/<data_final>', views.aprovar_repasse, name="aprovar_repasse"),
+    path('aprovar_parcela_taxa/<parcela_taxa_id>', views.aprovar_parcela_taxa, name="aprovar_parcela_taxa"),
     path('desaprovar_repasse/<repasse_aprovado_id>', views.desaprovar_repasse, name="desaprovar_repasse"),
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
