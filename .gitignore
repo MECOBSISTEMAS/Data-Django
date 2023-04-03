@@ -37,3 +37,4 @@ auto-text.txt
 planilhas_ferv/
 
 .env
+*.pdf
