@@ -12,6 +12,7 @@ from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
+from reportlab.pdfgen import canvas
 import random
 import ast
 import tempfile
@@ -32,8 +33,10 @@ class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Decimal):
             return float(obj)
-        elif isinstance(obj, date):
+        if isinstance(obj, date):
             return obj.strftime('%Y-%m-%d')
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
         return super().default(obj)
 
 
@@ -54,7 +57,7 @@ def index(request):
 
 @login_required(login_url="/login/")
 def pages(request):
-    context = {'teste':'teste'}
+    context:dict = {}
 
     # All resource paths end in .html.
     # Pick out the html file name from the url. And load that template.
@@ -107,62 +110,114 @@ def pages(request):
             
         elif load_template == 'tbl_prestacao_diaria.html':
             if request.method == 'POST':
-                bancos = request.POST.get('bancos')
-                data = request.POST.get('data')
-                context['repasses_semanais'] = CadCliente.objects.filter(
-                     repasse_semanal=True,
-                 ).annotate(
-                     total_repasses=Coalesce(
-                         Subquery(
-                             Dado.objects.filter(
-                                dt_credito="2023-02-28",
-                                id_vendedor=OuterRef('vendedor_id')
-                             ).values('id_vendedor').annotate(
-                                soma_repasses=Sum('repasses')
-                             ).values('soma_repasses')
-                         ),
-                         0,
-                         output_field=DecimalField()
-                     )
-                 ).values('total_repasses', 'vendedor__nome', 'vendedor__id')
-                
-                context['repasses'] = (
-                    Dado.objects
-                    .filter(dt_credito=data, banco=str(bancos).upper())
-                    .values('id_contrato', 'vendedor')
-                    .annotate(
+                if 'exportar-xlsx' in request.POST:
+                    with tempfile.TemporaryDirectory() as tmpdir:
+                        filepath = os.path.join(tmpdir, f'planilha_prestacao_diaria_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+                        workbook = openpyxl.Workbook()
+                        sheet = workbook.active
+                        
+                        # escrevendo os cabeçalhos
+                        headers = ['Repasses Semanais', 'Repasses', 'Comissões', 'Valores Pagos Honorários', 'Comissionistas do Mês', 'Repasses Geral']
+                        for i, header in enumerate(headers):
+                            coluna = get_column_letter(i + 1)
+                            cell = sheet.cell(row=1, column=i+1)
+                            cell.value = header
+                            cell.font = openpyxl.styles.Font(bold=True)
+                            #cell.alignment = Alignment(horizontal='center')
+                        
+                        context_values = [json.loads(request.session.get('repasses_semanais'))
+                                          ,json.loads(request.session.get('repasses'))
+                                          ,json.loads(request.session.get('comissoes'))
+                                          ,json.loads(request.session.get('valores_pagos_honorarios'))
+                                          ,json.loads(request.session.get('comissionistas_do_mes'))
+                                          ,json.loads(request.session.get('repasses_geral'))]
+                        
+                        for i, context_value in enumerate(context_values):
+                            for j, row in enumerate(context_value):
+                                if isinstance(row, date):
+                                    sheet.cell(row=i+2, column=k+1, value=value.strftime('%d/%m/%Y'))
+                                elif isinstance(row, list):
+                                    for k, value in enumerate(row):
+                                        sheet.cell(row=i+2, column=k+1, value=value)
+                                elif isinstance(row, dict):
+                                    for k, value in enumerate(row.values()):
+                                        sheet.cell(row=i+2, column=k+1, value=value)
+                                else:
+                                    sheet.cell(row=i+2, column=k+1, value=value)
+                                    
+    
+                        workbook.save(filepath)
+                        with open(filepath, 'rb') as f:
+                            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+                            return response
+                if 'exportar-pdf' in request.POST:
+                    return funcoes.gerar_arquivo_pdf(request, context)
+                if 'filtrar-prestacao-diaria' in request.POST:
+                    bancos = request.POST.get('bancos')
+                    data = request.POST.get('data')
+                    context['repasses_semanais'] = CadCliente.objects.filter(
+                        repasse_semanal=True,
+                    ).annotate(
+                        total_repasses=Coalesce(
+                            Subquery(
+                                Dado.objects.filter(
+                                    dt_credito=data,
+                                    id_vendedor=OuterRef('vendedor_id')
+                                ).values('id_vendedor').annotate(
+                                    soma_repasses=Sum('repasses')
+                                ).values('soma_repasses')
+                            ),
+                            0,
+                            output_field=DecimalField()
+                        )
+                    ).values('total_repasses', 'vendedor__nome', 'vendedor__id')
+                    
+                    context['repasses'] = (
+                        Dado.objects
+                        .filter(dt_credito=data, banco=str(bancos).upper())
+                        .values('id_contrato', 'vendedor')
+                        .annotate(
+                            repasses=Sum('repasses')
+                        )
+                        .order_by('vendedor')
+                    )    
+                        
+                    context['comissoes'] = (
+                        Calculo_Repasse.objects
+                        .filter(dt_credito=data, banco=str(bancos).upper())
+                        .exclude(comissao=None)
+                        .values('comissao')
+                        .annotate(comissoes=Sum('op'))
+                        .distinct()#talvez remover
+                    )
+                    
+                    context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
+                        id_contrato__gt=12460).aggregate(
+                            valores_pagos=Sum('vl_pago'),
+                            honorarios=Sum('me')
+                        )
+                        
+                    context['comissionistas_do_mes'] = Dado.objects.filter(
+                        dt_credito=data,comissao__isnull=False
+                        ).values('comissao').annotate(comissoes=Sum('op'))
+                    
+                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
                         repasses=Sum('repasses')
                     )
-                    .order_by('vendedor')
-                )    
-                    
-                context['comissoes'] = (
-                    Calculo_Repasse.objects
-                    .filter(dt_credito=data, banco=str(bancos).upper())
-                    .exclude(comissao=None)
-                    .values('comissao')
-                    .annotate(comissoes=Sum('op'))
-                    .distinct()#talvez remover
-                )
-                    
-                context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                    id_contrato__gt=12460).aggregate(
-                        valores_pagos=Sum('vl_pago'),
-                        honorarios=Sum('me')
-                    )
-                    
-                context['comissionistas_do_mes'] = Dado.objects.filter(
-                    dt_credito=data,comissao__isnull=False
-                    ).values('comissao').annotate(comissoes=Sum('op'))
-                
-                context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
-                    repasses=Sum('repasses')
-                )
-                repasses_geral = context['repasses_geral']['repasses']
-                repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]) or 0)
-                repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
+                    repasses_geral = context['repasses_geral']['repasses']
+                    repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
+                    repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
 
-                context['repasses_geral_descontado'] = repasses_geral_descontado
+                    context['repasses_geral_descontado'] = repasses_geral_descontado
+                    
+                    request.session['comissionistas_do_mes'] = json.dumps(list(context['comissionistas_do_mes']), cls=CustomJSONEncoder)
+                    request.session['repasses'] = json.dumps(list(context['repasses'].values()), cls=CustomJSONEncoder)
+                    request.session['comissoes'] = json.dumps(list(context['comissoes'].values()), cls=CustomJSONEncoder)
+                    request.session['valores_pagos_honorarios'] = json.dumps(list(context['valores_pagos_honorarios'].values()), cls=CustomJSONEncoder)
+                    request.session['comissionistas_do_mes'] = json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder)
+                    request.session['repasses_geral'] = json.dumps(list(context['repasses_geral'].values()), cls=CustomJSONEncoder)
+                    request.session['repasses_geral_descontado'] = json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder)
                 #context['repasses_geral_descontado'] = (float(context['repasses_geral']['repasses']) or 0) - (context['repasses_semanais_vendedores_totais'] or 0)
 
             
@@ -269,7 +324,6 @@ def pages(request):
                     ).order_by('id_vendedor')
 
                     request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
-                    #!request.session['dados_dias'] = json.dumps(dados_dias, cls=CustomJSONEncoder), por algum motivo isso esta dando erro no Sum
 
                     tbody = "<tr>"
                     for dado in context['dados']:
@@ -434,7 +488,8 @@ def pages(request):
                     valor = request.POST.get('valor')
                     data_taxa = request.POST.get('data-taxa')
                     descricao = request.POST.get('descricao')
-                    Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao)
+                    tipo = request.POST.get('tipo')
+                    Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao, tipo=tipo)
                 if 'filtrar-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
@@ -568,6 +623,7 @@ def pages(request):
                 tbody = ""
                 for valor_financeiro in context['valores_financeiros']:
                     tbody += "<tr>"
+                    #!tbody += f"<td>{valor_financeiro['id_contrato']}</td>"
                     for dia in financeiro_dias:
                         valor_financeiro_dia = valor_financeiro[f'{dia}']
                         tbody += f"<td>{valor_financeiro_dia}</td>"
@@ -622,7 +678,14 @@ def pages(request):
                 if 'filtrar-parcela-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
-                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim))
+                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim), aprovada=False)
+                    
+        elif load_template == 'tbl_taxas_aprovadas.html':
+            if request.method == 'POST':
+                if 'filtrar-parcela-taxa-aprovada' in request.POST:
+                    data_inicio = request.POST.get('data-inicio')
+                    data_fim = request.POST.get('data-fim')
+                    context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio, data_fim) , aprovada=True)
         
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
@@ -727,9 +790,6 @@ def upload_planilha_cob(request, *args, **kwargs):
         #arquivo esta recebendo com sucesso, azer os devidos tratamentos
         return HttpResponse(planilha)
     return HttpResponseRedirect('/form_elements.html')
-
-def editar_boleto_avulso(request, *args, **kwargs):
-    return HttpResponse("<h1>FUNCIONOU</h1>")
 
 def upload_planilha_cavalos_cob(request, *args, **kwargs):
     if request.method == 'POST':
@@ -1075,7 +1135,6 @@ def upload_planilha_dados_brutos(request):
         return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> Dados Criados: {} <br> Dados Modificados : {} <br> erros: {}".format(linhas,dados_criados,dados_modificados, erros_html))
     return HttpResponse("HTTP REQUEST")
 
-
 def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
     dados_consultados_string = kwargs.get('dados_consultados')
     #dados_consultados_dict = ast.literal_eval(dados_consultados_string)
@@ -1116,3 +1175,12 @@ def desaprovar_repasse(request, *args, **kwargs):
         dado.save()
     repasse_aprovado.delete()
     return HttpResponseRedirect('/tbl_repasses_aprovados.html')
+
+def aprovar_parcela_taxa(request, *args, **kwargs):
+    parcela_taxa = ParcelaTaxa.objects.get(id=kwargs.get('parcela_taxa_id'))
+    parcela_taxa.aprovada = True
+    parcela_taxa.save()
+    return HttpResponseRedirect('/tbl_parcela_taxas.html')
+
+def desaprovar_parcela_taxa(request, *args, **kwargs):
+    return HttpResponse("Funcionando o Desaprovar Repasse")

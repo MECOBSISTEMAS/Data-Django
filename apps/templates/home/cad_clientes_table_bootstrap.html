@@ -52,15 +52,11 @@
                           <tr>
                             <th>id</th>
                             <th>Nome</th>
-                            <th>Codigo</th>
                             <th>Sim</th>
                             <th>Nao</th>
                             <th>Operacional</th>
                             <th>TCC</th>
                             <th>Honorarios</th>
-                            <th>Animal</th>
-                            <th>Evento</th>
-                            <th>Informar Repasse</th>
                             <th>Repasse Semanal</th>
                           </tr>
                         </thead>
@@ -69,15 +65,11 @@
                           <tr>
                             <th>{{ cad_cliente.vendedor.id }}</th>
                             <td>{{ cad_cliente.vendedor.nome }}</td>
-                            <td>{{ cad_cliente.codigo }}</td>
                             <td>{{ cad_cliente.sim }}</td>
                             <td>{{ cad_cliente.nao }}</td>
                             <td>{{ cad_cliente.operacional }}</td>
                             <td>{{ cad_cliente.tcc }}</td>
                             <td>{{ cad_cliente.honorarios }}</td>
-                            <td>{{ cad_cliente.animal }}</td>
-                            <td>{{ cad_cliente.evento }}</td>
-                            <td>{{ cad_cliente.informar_repasse }}</td>
                             <td>{{ cad_cliente.repasse_semanal }}</td>
                           {% endfor %}
                           {% comment %} 

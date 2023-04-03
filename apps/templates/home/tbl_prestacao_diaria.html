@@ -19,7 +19,7 @@
             <div class="row align-items-center">
               <div class="col-md-12">
                 <div class="page-header-title">
-                  <h5 class="m-b-10">Julia</h5>
+                  <h5 class="m-b-10">Prestação Diária</h5>
                 </div>
                 <ul class="breadcrumb">
                   <li class="breadcrumb-item">
@@ -27,7 +27,7 @@
                   </li>
                   <li class="breadcrumb-item"><a href="#!">Tabelas & Formulario</a></li>
                   <li class="breadcrumb-item">
-                    <a href="javascript:">Julia</a>
+                    <a href="javascript:">Prestação Diária</a>
                   </li>
                 </ul>
               </div>
@@ -80,7 +80,7 @@
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
-                    <h5>Julia</h5>
+                    <h5>Prestação Diária</h5>
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
@@ -90,9 +90,14 @@
                           <option value="bradesco" name="banco">Bradesco</option>
                           <option value="unicred" name="banco">Unicred</option>
                         </select>
-                        <button class="btn btn-primary">Filtrar</button> 
+                        <button class="btn btn-primary" type="submit" name="filtrar-prestacao-diaria">Filtrar</button> 
                         <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
                       </p>
+                    </form>
+                    <form method="POST">
+                      {% csrf_token %}
+                      <button type="submit" name="exportar-xlsx" id="exportar-xlsx" class="btn btn-primary btn-sm">Exportar .xlsx</button>
+                      <button type="submit" name="exportar-pdf" id="exportar-pdf" class="btn btn-primary btn-sm">Exportar PDF</button>
                     </form>
                       <h6>Valor pago: R${{valores_pagos_honorarios.valores_pagos|intcomma}} | Honorarios: R${{valores_pagos_honorarios.honorarios|intcomma}} <h3/>
                   </div>
