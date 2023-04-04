@@ -112,57 +112,7 @@ def pages(request):
                 if 'exportar-xlsx' in request.POST:
                     if not request.session.get('prestacao_diaria_data'):
                         return HttpResponse('Nenhum dado encontrado para exportar')
-                    with tempfile.TemporaryDirectory() as tmpdir:
-                        filepath = os.path.join(tmpdir, f'planilha_prestacao_diaria_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
-                        workbook = openpyxl.Workbook()
-                        sheet = workbook.active
-                        
-                        context_keys = request.session.get('prestacao_diaria_data').keys()
-                        context_values = [ json.loads(request.session.get('prestacao_diaria_data')[key]) for key in context_keys]
-                        ultima_linha = 0
-                        ultima_coluna = 0
-                        
-                        """ 'repasses_semanais
-                            'comissionistas_do_mes
-                            'valores_pagos_honorarios
-                            'comissionistas_do_mes
-                            'repasses_geral_descontado """
-                        
-                        valores_pagos_e_honorarios = json.loads(request.session.get('prestacao_diaria_data')['valores_pagos_honorarios'])
-                        sheet.cell(row=1, column=1, value='Valor Pago')
-                        sheet.cell(row=1, column=2, value='honorarios')
-                        sheet.cell(row=2, column=1, value=valores_pagos_e_honorarios[0])
-                        sheet.cell(row=2, column=2, value=valores_pagos_e_honorarios[1])
-                        ultima_coluna = 2
-                        ultima_linha = 2
-                        ultima_coluna += 1
-                        ultima_linha += 2
-                        sheet.cell(row=ultima_linha, column=1, value='Comissionistas')
-                        sheet.cell(row=ultima_linha, column=2, value='Comissoes')
-                        
-                        comissionistas_do_mes = json.loads(request.session.get('prestacao_diaria_data')['comissionistas_do_mes'])
-                        for comissionista_unico in comissionistas_do_mes:
-                            sheet.cell(row=ultima_linha+2, column=1, value=comissionista_unico['comissao'])
-                            sheet.cell(row=ultima_linha+2, column=2, value=comissionista_unico['comissoes'])
-                            ultima_linha += 1
-                        
-                        ultima_linha += 1
-                        sheet.cell(row=ultima_linha+1, column=1, value='Repasses Semanais')
-                        repasses_semanais = json.loads(request.session.get('prestacao_diaria_data')['repasses_semanais'])
-                        for repasse_semanal in repasses_semanais:
-                            sheet.cell(row=ultima_linha+2, column=1, value=repasse_semanal['vendedor__id'])
-                            sheet.cell(row=ultima_linha+2, column=2, value=repasse_semanal['vendedor__nome'])
-                            sheet.cell(row=ultima_linha+2, column=3, value=repasse_semanal['total_repasses'])
-                            ultima_linha += 1
-                        
-                        sheet.cell(row=ultima_linha+2, column=1, value='Repasses Geral')
-                        sheet.cell(row=ultima_linha+3, column=1, value=json.loads(request.session.get('prestacao_diaria_data')['repasses_geral_descontado']))
-                        
-                        workbook.save(filepath)
-                        with open(filepath, 'rb') as file:
-                            response = HttpResponse(file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-                            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
-                            return response
+                    return funcoes.exportar_planilha_prestacao_diaria(request)
                 if 'exportar-pdf' in request.POST:
                     return funcoes.gerar_arquivo_pdf(request, context)
                 if 'filtrar-prestacao-diaria' in request.POST:
@@ -224,14 +174,7 @@ def pages(request):
                     context['repasses_geral_descontado'] = repasses_geral_descontado
                     
                     
-                    """ request.session['repasses_semanais'] = json.dumps(list(context['repasses_semanais']), cls=CustomJSONEncoder)
-                    request.session['comissionistas_do_mes'] = json.dumps(list(context['comissionistas_do_mes']), cls=CustomJSONEncoder)
-                    request.session['repasses'] = json.dumps(list(context['repasses'].values()), cls=CustomJSONEncoder)
-                    request.session['comissoes'] = json.dumps(list(context['comissoes'].values()), cls=CustomJSONEncoder)
-                    request.session['valores_pagos_honorarios'] = json.dumps(list(context['valores_pagos_honorarios'].values()), cls=CustomJSONEncoder)
-                    request.session['comissionistas_do_mes'] = json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder)
-                    request.session['repasses_geral'] = json.dumps(list(context['repasses_geral'].values()), cls=CustomJSONEncoder)
-                    request.session['repasses_geral_descontado'] = json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder) """
+                    
                     request.session['prestacao_diaria_data'] = {
                         'repasses_semanais': json.dumps(list(context['repasses_semanais']), cls=CustomJSONEncoder),
                         'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes']), cls=CustomJSONEncoder),
@@ -945,6 +888,7 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
             wb = openpyxl.load_workbook(planilha)
             cad_cliente = wb.active
             linha = 0
+            erros:list[str] = []
             for row in cad_cliente.iter_rows(values_only=True):
                 if linha < 1:
                     linha += 1
@@ -952,32 +896,38 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
                 #* sistema de parada
                 if (row[0]) == None:
                     break
+                nome_vendedor = row[0]
+                id_vendedor = row[1]
+                sim = row[2]
+                nao = row[3]
+                operacional = row[4]
+                tcc = row[5]
+                honorarios = row[6]
+                repasse_semanal = row[7]
                 try:
-                    pessoa = Pessoas.objects.get(id=row[2])
-                    pessoa.nome = row[0]
-                    pessoa.email = row[1]
+                    vendedor = Pessoas.objects.get(id=id_vendedor)
                 except Pessoas.DoesNotExist:
-                    pessoa = Pessoas.objects.create(id=row[2], nome=row[0], email=row[1])
+                    vendedor = Pessoas.objects.create(id=id_vendedor, nome=nome_vendedor)
                 except Pessoas.MultipleObjectsReturned:
-                    pass
-                pessoa.save()
+                    erros.append('Erro ao criar o vendedor, Multiplas Pessoas Encontradas: {}, linha: {}'.format(nome_vendedor, linha))
+                    continue
                 try:
-                    cad_cliente = CadCliente.objects.get(vendedor=pessoa)
-                    cad_cliente.sim = row[3]
-                    cad_cliente.nao = row[4]
-                    cad_cliente.operacional = row[5]
-                    cad_cliente.tcc = row[6]
-                    cad_cliente.honorarios = row[7]
-                    cad_cliente.animal = row[8]
-                    cad_cliente.evento = row[9]
-                    cad_cliente.informar_repasse = row[10]
+                    cad_cliente = CadCliente.objects.get(vendedor=vendedor)
+                    cad_cliente.sim = sim
+                    cad_cliente.nao = nao
+                    cad_cliente.operacional = operacional
+                    cad_cliente.tcc = tcc
+                    cad_cliente.honorarios = honorarios
+                    cad_cliente.repasse_semanal = True if repasse_semanal == 'SIM' else False
                 except CadCliente.DoesNotExist:
-                    cad_cliente = CadCliente.objects.create(vendedor=pessoa, sim=row[3], nao=row[4],
-                        operacional=row[5], tcc=row[6], honorarios=row[7], animal=row[8],
-                        evento=row[9], informar_repasse=row[10])
+                    cad_cliente = CadCliente.objects \
+                        .create(vendedor=vendedor, 
+                            sim=sim, nao=nao, operacional=operacional, 
+                            tcc=tcc, honorarios=honorarios, 
+                            repasse_semanal=True if repasse_semanal == 'SIM' else False)
                 except CadCliente.MultipleObjectsReturned:
-                    pass
-                cad_cliente.save()
+                    erros.append('Erro ao criar o cadastro do cliente, Multiplos CadCliente,s Encontrados: {}, linha: {}'.format(nome_vendedor, linha))
+                    continue
                 
             return HttpResponse('Planilha {} recebida com sucesso'.format(planilha.name))
         else:

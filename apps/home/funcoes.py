@@ -6,6 +6,8 @@ from django.db.models import Sum, Case, When, F, DecimalField
 from reportlab.pdfgen import canvas
 from django.http import HttpResponse
 import json
+import openpyxl
+import os
 
 
 def construir_dias_filtro(data_inicio: str, data_fim: str, dt_vencimento, campo: str) -> dict:
@@ -42,3 +44,57 @@ def gerar_arquivo_pdf(request, context):
         response['Content-Disposition'] = f'attachment; filename="prestacao_diaria_pdf_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.pdf"'
         response.write(tmp.read())
         return response
+
+
+def exportar_planilha_prestacao_diaria(request, *args, **kwargs):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        filepath = os.path.join(tmpdir, f'planilha_prestacao_diaria_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        
+        context_keys = request.session.get('prestacao_diaria_data').keys()
+        context_values = [ json.loads(request.session.get('prestacao_diaria_data')[key]) for key in context_keys]
+        ultima_linha = 0
+        ultima_coluna = 0
+        
+        """ 'repasses_semanais
+            'comissionistas_do_mes
+            'valores_pagos_honorarios
+            'comissionistas_do_mes
+            'repasses_geral_descontado """
+        
+        valores_pagos_e_honorarios = json.loads(request.session.get('prestacao_diaria_data')['valores_pagos_honorarios'])
+        sheet.cell(row=1, column=1, value='Valor Pago')
+        sheet.cell(row=1, column=2, value='honorarios')
+        sheet.cell(row=2, column=1, value=valores_pagos_e_honorarios[0])
+        sheet.cell(row=2, column=2, value=valores_pagos_e_honorarios[1])
+        ultima_coluna = 2
+        ultima_linha = 2
+        ultima_coluna += 1
+        ultima_linha += 2
+        sheet.cell(row=ultima_linha, column=1, value='Comissionistas')
+        sheet.cell(row=ultima_linha, column=2, value='Comissoes')
+        
+        comissionistas_do_mes = json.loads(request.session.get('prestacao_diaria_data')['comissionistas_do_mes'])
+        for comissionista_unico in comissionistas_do_mes:
+            sheet.cell(row=ultima_linha+2, column=1, value=comissionista_unico['comissao'])
+            sheet.cell(row=ultima_linha+2, column=2, value=comissionista_unico['comissoes'])
+            ultima_linha += 1
+        
+        ultima_linha += 1
+        sheet.cell(row=ultima_linha+1, column=1, value='Repasses Semanais')
+        repasses_semanais = json.loads(request.session.get('prestacao_diaria_data')['repasses_semanais'])
+        for repasse_semanal in repasses_semanais:
+            sheet.cell(row=ultima_linha+2, column=1, value=repasse_semanal['vendedor__id'])
+            sheet.cell(row=ultima_linha+2, column=2, value=repasse_semanal['vendedor__nome'])
+            sheet.cell(row=ultima_linha+2, column=3, value=repasse_semanal['total_repasses'])
+            ultima_linha += 1
+        
+        sheet.cell(row=ultima_linha+2, column=1, value='Repasses Geral')
+        sheet.cell(row=ultima_linha+3, column=1, value=json.loads(request.session.get('prestacao_diaria_data')['repasses_geral_descontado']))
+        
+        workbook.save(filepath)
+        with open(filepath, 'rb') as file:
+            response = HttpResponse(file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
