@@ -12,7 +12,6 @@ from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
-from reportlab.pdfgen import canvas
 import random
 import ast
 import tempfile
@@ -23,7 +22,6 @@ from decimal import Decimal
 from openpyxl.utils import get_column_letter
 
 from . import funcoes
-
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
@@ -63,6 +61,7 @@ def pages(request):
     # Pick out the html file name from the url. And load that template.
     try:
         request.session['serialized_data'] = None
+        #request.session['prestacao_diaria_data'] = None
         load_template = request.path.split('/')[-1]
 
         if load_template == 'admin':
@@ -111,44 +110,57 @@ def pages(request):
         elif load_template == 'tbl_prestacao_diaria.html':
             if request.method == 'POST':
                 if 'exportar-xlsx' in request.POST:
+                    if not request.session.get('prestacao_diaria_data'):
+                        return HttpResponse('Nenhum dado encontrado para exportar')
                     with tempfile.TemporaryDirectory() as tmpdir:
                         filepath = os.path.join(tmpdir, f'planilha_prestacao_diaria_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
                         workbook = openpyxl.Workbook()
                         sheet = workbook.active
                         
-                        # escrevendo os cabeçalhos
-                        headers = ['Repasses Semanais', 'Repasses', 'Comissões', 'Valores Pagos Honorários', 'Comissionistas do Mês', 'Repasses Geral']
-                        for i, header in enumerate(headers):
-                            coluna = get_column_letter(i + 1)
-                            cell = sheet.cell(row=1, column=i+1)
-                            cell.value = header
-                            cell.font = openpyxl.styles.Font(bold=True)
-                            #cell.alignment = Alignment(horizontal='center')
+                        context_keys = request.session.get('prestacao_diaria_data').keys()
+                        context_values = [ json.loads(request.session.get('prestacao_diaria_data')[key]) for key in context_keys]
+                        ultima_linha = 0
+                        ultima_coluna = 0
                         
-                        context_values = [json.loads(request.session.get('repasses_semanais'))
-                                          ,json.loads(request.session.get('repasses'))
-                                          ,json.loads(request.session.get('comissoes'))
-                                          ,json.loads(request.session.get('valores_pagos_honorarios'))
-                                          ,json.loads(request.session.get('comissionistas_do_mes'))
-                                          ,json.loads(request.session.get('repasses_geral'))]
+                        """ 'repasses_semanais
+                            'comissionistas_do_mes
+                            'valores_pagos_honorarios
+                            'comissionistas_do_mes
+                            'repasses_geral_descontado """
                         
-                        for i, context_value in enumerate(context_values):
-                            for j, row in enumerate(context_value):
-                                if isinstance(row, date):
-                                    sheet.cell(row=i+2, column=k+1, value=value.strftime('%d/%m/%Y'))
-                                elif isinstance(row, list):
-                                    for k, value in enumerate(row):
-                                        sheet.cell(row=i+2, column=k+1, value=value)
-                                elif isinstance(row, dict):
-                                    for k, value in enumerate(row.values()):
-                                        sheet.cell(row=i+2, column=k+1, value=value)
-                                else:
-                                    sheet.cell(row=i+2, column=k+1, value=value)
-                                    
-    
+                        valores_pagos_e_honorarios = json.loads(request.session.get('prestacao_diaria_data')['valores_pagos_honorarios'])
+                        sheet.cell(row=1, column=1, value='Valor Pago')
+                        sheet.cell(row=1, column=2, value='honorarios')
+                        sheet.cell(row=2, column=1, value=valores_pagos_e_honorarios[0])
+                        sheet.cell(row=2, column=2, value=valores_pagos_e_honorarios[1])
+                        ultima_coluna = 2
+                        ultima_linha = 2
+                        ultima_coluna += 1
+                        ultima_linha += 2
+                        sheet.cell(row=ultima_linha, column=1, value='Comissionistas')
+                        sheet.cell(row=ultima_linha, column=2, value='Comissoes')
+                        
+                        comissionistas_do_mes = json.loads(request.session.get('prestacao_diaria_data')['comissionistas_do_mes'])
+                        for comissionista_unico in comissionistas_do_mes:
+                            sheet.cell(row=ultima_linha+2, column=1, value=comissionista_unico['comissao'])
+                            sheet.cell(row=ultima_linha+2, column=2, value=comissionista_unico['comissoes'])
+                            ultima_linha += 1
+                        
+                        ultima_linha += 1
+                        sheet.cell(row=ultima_linha+1, column=1, value='Repasses Semanais')
+                        repasses_semanais = json.loads(request.session.get('prestacao_diaria_data')['repasses_semanais'])
+                        for repasse_semanal in repasses_semanais:
+                            sheet.cell(row=ultima_linha+2, column=1, value=repasse_semanal['vendedor__id'])
+                            sheet.cell(row=ultima_linha+2, column=2, value=repasse_semanal['vendedor__nome'])
+                            sheet.cell(row=ultima_linha+2, column=3, value=repasse_semanal['total_repasses'])
+                            ultima_linha += 1
+                        
+                        sheet.cell(row=ultima_linha+2, column=1, value='Repasses Geral')
+                        sheet.cell(row=ultima_linha+3, column=1, value=json.loads(request.session.get('prestacao_diaria_data')['repasses_geral_descontado']))
+                        
                         workbook.save(filepath)
-                        with open(filepath, 'rb') as f:
-                            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                        with open(filepath, 'rb') as file:
+                            response = HttpResponse(file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
                             response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
                             return response
                 if 'exportar-pdf' in request.POST:
@@ -193,7 +205,7 @@ def pages(request):
                     )
                     
                     context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                        id_contrato__gt=12460).aggregate(
+                        banco=str(bancos).upper()).aggregate(
                             valores_pagos=Sum('vl_pago'),
                             honorarios=Sum('me')
                         )
@@ -202,7 +214,7 @@ def pages(request):
                         dt_credito=data,comissao__isnull=False
                         ).values('comissao').annotate(comissoes=Sum('op'))
                     
-                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=bancos).aggregate(
+                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(
                         repasses=Sum('repasses')
                     )
                     repasses_geral = context['repasses_geral']['repasses']
@@ -211,14 +223,22 @@ def pages(request):
 
                     context['repasses_geral_descontado'] = repasses_geral_descontado
                     
+                    
+                    """ request.session['repasses_semanais'] = json.dumps(list(context['repasses_semanais']), cls=CustomJSONEncoder)
                     request.session['comissionistas_do_mes'] = json.dumps(list(context['comissionistas_do_mes']), cls=CustomJSONEncoder)
                     request.session['repasses'] = json.dumps(list(context['repasses'].values()), cls=CustomJSONEncoder)
                     request.session['comissoes'] = json.dumps(list(context['comissoes'].values()), cls=CustomJSONEncoder)
                     request.session['valores_pagos_honorarios'] = json.dumps(list(context['valores_pagos_honorarios'].values()), cls=CustomJSONEncoder)
                     request.session['comissionistas_do_mes'] = json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder)
                     request.session['repasses_geral'] = json.dumps(list(context['repasses_geral'].values()), cls=CustomJSONEncoder)
-                    request.session['repasses_geral_descontado'] = json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder)
-                #context['repasses_geral_descontado'] = (float(context['repasses_geral']['repasses']) or 0) - (context['repasses_semanais_vendedores_totais'] or 0)
+                    request.session['repasses_geral_descontado'] = json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder) """
+                    request.session['prestacao_diaria_data'] = {
+                        'repasses_semanais': json.dumps(list(context['repasses_semanais']), cls=CustomJSONEncoder),
+                        'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes']), cls=CustomJSONEncoder),
+                        'valores_pagos_honorarios': json.dumps(list(context['valores_pagos_honorarios'].values()), cls=CustomJSONEncoder),
+                        'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder),
+                        'repasses_geral_descontado': json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder),
+                    }
 
             
         elif load_template == 'form_elements.html':
@@ -248,7 +268,7 @@ def pages(request):
                     dados_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        dados_dias[f'dia_{dia.day}'] = Sum(
+                        dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
                             Case(
                                 When(dt_credito__day=dia.day, then=F('repasses')),
                                 default=0,
