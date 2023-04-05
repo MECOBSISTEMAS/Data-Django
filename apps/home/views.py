@@ -170,7 +170,9 @@ def pages(request):
                         )
                     repasses_geral = context['repasses_geral']['repasses']
                     repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
-                    repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
+                    repasses_geral_descontado = (float(repasses_geral or 0))
+                    - (float(repasses_semanais_vendedores_totais or 0))
+                    - (float(Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(taxas=Sum('taxas'))['taxas'] or 0))
 
                     context['repasses_geral_descontado'] = repasses_geral_descontado
                     
