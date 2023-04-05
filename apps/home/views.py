@@ -113,9 +113,9 @@ def pages(request):
                     if not request.session.get('prestacao_diaria_data'):
                         return HttpResponse('Nenhum dado encontrado para exportar')
                     return funcoes.exportar_planilha_prestacao_diaria(request)
-                if 'exportar-pdf' in request.POST:
+                elif 'exportar-pdf' in request.POST:
                     return funcoes.gerar_arquivo_pdf(request, context)
-                if 'filtrar-prestacao-diaria' in request.POST:
+                elif 'filtrar-prestacao-diaria' in request.POST:
                     bancos = request.POST.get('bancos')
                     data = request.POST.get('data')
                     context['repasses_semanais'] = CadCliente.objects.filter(
@@ -143,7 +143,7 @@ def pages(request):
                             repasses=Sum('repasses')
                         )
                         .order_by('vendedor')
-                    )    
+                    )
                         
                     context['comissoes'] = (
                         Calculo_Repasse.objects
@@ -164,16 +164,15 @@ def pages(request):
                         dt_credito=data,comissao__isnull=False
                         ).values('comissao').annotate(comissoes=Sum('op'))
                     
-                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(
-                        repasses=Sum('repasses')
-                    )
+                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data,
+                        banco=str(bancos).upper()).aggregate(
+                            repasses=Sum('repasses')
+                        )
                     repasses_geral = context['repasses_geral']['repasses']
                     repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
                     repasses_geral_descontado = (float(repasses_geral) if repasses_geral else 0) - (float(repasses_semanais_vendedores_totais) if repasses_semanais_vendedores_totais else 0)
 
                     context['repasses_geral_descontado'] = repasses_geral_descontado
-                    
-                    
                     
                     request.session['prestacao_diaria_data'] = {
                         'repasses_semanais': json.dumps(list(context['repasses_semanais']), cls=CustomJSONEncoder),
