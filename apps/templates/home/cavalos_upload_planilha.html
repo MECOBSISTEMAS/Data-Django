@@ -48,26 +48,26 @@ load utils %} {% load humanize %} {% load static %}
 										<form action="{% url 'home:upload_planilha_cavalos_cob' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
 											{% csrf_token %}
 											<input type="file" name="docpicker">
-											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
+											<button type="submit" class="btn btn-primary">Enviar pLanilha</button>
 										</form> {% endcomment %}
 										<br>
 										<h4>Importar Planilha CADCLIENTE</h4>
 										<form action="{% url 'home:upload_planilha_cad_clientes' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
                       {% csrf_token %}
 											<input type="file" name="docpicker">
-											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
+											<button type="submit" class="btn btn-primary">Enviar pLanilha</button>
 										</form>
                     <h4>Importar Planilha Taxas</h4>
                     <form action="{% url 'home:upload_planilha_parcelas_taxas' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
 											{% csrf_token %}
 											<input type="file" name="docpicker">
-											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
+											<button type="submit" class="btn btn-primary">Enviar pLanilha</button>
 										</form>
                     <h4>Importar Planilha COB e converter para dados</h4>
                     <form action="{% url 'home:upload_planilha_dados_brutos' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
 											{% csrf_token %}
 											<input type="file" name="docpicker">
-											<button type="submit" class="btn btn-success">Enviar pLanilha</button>
+											<button type="submit" class="btn btn-primary">Enviar pLanilha</button>
 										</form>
 									</div>
                 </div>
