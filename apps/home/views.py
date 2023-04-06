@@ -415,7 +415,7 @@ def pages(request):
                             Case(
                                 When(dt_debitado__day=dia.day, then=F('vl_debito')),
                                 default=0,
-                                output_field=IntegerField(),
+                                output_field=DecimalField(),
                             ),
                         )
 
@@ -466,7 +466,7 @@ def pages(request):
                             Case(
                                 When(dt_taxa__day=dia.day, then=F('taxas')),
                                 default=0,
-                                output_field=IntegerField(),
+                                output_field=DecimalField(),
                             ),
                         )
 
@@ -522,7 +522,7 @@ def pages(request):
                             Case(
                                 When(dt_rep_retido__day=dia.day, then=F('vlr_rep_retido')),
                                 default=0,
-                                output_field=IntegerField(),
+                                output_field=DecimalField(),
                             ),
                         )
 

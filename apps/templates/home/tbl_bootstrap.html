@@ -76,7 +76,6 @@
                           </tr>
                         </thead>
                         <tbody>
-                          {% comment %} <a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-primary btn-sm" href="{% url 'home:aprovar_repasse'  %}" role="button">Aprovar Repasse</a> {% endcomment %}
                           {{tbody|safe}}
                         </tbody>
                       </table>
@@ -100,8 +99,6 @@
 <script>
   $(document).ready(function(){
     $('#table-contratos').DataTable();
-    $('#table-parcelas').DataTable();
-    
   })
 </script>
 {% comment %} <script src="{% static 'assets/js/quinzenal/scripts.js' %}"></script> {% endcomment %}
