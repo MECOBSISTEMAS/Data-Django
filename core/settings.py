@@ -5,6 +5,8 @@ Copyright (c) 2019 - present AppSeed.us
 
 import os, environ
 import dj_database_url
+import random
+import string
 
 env = environ.Env(
     # set casting, default value
@@ -19,9 +21,7 @@ CORE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', default='S#perS3crEt_007')
-TESTE = os.getenv('TESTE')
-print(TESTE)
+SECRET_KEY = env('SECRET_KEY', default=str().join(random.choice(string.ascii_uppercase + string.digits) for _ in range(64)))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
