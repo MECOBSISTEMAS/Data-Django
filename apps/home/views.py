@@ -6,7 +6,7 @@ from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max
 from django.db.models.functions import Coalesce, Cast
 from django.template import loader
@@ -90,7 +90,7 @@ def pages(request):
                         pessoa = Pessoas.objects.create(nome=nome, email=email)
                         cliente_id = pessoa.id
                     elif nome:
-                        pessoa = Pessoas.objects.create(nome=nome, email=f"{slugify(nome)}_{random.randint(9,9999)}@fakeemail.br")
+                        pessoa = Pessoas.objects.create(nome=nome)
                         cliente_id = pessoa.id
                     else:
                         try:
@@ -1106,10 +1106,10 @@ def upload_planilha_dados_brutos(request):
         return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> Dados Criados: {} <br> Dados Modificados : {} <br> erros: {}".format(linhas,dados_criados,dados_modificados, erros_html))
     return HttpResponse("HTTP REQUEST")
 
-def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
+def aprovar_repasse(request, *args, **kwargs) :
     dados_consultados_string = kwargs.get('dados_consultados')
     #dados_consultados_dict = ast.literal_eval(dados_consultados_string)
-    data_incial = kwargs.get('data_inicial')
+    data_inicial = kwargs.get('data_inicial')
     data_final = kwargs.get('data_final')
     dados_consultados_string = dados_consultados_string.replace("Decimal('", "'").replace("')", "'")
     dados_consultados_dict = ast.literal_eval(dados_consultados_string)
@@ -1122,7 +1122,7 @@ def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
     except Pessoas.MultipleObjectsReturned:
         return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {dados_consultados_dict.get('id_vendedor')}")
     
-    dados = Dado.objects.filter(id_vendedor=dados_consultados_dict.get('id_vendedor'), dt_credito__range=(data_incial, data_final))
+    dados = Dado.objects.filter(id_vendedor=dados_consultados_dict.get('id_vendedor'), dt_credito__range=(data_inicial, data_final))
     repasse_aprovado = RepasseAprovado.objects.create(
         cliente=cliente,
         total_repasses_retidos=dados_consultados_dict.get('total_repasses_retidos'),
@@ -1130,14 +1130,18 @@ def aprovar_repasse(request, *args, **kwargs) -> HttpResponse:
         total_debito=dados_consultados_dict.get('total_debito'),
         total_taxa=dados_consultados_dict.get('total_taxa'),
         total_repasse=dados_consultados_dict.get('total_repasse'),
-        data_inicial=data_incial,
+        data_inicial=data_inicial,
         data_final=data_final,
     )
     for dado in dados:
         dado.repasse_aprovado = True
         dado.save()
         repasse_aprovado.dado.add(dado)
-    return HttpResponseRedirect('/tbl_bootstrap.html')
+    #return HttpResponseRedirect('/tbl_bootstrap.html')
+    dados_nao_aprovados = Dado.objects.filter(dt_credito__range=(data_inicial, data_final), repasse_aprovado=False).values()
+    dados_nao_aprovados_json = json.dumps(list(dados_nao_aprovados))
+    print('ENTREI AQUI DJANGO SERVER')
+    return JsonResponse({'dados': dados_nao_aprovados_json, 'data_inicial': data_inicial, 'data_final': data_final, 'status': 200})
 
 def desaprovar_repasse(request, *args, **kwargs):
     repasse_aprovado = RepasseAprovado.objects.get(id=kwargs.get('repasse_aprovado_id'))
