@@ -44,11 +44,11 @@
 
                     </form>
 
-                  <!--  <p class="mb-0 text-muted">Don’t have an account? <a href="{% url 'register' %}" >Sign UP</a></p>
+                   {% comment %} <p class="mb-0 text-muted">Don’t have an account? <a href="{% url 'register' %}" >Sign UP</a></p> {% endcomment %}
+                   <p class="mb-2 text-muted">Esqueceu a senha? <a href="/auth-reset-password.html">Reset</a></p>
 
-                    <br /> -->
-
-                 <!--   {% if GITHUB_AUTH %}
+                    <br /> 
+                    {% if GITHUB_AUTH %}
                     <div class="mx-2">
                         <form method="post" action="/social_login/github/login/?next=%2F">
                             {% csrf_token %}
@@ -57,7 +57,7 @@
                         </form>
                         <span class="mx-1">Sign IN with GitHub</span>
                     </div>                   
-                    {% endif %} --!>
+                    {% endif %} 
 
                 </div>
             </div>
