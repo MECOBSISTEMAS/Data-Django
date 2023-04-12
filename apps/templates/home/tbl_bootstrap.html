@@ -51,6 +51,7 @@
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
                     <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a>
+                    <h6>De : {{data_inicio}} até {{data_final}}</h6>
                     {% comment %} <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">
                       {% csrf_token %}
                       <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">

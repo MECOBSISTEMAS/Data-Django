@@ -118,6 +118,7 @@ def pages(request):
                 elif 'filtrar-prestacao-diaria' in request.POST:
                     bancos = request.POST.get('bancos')
                     data = request.POST.get('data')
+                    context['data_consultada'] = data
                     context['repasses_semanais'] = CadCliente.objects.filter(
                         repasse_semanal=True,
                     ).annotate(
@@ -202,6 +203,8 @@ def pages(request):
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
                     dados_dias = {}
+                    context['data_inicio'] = data_inicio
+                    context['data_final'] = data_fim
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
                         dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
