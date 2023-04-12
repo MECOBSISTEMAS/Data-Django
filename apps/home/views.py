@@ -145,14 +145,6 @@ def pages(request):
                         .order_by('vendedor')
                     )
                         
-                    """ context['comissoes'] = (
-                        Calculo_Repasse.objects
-                        .filter(dt_credito=data, banco=str(bancos).upper())
-                        .exclude(comissao=None)
-                        .values('comissao')
-                        .annotate(comissoes=Sum('op'))
-                        .distinct()#talvez remover
-                    ) """
                     
                     context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
                         banco=str(bancos).upper()).aggregate(
