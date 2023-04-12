@@ -275,14 +275,3 @@ class ParcelaTaxa(models.Model):
         verbose_name = 'ParcelaTaxa'
         verbose_name_plural = 'ParcelaTaxas'
         
-""" class ParcelaTaxaAprovada(models.Model):
-    
-
-    def __str__(self):
-        pass
-
-    class Meta:
-        db_table = 'taxas_parovadas'
-        managed = True
-        verbose_name = 'TaxaAprovada'
-        verbose_name_plural = 'TaxaAprovadas' """

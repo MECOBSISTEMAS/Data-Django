@@ -89,9 +89,15 @@ def exportar_planilha_prestacao_diaria(request, *args, **kwargs):
             sheet.cell(row=ultima_linha+2, column=2, value=repasse_semanal['vendedor__nome'])
             sheet.cell(row=ultima_linha+2, column=3, value=repasse_semanal['total_repasses'])
             ultima_linha += 1
+        ultima_linha += 2
+        sheet.cell(row=ultima_linha, column=1, value='Repasses Geral')
+        ultima_linha += 1
+        sheet.cell(row=ultima_linha, column=1, value=json.loads(request.session.get('prestacao_diaria_data')['repasses_geral_descontado']))
+        #context['taxas'] =float(Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(taxas=Sum('taxas'))['taxas'] or 0)
+        taxas = json.loads(request.session.get('prestacao_diaria_data')['taxas'])
+        sheet.cell(row=ultima_linha, column=2, value=f"Taxas (não aplicada) {taxas}")
         
-        sheet.cell(row=ultima_linha+2, column=1, value='Repasses Geral')
-        sheet.cell(row=ultima_linha+3, column=1, value=json.loads(request.session.get('prestacao_diaria_data')['repasses_geral_descontado']))
+        
         
         workbook.save(filepath)
         with open(filepath, 'rb') as file:

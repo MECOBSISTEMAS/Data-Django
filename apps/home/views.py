@@ -175,6 +175,7 @@ def pages(request):
                         'valores_pagos_honorarios': json.dumps(list(context['valores_pagos_honorarios'].values()), cls=CustomJSONEncoder),
                         'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder),
                         'repasses_geral_descontado': json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder),
+                        'taxas': json.dumps(context['taxas'], cls=CustomJSONEncoder),
                     }
 
             
@@ -637,6 +638,8 @@ def pages(request):
                 if 'filtrar-parcela-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
+                    context['data_inicio'] = data_inicio
+                    context['data_fim'] = data_fim
                     context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim), aprovada=False)
                     
         elif load_template == 'tbl_taxas_aprovadas.html':
@@ -965,14 +968,14 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 try:
                     comprador = Pessoas.objects.get(nome=comprador_nome)
                 except Pessoas.DoesNotExist:
-                    comprador = Pessoas.objects.create(nome=comprador_nome, email=f"{comprador_nome}-email@nãoexiste.com.br")
+                    comprador = Pessoas.objects.create(nome=comprador_nome)
                 except Pessoas.MultipleObjectsReturned:
                     erros.append(f"Erro na linha {linhas}, comprador {comprador_nome} possui mais de um cadastro")
                 Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=dt_vencimento)
                 try:
                     vendedor = Pessoas.objects.get(nome=vendedor_nome)
                 except Pessoas.DoesNotExist:
-                    vendedor = Pessoas.objects.create(nome=vendedor_nome, email=f"{vendedor_nome}-email@nãoexiste.com.br")
+                    vendedor = Pessoas.objects.create(nome=vendedor_nome)
                 except Pessoas.MultipleObjectsReturned:
                     erros.append(f"Erro na linha {linhas}, vendedor {vendedor_nome} possui mais de um cadastro")
                 Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
@@ -980,8 +983,8 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 erros.append(f"Erro na linha {linhas}, {e}")
             try:
                 parcela_taxa = ParcelaTaxa.objects.get(id_contrato=contrato_parcelas_id, comprador=comprador, vendedor=vendedor, valor=valor)
-                #!modificar todos os outros campos caso seja encontrado no aquivo e salvalo
-            except ParcelaTaxa.DoesNotExist:    
+                #!modificar todos os outros campos caso seja encontrado no aquivo e salvar
+            except ParcelaTaxa.DoesNotExist:
                 ParcelaTaxa.objects.create(
                     id_contrato=contrato_parcelas_id,
                     comprador=comprador,
