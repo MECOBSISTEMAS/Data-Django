@@ -60,26 +60,26 @@
                   </div>
                   <div class="card-block table-border-style">
                     <div class="table-responsive">
-                      <table class="table table-hover" id="table-contratos">
-                        <thead>
-                          <tr>
-                            <th>Ações</th>
-                            <th>Vendedor ID</th>
-                            <th>Nome Vendedor</th>
-                            <th>Valor Repasse Retido</th>
-                            {% for dia in dados_dias %}
-                              <th>{{dia}}</th>
-                            {% endfor %}
-                            <th>Creditos</th>
-                            <th>Taxas</th>
-                            <th>Debitos</th>
-                            <th>Total Repasses</th>
-                          </tr>
-                        </thead>
-                        <tbody id="table-body">
-                          {{tbody|safe}}
-                        </tbody>
-                      </table>
+                        <table class="table table-hover" id="table-contratos">
+                          <thead>
+                            <tr>
+                              <th>Ações</th>
+                              <th>Vendedor ID</th>
+                              <th>Nome Vendedor</th>
+                              <th>Valor Repasse Retido</th>
+                              {% for dia in dados_dias %}
+                                <th>{{dia}}</th>
+                              {% endfor %}
+                              <th>Creditos</th>
+                              <th>Taxas</th>
+                              <th>Debitos</th>
+                              <th>Total Repasses</th>
+                            </tr>
+                          </thead>
+                          <tbody id="table-body">
+                            {{tbody|safe}}
+                          </tbody>
+                        </table>
                     </div>
                   </div>
                 </div>
@@ -102,5 +102,5 @@
     $('#table-contratos').DataTable();
   })
 </script>
-{% comment %} <script src="{% static 'assets/js/quinzenal/scripts.js' %}"></script> {% endcomment %}
+<script src="{% static 'assets/js/quinzenal/scripts.js' %}"></script>
 {% endblock javascripts %}

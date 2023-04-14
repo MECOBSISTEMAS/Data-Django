@@ -2,12 +2,15 @@ from datetime import datetime
 from django.utils.text import slugify
 import tempfile
 from datetime import datetime, timedelta
-from django.db.models import Sum, Case, When, F, DecimalField
+from django.db.models import Sum, Case, When, F, DecimalField, OuterRef, Subquery, Value, Max
+from django.db.models.functions import Coalesce
 from reportlab.pdfgen import canvas
 from django.http import HttpResponse
 import json
 import openpyxl
 import os
+
+from .models import Debito, Credito, Taxa, Dado, RepasseRetido
 
 
 def construir_dias_filtro(data_inicio: str, data_fim: str, dt_vencimento, campo: str) -> dict:
@@ -104,3 +107,79 @@ def exportar_planilha_prestacao_diaria(request, *args, **kwargs):
             response = HttpResponse(file.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
             response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
             return response
+        
+def repasses_nao_aprovados(data_inicial, data_final):
+    dados_dias = {}
+    for i in range((datetime.strptime(data_final, '%Y-%m-%d') - datetime.strptime(data_inicial, '%Y-%m-%d')).days + 1):
+        dia = datetime.strptime(data_inicial, '%Y-%m-%d') + timedelta(days=i)
+        dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
+            Case(
+                When(dt_credito__day=dia.day, then=F('repasses')),
+                default=0,
+                output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
+            ),
+        )
+
+    dados = Dado.objects.filter(
+        dt_credito__gte=data_inicial, 
+        dt_credito__lte=data_final,
+        repasse_aprovado=False,
+    ).values(
+        'id_vendedor','vendedor', id_dado=Max('id')
+    ).annotate(
+        total_repasses_retidos=Coalesce(
+            Subquery(
+                RepasseRetido.objects.filter(
+                    cliente_id=OuterRef('id_vendedor'),
+                    dt_rep_retido__gte=data_inicial,
+                    dt_rep_retido__lte=data_final,
+                ).values('cliente_id')
+                .annotate(total=Sum('vlr_rep_retido'))
+                .values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+        ),
+        **dados_dias,
+        total_credito=Coalesce(
+            Subquery(
+                Credito.objects.filter(
+                    cliente_id=OuterRef('id_vendedor'),
+                    dt_creditado__gte=data_inicial,
+                    dt_creditado__lte=data_final,
+                ).values('cliente_id')
+                .annotate(total=Sum('vl_credito'))
+                .values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+        ),
+        total_taxa=Coalesce(
+            Subquery(
+                Taxa.objects.filter(
+                    cliente_id=OuterRef('id_vendedor'),
+                    dt_taxa__gte=data_inicial,
+                    dt_taxa__lte=data_final,
+                ).values('cliente_id')
+                .annotate(total=Sum('taxas'))
+                .values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+        ),
+        total_debito=Coalesce(
+            Subquery(
+                Debito.objects.filter(
+                    cliente_id=OuterRef('id_vendedor'),
+                    dt_debitado__gte=data_inicial,
+                    dt_debitado__lte=data_final,
+                ).values('cliente_id')
+                .annotate(total=Sum('vl_debito'))
+                .values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+        ),
+        total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
+    )
+    return [dados, dados_dias]

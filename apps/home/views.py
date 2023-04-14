@@ -203,9 +203,9 @@ def pages(request):
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    dados_dias = {}
                     context['data_inicio'] = data_inicio
                     context['data_final'] = data_fim
+                    dados_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
                         dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
@@ -225,7 +225,7 @@ def pages(request):
                         dt_credito__lte=data_fim,
                         repasse_aprovado=False,
                     ).values(
-                        'id_vendedor', 'vendedor', id_dado=Max('id')
+                        'id_vendedor','vendedor', id_dado=Max('id')
                     ).annotate(
                         total_repasses_retidos=Coalesce(
                             Subquery(
@@ -287,7 +287,9 @@ def pages(request):
 
                     tbody = "<tr>"
                     for dado in context['dados']:
-                        tbody += '<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="/aprovar_repasse/{}/{}/{}">Aprovar Repasse</a></td>'.format(dado,data_inicio,data_fim)
+                        tbody += '<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="/aprovar_repasse/{}/{}/{}/{}/{}/{}/{}/{}">Aprovar Repasse</a></td>'.format(
+                            dado['id_vendedor'],data_inicio,data_fim, dado['total_repasses_retidos'],dado['total_credito'],dado['total_taxa'],dado['total_debito'],dado['total_repasse'])
+                        #tbody += f'<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="/aprovar_repasse/{}/{data_inicio}/{data_fim}">Aprovar Repasse</a></td>'
                         tbody += f"<td>{dado['id_vendedor']}</td>"
                         tbody += f"<td>{dado['vendedor']}</td>"
                         tbody += f"<td>{dado['total_repasses_retidos']}</td>"
@@ -1105,22 +1107,66 @@ def upload_planilha_dados_brutos(request):
     return HttpResponse("HTTP REQUEST")
 
 def aprovar_repasse(request, *args, **kwargs) :
+    id_vendedor = kwargs.get('id_vendedor')
+    data_inicial = kwargs.get('data_inicial')
+    data_final = kwargs.get('data_final')
+    total_repasses_retidos = kwargs.get('total_repasses_retidos')
+    total_credito = kwargs.get('total_credito')
+    total_debito = kwargs.get('total_debito')
+    total_taxa = kwargs.get('total_taxa')
+    total_repasse = kwargs.get('total_repasse')
+    try:
+        cliente = Pessoas.objects.get(id=id_vendedor)
+    except Pessoas.DoesNotExist:
+        cliente = Pessoas.objects.create(id=id_vendedor)
+    except Pessoas.MultipleObjectsReturned:
+        return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {id_vendedor}")
+    dados = Dado.objects.filter(id_vendedor=id_vendedor, dt_credito__range=(data_inicial, data_final))
+
+    repasse_aprovado = RepasseAprovado.objects.create(
+        cliente=cliente,
+        total_repasses_retidos=total_repasses_retidos,
+        total_credito=total_credito,
+        total_debito=total_debito,
+        total_taxa=total_taxa,
+        total_repasse=total_repasse,
+        data_inicial=data_inicial,
+        data_final=data_final,
+    )
+    for dado in dados:
+        dado.repasse_aprovado = True
+        dado.save()
+        repasse_aprovado.dado.add(dado)
+    #dados_nao_aprovados = Dado.objects.filter(dt_credito__range=(data_inicial, data_final), repasse_aprovado=False)
+    dados = funcoes.repasses_nao_aprovados(data_inicial, data_final)
+    
+    
+    return JsonResponse(
+        {
+        'dados':list(dados[0]),
+        'dados_dias':list(dados[1]),
+        'data_inicio':data_inicial,
+        'data_fim':data_final, 
+        'status':200
+        }
+    )
     dados_consultados_string = kwargs.get('dados_consultados')
     #dados_consultados_dict = ast.literal_eval(dados_consultados_string)
     data_inicial = kwargs.get('data_inicial')
     data_final = kwargs.get('data_final')
+    id_vendedor = kwargs.get('id_vendedor')
     dados_consultados_string = dados_consultados_string.replace("Decimal('", "'").replace("')", "'")
     dados_consultados_dict = ast.literal_eval(dados_consultados_string)
     
     
     try:
-        cliente = Pessoas.objects.get(id=dados_consultados_dict.get('id_vendedor'))
+        cliente = Pessoas.objects.get(id=id_vendedor)
     except Pessoas.DoesNotExist:
-        cliente = Pessoas.objects.create(id=dados_consultados_dict.get('id_vendedor'), nome=dados_consultados_dict.get('vendedor'))
+        cliente = Pessoas.objects.create(id=id_vendedor)
     except Pessoas.MultipleObjectsReturned:
         return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {dados_consultados_dict.get('id_vendedor')}")
     
-    dados = Dado.objects.filter(id_vendedor=dados_consultados_dict.get('id_vendedor'), dt_credito__range=(data_inicial, data_final))
+    dados = Dado.objects.filter(id_vendedor=id_vendedor, dt_credito__range=(data_inicial, data_final))
     repasse_aprovado = RepasseAprovado.objects.create(
         cliente=cliente,
         total_repasses_retidos=dados_consultados_dict.get('total_repasses_retidos'),
@@ -1138,7 +1184,6 @@ def aprovar_repasse(request, *args, **kwargs) :
     #return HttpResponseRedirect('/tbl_bootstrap.html')
     dados_nao_aprovados = Dado.objects.filter(dt_credito__range=(data_inicial, data_final), repasse_aprovado=False).values()
     dados_nao_aprovados_json = json.dumps(list(dados_nao_aprovados))
-    print('ENTREI AQUI DJANGO SERVER')
     return JsonResponse({'dados': dados_nao_aprovados_json, 'data_inicial': data_inicial, 'data_final': data_final, 'status': 200})
 
 def desaprovar_repasse(request, *args, **kwargs):
