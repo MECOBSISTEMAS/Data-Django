@@ -920,6 +920,7 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
                     cad_cliente.tcc = tcc
                     cad_cliente.honorarios = honorarios
                     cad_cliente.repasse_semanal = True if repasse_semanal == 'SIM' else False
+                    cad_cliente.save()
                 except CadCliente.DoesNotExist:
                     cad_cliente = CadCliente.objects \
                         .create(vendedor=vendedor, 
