@@ -913,13 +913,13 @@ def upload_planilha_cad_clientes(request, *args, **kwargs):
                     erros.append('Erro ao criar o vendedor, Multiplas Pessoas Encontradas: {}, linha: {}'.format(nome_vendedor, linha))
                     continue
                 try:
-                    cad_cliente = CadCliente.objects.get(vendedor=vendedor)
+                    cad_cliente = CadCliente.objects.get(vendedor__id=vendedor.id)
                     cad_cliente.sim = sim
                     cad_cliente.nao = nao
                     cad_cliente.operacional = operacional
                     cad_cliente.tcc = tcc
                     cad_cliente.honorarios = honorarios
-                    cad_cliente.repasse_semanal = True if repasse_semanal == 'SIM' else False
+                    cad_cliente.repasse_semanal = True if str(repasse_semanal) == 'SIM' else False
                     cad_cliente.save()
                 except CadCliente.DoesNotExist:
                     cad_cliente = CadCliente.objects \
