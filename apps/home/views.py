@@ -968,30 +968,13 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             hon = row[9]
             repasse = row[10]
             try:
-                try:
-                    comprador = Pessoas.objects.get(nome=comprador_nome)
-                except Pessoas.DoesNotExist:
-                    comprador = Pessoas.objects.create(nome=comprador_nome)
-                except Pessoas.MultipleObjectsReturned:
-                    erros.append(f"Erro na linha {linhas}, comprador {comprador_nome} possui mais de um cadastro")
-                Debito.objects.create(cliente=comprador, vl_debito=desconto_total, dt_debitado=dt_vencimento)
-                try:
-                    vendedor = Pessoas.objects.get(nome=vendedor_nome)
-                except Pessoas.DoesNotExist:
-                    vendedor = Pessoas.objects.create(nome=vendedor_nome)
-                except Pessoas.MultipleObjectsReturned:
-                    erros.append(f"Erro na linha {linhas}, vendedor {vendedor_nome} possui mais de um cadastro")
-                Credito.objects.create(cliente=vendedor, vl_credito=repasse, dt_creditado=dt_vencimento)
-            except Exception as e:
-                erros.append(f"Erro na linha {linhas}, {e}")
-            try:
-                parcela_taxa = ParcelaTaxa.objects.get(id_contrato=contrato_parcelas_id, comprador=comprador, vendedor=vendedor, valor=valor)
+                parcela_taxa = ParcelaTaxa.objects.get(id_contrato=contrato_parcelas_id, comprador=comprador_nome, vendedor=vendedor_nome, valor=valor)
                 #!modificar todos os outros campos caso seja encontrado no aquivo e salvar
             except ParcelaTaxa.DoesNotExist:
                 ParcelaTaxa.objects.create(
                     id_contrato=contrato_parcelas_id,
-                    comprador=comprador,
-                    vendedor=vendedor,
+                    comprador=comprador_nome,
+                    vendedor=vendedor_nome,
                     parcela=parcela,
                     dt_vencimento=dt_vencimento,
                     valor=valor,
