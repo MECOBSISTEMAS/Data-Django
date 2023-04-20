@@ -29,12 +29,11 @@ apps/static/assets/node_modules
 apps/static/assets/yarn.lock
 apps/static/assets/.temp
 
-.env__
+
 cavalos_09_2022_backup.xlsx
 cavalos_09_2022.xlsx
 *.xlsx
 auto-text.txt
 planilhas_ferv/
 
-.env
 *.pdf
