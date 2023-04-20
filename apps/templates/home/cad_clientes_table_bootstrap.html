@@ -70,7 +70,7 @@
                             <td>{{ cad_cliente.operacional }}</td>
                             <td>{{ cad_cliente.tcc }}</td>
                             <td>{{ cad_cliente.honorarios }}</td>
-                            <td>{{ cad_cliente.repasse_semanal }}</td>
+                            <td>{% if cad_cliente.repasse_semanal %}SIM {% else %} NÃo {% endif %}</td>
                           {% endfor %}
                           {% comment %} 
                           <tr>
