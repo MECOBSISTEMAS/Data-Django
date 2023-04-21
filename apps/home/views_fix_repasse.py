@@ -954,36 +954,36 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 continue
             if row[0] == None or row[0] == '':
                 break
-            contrato_parcelas_id = row[0]
-            comprador_nome = row[1]
-            vendedor_nome = row[2]
-            parcela = row[3]# (1/2), pegar o primeiro digito antes da barra
-            vencimento = row[4] #14/01/2023, dia 14 mes 01 ano 2023
-            dt_vencimento = date(day=vencimento.day, month=vencimento.month, year=vencimento.year)
-            dt_vencimento = datetime.combine(dt_vencimento, datetime.min.time())
-
-            valor = row[5]
-            tcc = row[6]
-            ted = row[7]
-            desconto_total = row[8]
-            hon = row[9]
-            repasse = row[10]
+            id_contrato = row[0]
+            id_comprador = row[1]
+            nome_comprador = row[2]
+            id_vendedor = row[3]
+            nome_vendedor = row[4]
+            parcela = row[5]
+            dt_vencimento = row[6]#datetime.strptime(row[6], "<%d/%m/%Y>").date()
+            valor = row[7]
+            tcc = row[8]
+            ted = row[9]
+            desconto_total = row[10]
+            honorarios = row[11]
+            repasse = row[12]
             try:
-                parcela_taxa = ParcelaTaxa.objects.get(id_contrato=contrato_parcelas_id, comprador=comprador_nome, vendedor=vendedor_nome, valor=valor)
-                #!modificar todos os outros campos caso seja encontrado no aquivo e salvar
+                parcela_taxa = ParcelaTaxa.objects.get(id_comprador=id_comprador, id_vendedor=id_vendedor, parcela=parcela, dt_vencimento=dt_vencimento)
+                parcela_taxa.valor = valor
+                parcela_taxa.tcc = tcc
+                parcela_taxa.ted = ted
+                parcela_taxa.desconto_total = desconto_total
+                parcela_taxa.honorarios = honorarios
+                parcela_taxa.repasse = repasse
+                parcela_taxa.save()
             except ParcelaTaxa.DoesNotExist:
                 ParcelaTaxa.objects.create(
-                    id_contrato=contrato_parcelas_id,
-                    comprador=comprador_nome,
-                    vendedor=vendedor_nome,
-                    parcela=parcela,
-                    dt_vencimento=dt_vencimento,
-                    valor=valor,
-                    tcc=tcc,
-                    desconto_total=desconto_total,
-                    honorarios=hon,
-                    repasse=repasse,
+                    id_contrato=id_contrato, id_comprador=id_comprador, nome_comprador=nome_comprador,
+                    id_vendedor=id_vendedor, nome_vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
+                    valor=valor, tcc=tcc, ted=ted, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
                 )
+            except Exception as e:
+                erros.append('Erro ao criar a parcela, linha: {}, erro: {}'.format(linhas, e))
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
