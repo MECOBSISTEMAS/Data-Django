@@ -243,6 +243,7 @@ class RepasseAprovado(models.Model):
     total_repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     data_inicial = models.DateField(_(""), blank=True, null=True)
     data_final = models.DateField(_(""), blank=True, null=True)
+    data_aprovado = models.DateTimeField(_(""), blank=True, null=True)
     def __str__(self):
         return f'{self.cliente}, {self.total_repasse}'
 
@@ -255,7 +256,9 @@ class RepasseAprovado(models.Model):
 
 class ParcelaTaxa(models.Model):
     id_contrato = models.IntegerField(_(""), blank=True, null=True)
+    id_comprador = models.IntegerField(_(""), blank=True, null=True)
     comprador = models.CharField(_("Nome do comprador "), max_length=128, blank=True, null=True)
+    id_vendedor= models.IntegerField(_(""), blank=True, null=True)
     vendedor = models.CharField(_("Nome do vendedor "), max_length=128, blank=True, null=True)
     parcela = models.CharField(_(""), max_length=128, blank=True, null=True)
     dt_vencimento = models.DateField(_(""), blank=True, null=True)
@@ -265,6 +268,7 @@ class ParcelaTaxa(models.Model):
     honorarios = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     aprovada = models.BooleanField(_(""), blank=True, null=True, default=False)
+    data_criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
     
     def __str__(self):
         return f'{self.id_contrato}, {self.comprador}'

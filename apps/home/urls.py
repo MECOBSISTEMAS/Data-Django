@@ -8,7 +8,7 @@ from apps.home import views, views_fix_repasse
 
 
 app_name = 'home'
-
+""" 
 urlpatterns = [
 
     # The home page
@@ -40,9 +40,9 @@ urlpatterns = [
     # Matches any html file
     re_path(r'^.*\.*', views.pages, name='pages'),
 
-]
+] """
 
-""" urlpatterns = [
+urlpatterns = [
 
     # The home page
     path('', views_fix_repasse.index, name='home'),
@@ -73,4 +73,4 @@ urlpatterns = [
     # Matches any html file
     re_path(r'^.*\.*', views_fix_repasse.pages, name='pages'),
 
-] """
+]
