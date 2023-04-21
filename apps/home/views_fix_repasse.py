@@ -243,12 +243,13 @@ def pages(request):
                         **dados_dias,
                         total_credito=Coalesce(
                             Subquery(
-                                Credito.objects.filter(
-                                    cliente_id=OuterRef('id_vendedor'),
-                                    dt_creditado__gte=data_inicio,
-                                    dt_creditado__lte=data_fim,
-                                ).values('cliente_id')
-                                .annotate(total=Sum('vl_credito'))
+                                ParcelaTaxa.objects.filter(
+                                    id_vendedor=OuterRef('id_vendedor'),
+                                    dt_vencimento__gte=data_inicio,
+                                    dt_vencimento__lte=data_fim,
+                                    aprovada=True
+                                ).values('id_vendedor')
+                                .annotate(total=Sum('repasse'))
                                 .values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
@@ -269,6 +270,19 @@ def pages(request):
                         ),
                         total_debito=Coalesce(
                             Subquery(
+                                ParcelaTaxa.objects.filter(
+                                    id_comprador=OuterRef('id_vendedor'),
+                                    dt_vencimento__gte=data_inicio,
+                                    dt_vencimento__lte=data_fim,
+                                    aprovada=True,
+                                ).values('id_comprador').annotate(total=Sum('desconto_total')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+                        ),
+                        total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
+                    ).order_by('id_vendedor')
+                    """ Subquery(
                                 Debito.objects.filter(
                                     cliente_id=OuterRef('id_vendedor'),
                                     dt_debitado__gte=data_inicio,
@@ -278,10 +292,7 @@ def pages(request):
                                 .values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
-                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-                        ),
-                        total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
-                    ).order_by('id_vendedor')
+                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2)) """
 
                     request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
 
@@ -967,23 +978,11 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             desconto_total = row[10]
             honorarios = row[11]
             repasse = row[12]
-            try:
-                parcela_taxa = ParcelaTaxa.objects.get(id_comprador=id_comprador, id_vendedor=id_vendedor, parcela=parcela, dt_vencimento=dt_vencimento)
-                parcela_taxa.valor = valor
-                parcela_taxa.tcc = tcc
-                parcela_taxa.ted = ted
-                parcela_taxa.desconto_total = desconto_total
-                parcela_taxa.honorarios = honorarios
-                parcela_taxa.repasse = repasse
-                parcela_taxa.save()
-            except ParcelaTaxa.DoesNotExist:
-                ParcelaTaxa.objects.create(
-                    id_contrato=id_contrato, id_comprador=id_comprador, nome_comprador=nome_comprador,
-                    id_vendedor=id_vendedor, nome_vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
-                    valor=valor, tcc=tcc, ted=ted, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
-                )
-            except Exception as e:
-                erros.append('Erro ao criar a parcela, linha: {}, erro: {}'.format(linhas, e))
+            ParcelaTaxa.objects.create(
+                id_contrato=id_contrato, id_comprador=id_comprador, comprador=nome_comprador,
+                id_vendedor=id_vendedor, vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
+                valor=valor, tcc=tcc, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
+            )
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
