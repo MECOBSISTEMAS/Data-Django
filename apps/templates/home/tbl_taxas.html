@@ -75,6 +75,7 @@
             </div>
 
             <div class="card-block table-border-style">
+              {% comment %} start table {% endcomment %}
               <div class="table-responsive">
                 <table class="table table-hover" id="table-taxas">
                   <thead>
@@ -89,6 +90,67 @@
                   </thead>
                   <tbody>
                     {{tbody|safe}}
+                  </tbody>
+                </table>
+              </div>
+              {% comment %} end table {% endcomment %}
+
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-taxas-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome</th>
+                      <th>Data Taxa</th>
+                      <th>Taxa Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for taxa in taxas_nao_aprovadas %}
+                      <th>
+                        <a 
+                        name="aprovar-taxa" 
+                        id="aprovar-taxa" 
+                        class="btn btn-primary" 
+                        href="{% url 'home:aprovar_taxa_manual' taxa.id %}" 
+                        role="button">Aprovar</a>
+                      </th>
+                      <th>{{taxa.cliente_id}}</th>
+                      <th>{{taxa.cliente__nome}}</th>
+                      <th>{{taxa.dt_taxa}}</th>
+                      <th>{{taxa.taxas}}</th>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-taxas-nao-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome</th>
+                      <th>Data Taxa</th>
+                      <th>Taxa Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for taxa in taxas_aprovadas %}
+                      <th>
+                        <a 
+                        name="desaprovar-taxa" 
+                        id="desaprovar-taxa" 
+                        class="btn btn-danger" 
+                        href="#" 
+                        role="button">Desaprovar</a>
+                      </th>
+                      <th>{{taxa.cliente_id}}</th>
+                      <th>{{taxa.cliente__nome}}</th>
+                      <th>{{taxa.dt_taxa}}</th>
+                      <th>{{taxa.taxas}}</th>
+                    {% endfor %}
                   </tbody>
                 </table>
               </div>
@@ -108,6 +170,8 @@
 <script>
   $(document).ready(function(){
     $('#table-taxas').DataTable();
+    $('#table-taxas-aprovadas').DataTable();
+    $('#table-taxas-nao-aprovadas').DataTable();
   })
 </script>
 {% endblock javascripts %}

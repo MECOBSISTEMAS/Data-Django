@@ -70,6 +70,7 @@ urlpatterns = [
          views_fix_repasse.aprovar_parcela_taxa, name="aprovar_parcela_taxa"),
     path('desaprovar_repasse/<repasse_aprovado_id>',
          views_fix_repasse.desaprovar_repasse, name="desaprovar_repasse"),
+    path('aprovar-taxa-manual/<taxa_id>',views_fix_repasse.aprovar_taxa_manual, name="aprovar_taxa_manual"),
     # Matches any html file
     re_path(r'^.*\.*', views_fix_repasse.pages, name='pages'),
 

@@ -261,6 +261,7 @@ def pages(request):
                                     cliente_id=OuterRef('id_vendedor'),
                                     dt_taxa__gte=data_inicio,
                                     dt_taxa__lte=data_fim,
+                                    aprovada=True
                                 ).values('cliente_id')
                                 .annotate(total=Sum('taxas'))
                                 .values('total'),
@@ -504,6 +505,19 @@ def pages(request):
                         tbody += f"<td>{taxa['total_taxa']}</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
+                    
+                    context['taxas_nao_aprovadas'] = Taxa.objects.filter(
+                        dt_taxa__gte=data_inicio,
+                        dt_taxa__lte=data_fim,
+                        aprovada=False,
+                    )
+                    
+                    context['taxas_aprovadas'] = Taxa.objects.filter(
+                        dt_taxa__gte=data_inicio,
+                        dt_taxa__lte=data_fim,
+                        aprovada=True,
+                    )
+
                     
         elif load_template == 'tbl_repasse_retido.html':
             if request.method == 'POST':
@@ -1186,3 +1200,15 @@ def aprovar_parcela_taxa(request, *args, **kwargs):
 
 def desaprovar_parcela_taxa(request, *args, **kwargs):
     return HttpResponse("Funcionando o Desaprovar Repasse")
+
+def aprovar_taxa_manual(request, *args, **kwargs):
+    taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
+    taxa.aprovada = True
+    taxa.save()
+    return HttpResponseRedirect('/tbl_taxas.html')
+
+def desaprovar_taxa_manual(request, *args, **kwargs):
+    taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
+    taxa.aprovada = False
+    taxa.save()
+    return HttpResponseRedirect('/tbl_taxas.html')

@@ -50,6 +50,7 @@ class RepasseRetido(models.Model):
     vlr_rep_retido = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     dt_rep_retido = models.DateField(_(""), blank=True, null=True)
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
+    aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
     
     class Meta:
         verbose_name = _("RepasseRetido")
@@ -70,6 +71,7 @@ class Debito(models.Model):
     dt_debitado = models.DateField(_(""), blank=True, null=True)
     #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
+    aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
     
     class Meta:
         verbose_name = _("debito")
@@ -89,6 +91,7 @@ class Credito(models.Model):
     #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
     cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True, related_name='creditos')
     descricao = models.CharField(_(""), max_length=128, blank=True, null=True)
+    aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
 
     class Meta:
         verbose_name = _("credito")
@@ -111,6 +114,7 @@ class Taxa(models.Model):
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
     dt_taxa = models.DateField(_(""), blank=True, null=True)
+    aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
     
     class Meta:
         verbose_name = _("taxas")
