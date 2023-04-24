@@ -63,6 +63,11 @@
                   </button>
                 </p>
               </form>
+              <form action="{% url 'home:upload_planilha_parcelas_taxas' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
+                {% csrf_token %}
+                <input type="file" name="docpicker">
+                <button type="submit" class="btn btn-primary">Enviar pLanilha</button>
+              </form>
               <h6>Filtrado de: {{data_inicio}} até: {{data_fim}}</h6>
             </div>
 
