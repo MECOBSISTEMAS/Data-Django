@@ -108,18 +108,20 @@
                   </thead>
                   <tbody>
                     {% for taxa in taxas_nao_aprovadas %}
-                      <th>
-                        <a 
-                        name="aprovar-taxa" 
-                        id="aprovar-taxa" 
-                        class="btn btn-primary" 
-                        href="{% url 'home:aprovar_taxa_manual' taxa.id %}" 
-                        role="button">Aprovar</a>
-                      </th>
-                      <th>{{taxa.cliente_id}}</th>
-                      <th>{{taxa.cliente__nome}}</th>
-                      <th>{{taxa.dt_taxa}}</th>
-                      <th>{{taxa.taxas}}</th>
+                      <tr>
+                        <th>
+                          <a 
+                          name="aprovar-taxa" 
+                          id="aprovar-taxa" 
+                          class="btn btn-primary" 
+                          href="{% url 'home:aprovar_taxa_manual' taxa.id %}" 
+                          role="button">Aprovar</a>
+                        </th>
+                        <th>{{taxa.cliente_id}}</th>
+                        <th>{{taxa.cliente__nome}}</th>
+                        <th>{{taxa.dt_taxa}}</th>
+                        <th>{{taxa.taxas}}</th>
+                      </tr>
                     {% endfor %}
                   </tbody>
                 </table>
@@ -138,18 +140,20 @@
                   </thead>
                   <tbody>
                     {% for taxa in taxas_aprovadas %}
-                      <th>
-                        <a 
-                        name="desaprovar-taxa" 
-                        id="desaprovar-taxa" 
-                        class="btn btn-danger" 
-                        href="#" 
-                        role="button">Desaprovar</a>
-                      </th>
-                      <th>{{taxa.cliente_id}}</th>
-                      <th>{{taxa.cliente__nome}}</th>
-                      <th>{{taxa.dt_taxa}}</th>
-                      <th>{{taxa.taxas}}</th>
+                      <tr>
+                        <th>
+                          <a 
+                          name="desaprovar-taxa" 
+                          id="desaprovar-taxa" 
+                          class="btn btn-danger" 
+                          href="#" 
+                          role="button">Desaprovar</a>
+                        </th>
+                        <th>{{taxa.cliente_id}}</th>
+                        <th>{{taxa.cliente__nome}}</th>
+                        <th>{{taxa.dt_taxa}}</th>
+                        <th>{{taxa.taxas}}</th>
+                      </tr>
                     {% endfor %}
                   </tbody>
                 </table>
