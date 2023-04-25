@@ -44,8 +44,8 @@
                     <h5>Pagamentos aprovados</h5>
                     <form method="POST">
                       {% csrf_token %}
-                      data inicio <input required type="date" id="data-inicio" name="data-inicio" >
-                      data fim <input required type="date" id="data-fim" name="data-fim">
+                      data inicio <input required type="date" id="data-inicio" name="data-inicio" {% if data_inicio %} value={{data_inicio}} {% endif %} >
+                      data fim <input required type="date" id="data-fim" name="data-fim" {% if data_fim %} value={{data_fim}} {% endif %}>
                       <button type="submit" name="filtrar-parcela-taxa-aprovada" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>

@@ -49,9 +49,10 @@
                     type="date"
                     name="data-inicio"
                     id="data-inicio"
+                    {% if data_inicio %} value={{data_inicio}} {% endif %}
                   />
                   até
-                  <input type="date" name="data-fim" id="data-fim" />
+                  <input type="date" name="data-fim" id="data-fim" {% if data_fim %} value={{data_fim}} {% endif %} />
                   <button class="btn btn-primary" type="submit" name="filtrar-parcela-taxa">Filtrar</button>
                   <button
                     type="button"
@@ -68,7 +69,6 @@
                 <input type="file" name="docpicker">
                 <button type="submit" class="btn btn-primary">Enviar pLanilha</button>
               </form>
-              <h6>Filtrado de: {{data_inicio}} até: {{data_fim}}</h6>
             </div>
 
             <div class="card-block table-border-style">

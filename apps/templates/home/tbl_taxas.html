@@ -49,9 +49,10 @@
                     type="date"
                     name="data-inicio"
                     id="data-inicio"
+                    {% if data_inicio %}value={{data_inicio}}{% endif %}
                   />
                   até
-                  <input type="date" name="data-fim" id="data-fim" />
+                  <input type="date" name="data-fim" id="data-fim" {% if data_fim %}value={{data_fim}}{% endif %} />
                   <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
                   <button
                     type="button"

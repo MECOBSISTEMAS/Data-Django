@@ -469,6 +469,8 @@ def pages(request):
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    context['data_inicio'] = data_inicio
+                    context['data_fim'] = data_fim
                     taxas_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
