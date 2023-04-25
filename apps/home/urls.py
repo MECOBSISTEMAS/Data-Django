@@ -66,11 +66,12 @@ urlpatterns = [
          name="upload_planilha_dados_brutos"),
     path('aprovar_repasse/<id_vendedor>/<data_inicial>/<data_final>/<total_repasse_retido>/<total_credito>/<total_taxa>/<total_debito>/<total_repasse>',
          views_fix_repasse.aprovar_repasse, name="aprovar_repasse"),
-    path('aprovar_parcela_taxa/<parcela_taxa_id>',
+    path('aprovar_parcela_taxa/<parcela_taxa_id>/<data_inicio>/<data_fim>',
          views_fix_repasse.aprovar_parcela_taxa, name="aprovar_parcela_taxa"),
     path('desaprovar_repasse/<repasse_aprovado_id>',
          views_fix_repasse.desaprovar_repasse, name="desaprovar_repasse"),
     path('aprovar-taxa-manual/<taxa_id>',views_fix_repasse.aprovar_taxa_manual, name="aprovar_taxa_manual"),
+    path('desaprovar_parcela_taxa/<parcela_taxa_id>/',views_fix_repasse.desaprovar_parcela_taxa, name="desaprovar_parcela_taxa"),
     # Matches any html file
     re_path(r'^.*\.*', views_fix_repasse.pages, name='pages'),
 

@@ -79,7 +79,7 @@
                         <tbody>
                           {% for parcela_taxa_aprovada in parcelas_taxas_aprovadas %}
                           <tr>
-                            <th><a name="" id="" class="btn btn-primary btn-sm" href="#" role="button">Desaprovar</a></th>
+                            <th><a name="" id="" class="btn btn-primary btn-sm" href="{% url 'home:desaprovar_parcela_taxa' parcela_taxa_aprovada.id %}" role="button">Desaprovar</a></th>
                             <th>{{parcela_taxa_aprovada.id_contrato}}</th>
                             <th>{{parcela_taxa_aprovada.id_comprador}}</th>
                             <th>{{parcela_taxa_aprovada.comprador}}</th>

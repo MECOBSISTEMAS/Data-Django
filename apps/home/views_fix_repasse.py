@@ -1196,12 +1196,26 @@ def desaprovar_repasse(request, *args, **kwargs):
 
 def aprovar_parcela_taxa(request, *args, **kwargs):
     parcela_taxa = ParcelaTaxa.objects.get(id=kwargs.get('parcela_taxa_id'))
+    data_inicio = kwargs.get('data_inicio')
+    data_fim = kwargs.get('data_fim')
     parcela_taxa.aprovada = True
     parcela_taxa.save()
+    
+    return JsonResponse(
+        {
+            'parcelas_taxas': list(ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio, data_fim), aprovada=False).values()),
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'status': 200,
+        }
+    )
     return HttpResponseRedirect('/tbl_parcela_taxas.html')
 
 def desaprovar_parcela_taxa(request, *args, **kwargs):
-    return HttpResponse("Funcionando o Desaprovar Repasse")
+    parcela_taxa_aprovada = ParcelaTaxa.objects.get(id=kwargs.get('parcela_taxa_id'))
+    parcela_taxa_aprovada.aprovada = False
+    parcela_taxa_aprovada.save()
+    return HttpResponseRedirect('tbl_taxas_aprovadas.html')
 
 def aprovar_taxa_manual(request, *args, **kwargs):
     taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
