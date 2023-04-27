@@ -243,12 +243,13 @@ def pages(request):
                         **dados_dias,
                         total_credito=Coalesce(
                             Subquery(
-                                Credito.objects.filter(
-                                    cliente_id=OuterRef('id_vendedor'),
-                                    dt_creditado__gte=data_inicio,
-                                    dt_creditado__lte=data_fim,
-                                ).values('cliente_id')
-                                .annotate(total=Sum('vl_credito'))
+                                ParcelaTaxa.objects.filter(
+                                    id_vendedor=OuterRef('id_vendedor'),
+                                    dt_vencimento__gte=data_inicio,
+                                    dt_vencimento__lte=data_fim,
+                                    aprovada=True
+                                ).values('id_vendedor')
+                                .annotate(total=Sum('repasse'))
                                 .values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
@@ -260,6 +261,7 @@ def pages(request):
                                     cliente_id=OuterRef('id_vendedor'),
                                     dt_taxa__gte=data_inicio,
                                     dt_taxa__lte=data_fim,
+                                    aprovada=True
                                 ).values('cliente_id')
                                 .annotate(total=Sum('taxas'))
                                 .values('total'),
@@ -269,6 +271,19 @@ def pages(request):
                         ),
                         total_debito=Coalesce(
                             Subquery(
+                                ParcelaTaxa.objects.filter(
+                                    id_comprador=OuterRef('id_vendedor'),
+                                    dt_vencimento__gte=data_inicio,
+                                    dt_vencimento__lte=data_fim,
+                                    aprovada=True,
+                                ).values('id_comprador').annotate(total=Sum('desconto_total')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                        Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
+                        ),
+                        total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
+                    ).order_by('id_vendedor')
+                    """ Subquery(
                                 Debito.objects.filter(
                                     cliente_id=OuterRef('id_vendedor'),
                                     dt_debitado__gte=data_inicio,
@@ -278,10 +293,7 @@ def pages(request):
                                 .values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
-                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2))
-                        ),
-                        total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
-                    ).order_by('id_vendedor')
+                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2)) """
 
                     request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
 
@@ -457,6 +469,8 @@ def pages(request):
                     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    context['data_inicio'] = data_inicio
+                    context['data_fim'] = data_fim
                     taxas_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
@@ -493,6 +507,19 @@ def pages(request):
                         tbody += f"<td>{taxa['total_taxa']}</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
+                    
+                    context['taxas_nao_aprovadas'] = Taxa.objects.filter(
+                        dt_taxa__gte=data_inicio,
+                        dt_taxa__lte=data_fim,
+                        aprovada=False,
+                    )
+                    
+                    context['taxas_aprovadas'] = Taxa.objects.filter(
+                        dt_taxa__gte=data_inicio,
+                        dt_taxa__lte=data_fim,
+                        aprovada=True,
+                    )
+
                     
         elif load_template == 'tbl_repasse_retido.html':
             if request.method == 'POST':
@@ -954,36 +981,24 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 continue
             if row[0] == None or row[0] == '':
                 break
-            contrato_parcelas_id = row[0]
-            comprador_nome = row[1]
-            vendedor_nome = row[2]
-            parcela = row[3]# (1/2), pegar o primeiro digito antes da barra
-            vencimento = row[4] #14/01/2023, dia 14 mes 01 ano 2023
-            dt_vencimento = date(day=vencimento.day, month=vencimento.month, year=vencimento.year)
-            dt_vencimento = datetime.combine(dt_vencimento, datetime.min.time())
-
-            valor = row[5]
-            tcc = row[6]
-            ted = row[7]
-            desconto_total = row[8]
-            hon = row[9]
-            repasse = row[10]
-            try:
-                parcela_taxa = ParcelaTaxa.objects.get(id_contrato=contrato_parcelas_id, comprador=comprador_nome, vendedor=vendedor_nome, valor=valor)
-                #!modificar todos os outros campos caso seja encontrado no aquivo e salvar
-            except ParcelaTaxa.DoesNotExist:
-                ParcelaTaxa.objects.create(
-                    id_contrato=contrato_parcelas_id,
-                    comprador=comprador_nome,
-                    vendedor=vendedor_nome,
-                    parcela=parcela,
-                    dt_vencimento=dt_vencimento,
-                    valor=valor,
-                    tcc=tcc,
-                    desconto_total=desconto_total,
-                    honorarios=hon,
-                    repasse=repasse,
-                )
+            id_contrato = row[0]
+            id_comprador = row[1]
+            nome_comprador = row[2]
+            id_vendedor = row[3]
+            nome_vendedor = row[4]
+            parcela = row[5]
+            dt_vencimento = row[6]#datetime.strptime(row[6], "<%d/%m/%Y>").date()
+            valor = row[7]
+            tcc = row[8]
+            ted = row[9]
+            desconto_total = row[10]
+            honorarios = row[11]
+            repasse = row[12]
+            ParcelaTaxa.objects.create(
+                id_contrato=id_contrato, id_comprador=id_comprador, comprador=nome_comprador,
+                id_vendedor=id_vendedor, vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
+                valor=valor, tcc=tcc, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
+            )
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
@@ -1181,9 +1196,35 @@ def desaprovar_repasse(request, *args, **kwargs):
 
 def aprovar_parcela_taxa(request, *args, **kwargs):
     parcela_taxa = ParcelaTaxa.objects.get(id=kwargs.get('parcela_taxa_id'))
+    data_inicio = kwargs.get('data_inicio')
+    data_fim = kwargs.get('data_fim')
     parcela_taxa.aprovada = True
     parcela_taxa.save()
+    
+    return JsonResponse(
+        {
+            'parcelas_taxas': list(ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio, data_fim), aprovada=False).values()),
+            'data_inicio': data_inicio,
+            'data_fim': data_fim,
+            'status': 200,
+        }
+    )
     return HttpResponseRedirect('/tbl_parcela_taxas.html')
 
 def desaprovar_parcela_taxa(request, *args, **kwargs):
-    return HttpResponse("Funcionando o Desaprovar Repasse")
+    parcela_taxa_aprovada = ParcelaTaxa.objects.get(id=kwargs.get('parcela_taxa_id'))
+    parcela_taxa_aprovada.aprovada = False
+    parcela_taxa_aprovada.save()
+    return HttpResponseRedirect('tbl_taxas_aprovadas.html')
+
+def aprovar_taxa_manual(request, *args, **kwargs):
+    taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
+    taxa.aprovada = True
+    taxa.save()
+    return HttpResponseRedirect('/tbl_taxas.html')
+
+def desaprovar_taxa_manual(request, *args, **kwargs):
+    taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
+    taxa.aprovada = False
+    taxa.save()
+    return HttpResponseRedirect('/tbl_taxas.html')
