@@ -709,7 +709,7 @@ def upload_planilha_quinzenal(request, *args, **kwargs):
         return HttpResponse(planilha)
     return HttpResponseRedirect('/tbl_credito_cessao.html')
 
-def download_planilha_quinzenal(request, *args, **kwargs):
+def download_planilha_repasses(request, *args, **kwargs):
     if request.session.get('serialized_data') is None:
         return HttpResponse('Nenhum dado encontrado para download')
     with tempfile.TemporaryDirectory() as tmpdir:
