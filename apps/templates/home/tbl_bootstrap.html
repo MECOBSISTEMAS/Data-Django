@@ -41,8 +41,9 @@
               <div class="col-xl-12">
                 <div class="card">
                   <div class="card-header">
-                    <h5>Quinzenal</h5>
-                    {% comment %} <h6>{{dados}}</h6> {% endcomment %}
+                    <h5>Repasses</h5>
+                    <p>{{repasses_clientes}}</p>
+                    {% comment %} <h6>{{repasses_clientes}}</h6> {% endcomment %}
                     <form method="post">
                       {% csrf_token %}
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" {% if data_inicio %} value={{data_inicio}} {% endif %}>
@@ -50,7 +51,7 @@
                       <button type="submit" name="filtrar-tabela-repasse-cliente" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
-                    <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_quinzenal' %}" role="button">Exportar Consulta .xlsx</a>
+                    <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_repasses' %}" role="button">Exportar Consulta .xlsx</a>
                     {% comment %} <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">
                       {% csrf_token %}
                       <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
@@ -63,8 +64,8 @@
                           <thead>
                             <tr>
                               <th>Ações</th>
-                              <th>Vendedor ID</th>
-                              <th>Nome Vendedor</th>
+                              <th>Cliente ID</th>
+                              <th>Nome Cliente</th>
                               <th>Valor Repasse Retido</th>
                               {% for dia in dados_dias %}
                                 <th>{{dia}}</th>
@@ -76,7 +77,22 @@
                             </tr>
                           </thead>
                           <tbody id="table-body">
-                            {{tbody|safe}}
+                            {% comment %} {% for repasse_cliente in repasses_clientes %}
+                              <tr>
+                                <th><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success" href="#" role="button">Aprovar</a></th>
+                                <th>Cliente ID</th>
+                                <th>Nome Cliente</th>
+                                <th>Valor Repasse Retido</th>
+                                {% for dia in dados_dias %}
+                                  <th>{{dia}}</th>
+                                {% endfor %}
+                                <th>Creditos</th>
+                                <th>Taxas</th>
+                                <th>Debitos</th>
+                                <th>Total Repasses</th>
+                              </tr>
+                            {% endfor %} {% endcomment %}
+                            {% comment %} {{tbody|safe}} {% endcomment %}
                           </tbody>
                         </table>
                     </div>

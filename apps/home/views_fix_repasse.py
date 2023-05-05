@@ -2,12 +2,13 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
+from typing import Self
 from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch
 from django.db.models.functions import Coalesce, Cast
 from django.template import loader
 from django.urls import reverse
@@ -200,26 +201,55 @@ def pages(request):
             if request.method == 'POST':
                 if 'filtrar-tabela-repasse-cliente' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
-                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim = request.POST.get('data-fim')
+                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
                     context['data_inicio'] = data_inicio
                     context['data_final'] = data_fim
                     dados_dias = {}
-                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
-                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
-                            Case(
-                                When(dt_credito__day=dia.day, then=F('repasses')),
-                                default=0,
-                                output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
+                    for i in range((data_fim_dt - data_inicio_dt).days + 1):
+                        dia = data_inicio_dt + timedelta(days=i)
+                        dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Coalesce(
+                            Subquery(
+                                Dado.objects.filter(
+                                    id_vendedor=OuterRef('vendedor__id'),
+                                    dt_credito=dia,
+                                ).values('id_vendedor').annotate(
+                                    repasses_totais=Sum('repasses')
+                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+                            )
+                        ,0,output_field=DecimalField(max_digits=8, decimal_places=2)) 
+                        
+                        
+                    context['repasses_clientes'] = CadCliente.objects.annotate(
+                        **dados_dias,
+                        total_credito = Coalesce(
+                            Subquery(
+                                Credito.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_creditado__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                ).values().annotate(total=Sum('vl_credito')).values('total')
+                                ,output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                        ) + Coalesce(
+                                Subquery(
+                                    ParcelaTaxa.objects.filter(
+                                        id_vendedor=OuterRef('vendedor__id'),
+                                        dt_vencimento__range=(data_inicio, data_fim),
+                                        aprovada=True,
+                                    ).values().annotate(total=Sum('repasse')).values('total')
+                                ),
+                                0,
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
                         )
-
-                    context['dias_de_consulta'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
-                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
+                    ).filter(total_credito__gt=0).values()
+                    #*ou repasse_retido maior que 0
                     context['dados_dias'] = dados_dias
                     
+                    """ 
                     context['dados'] = Dado.objects.filter(
                         dt_credito__gte=data_inicio, 
                         dt_credito__lte=data_fim,
@@ -283,17 +313,6 @@ def pages(request):
                         ),
                         total_repasse= -F('total_taxa') - F('total_debito') + F('total_credito') + F('total_repasses_retidos') + Sum(F('repasses'))
                     ).order_by('id_vendedor')
-                    """ Subquery(
-                                Debito.objects.filter(
-                                    cliente_id=OuterRef('id_vendedor'),
-                                    dt_debitado__gte=data_inicio,
-                                    dt_debitado__lte=data_fim,
-                                ).values('cliente_id')
-                                .annotate(total=Sum('vl_debito'))
-                                .values('total'),
-                                output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                            Value(0, output_field=DecimalField(max_digits=8, decimal_places=2)) """
 
                     request.session['serialized_data'] = json.dumps(list(context['dados']), cls=CustomJSONEncoder)
 
@@ -312,7 +331,7 @@ def pages(request):
                         tbody += f"<td>{dado['total_debito']}</td>"
                         tbody += f"<td>{dado['total_repasse']}</td>"
                         tbody += "</tr>"
-                    context['tbody'] = tbody
+                    context['tbody'] = tbody """
                     #return render(request, 'home/tbl_bootstrap.html', context=context)
         
         elif load_template == 'tbl_credito.html':
@@ -346,9 +365,12 @@ def pages(request):
                     data_fim = request.POST.get('data-fim')
                     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
                     credito_dias = {}
+                    
+                    context['data_inicio'] = data_inicio
+                    context['data_fim'] = data_fim
                     for i in range((data_fim_dt - data_inicio_dt).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        credito_dias[f'dia_{dia.day}'] = Sum(
+                        credito_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
                             Case(
                                 When(dt_creditado__day=dia.day, then=F('vl_credito')),
                                 default=0,
@@ -356,13 +378,10 @@ def pages(request):
                             ),
                         )
 
-                    context['dias'] = list(range(1, (data_fim_dt - data_inicio_dt).days + 2))
-                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
                     context['creditos_dias'] = credito_dias
 
                     context['creditos'] = Credito.objects.filter(
-                        dt_creditado__gte=data_inicio, 
-                        dt_creditado__lte=data_fim,
+                        dt_creditado__range=[data_inicio, data_fim]
                     ).values(
                         'cliente_id', 'cliente__nome',
                     ).annotate(
@@ -382,6 +401,17 @@ def pages(request):
                         tbody += f"<td>{credito['total_credito']}</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
+                    
+                    
+                    context['creditos_nao_aprovadas'] = Credito.objects.filter(
+                        dt_creditado__range=[data_inicio, data_fim],
+                        aprovada=False,
+                    )
+                    
+                    context['creditos_aprovadas'] = Credito.objects.filter(
+                        dt_creditado__range=[data_inicio, data_fim],
+                        aprovada=True,
+                    )
                         
         elif load_template == 'tbl_repasses_aprovados.html':
             if request.method == 'POST':
@@ -421,7 +451,7 @@ def pages(request):
                     debito_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        debito_dias[f'dia_{dia.day}'] = Sum(
+                        debito_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
                             Case(
                                 When(dt_debitado__day=dia.day, then=F('vl_debito')),
                                 default=0,
@@ -429,7 +459,6 @@ def pages(request):
                             ),
                         )
 
-                    context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
                     context['debitos_dias'] = debito_dias
                     
@@ -454,6 +483,16 @@ def pages(request):
                         tbody += f"<td>{debito['total_debito']}</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
+                    
+                    context['debitos_nao_aprovadas'] = Debito.objects.filter(
+                        dt_debitado__range=[data_inicio, data_fim],
+                        aprovada=False,
+                    )
+                    
+                    context['debitos_aprovadas'] = Debito.objects.filter(
+                        dt_debitado__range=[data_inicio, data_fim],
+                        aprovada=True,
+                    )
                     
         elif load_template == 'tbl_taxas.html':
             if request.method == 'POST':
@@ -709,7 +748,8 @@ def upload_planilha_quinzenal(request, *args, **kwargs):
         return HttpResponse(planilha)
     return HttpResponseRedirect('/tbl_credito_cessao.html')
 
-def download_planilha_quinzenal(request, *args, **kwargs):
+def download_planilha_repasses(request, *args, **kwargs):
+    return HttpResponse('configuração de download em andamento')
     if request.session.get('serialized_data') is None:
         return HttpResponse('Nenhum dado encontrado para download')
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -833,7 +873,7 @@ def upload_planilha_cavalos_cob(request, *args, **kwargs):
                 try:
                     vendedor = Pessoas.objects.get(id=codigo_vendedor)
                 except Pessoas.DoesNotExist:
-                    vendedor = Pessoas.objects.create(id=codigo_vendedor, nome=nome_vendedor, email=f"{row[0]}_{row[2]}@gmail.com")
+                    vendedor = Pessoas.objects.create(id=codigo_vendedor, nome=nome_vendedor)
                 except Pessoas.MultipleObjectsReturned:
                     erros.append(f"O vendedor {nome_vendedor} possui mais de um cadastro. linha: {linha}")
                     continue
@@ -1228,3 +1268,27 @@ def desaprovar_taxa_manual(request, *args, **kwargs):
     taxa.aprovada = False
     taxa.save()
     return HttpResponseRedirect('/tbl_taxas.html')
+
+def aprovar_credito(request, *args, **kwargs):
+    credito = Credito.objects.get(id=kwargs.get('credito_id'))
+    credito.aprovada = True
+    credito.save()
+    return HttpResponseRedirect('/tbl_credito.html')
+
+def desaprovar_credito(request, *args, **kwargs):
+    credito = Credito.objects.get(id=kwargs.get('credito_id'))
+    credito.aprovada = False
+    credito.save()
+    return HttpResponseRedirect('/tbl_credito.html')
+
+def aprovar_debito(request, *args, **kwargs):
+    debito = Debito.objects.get(id=kwargs.get('debito_id'))
+    debito.aprovada = True
+    debito.save()
+    return HttpResponseRedirect('/tbl_debito.html')
+
+def desaprovar_debito(request, *args, **kwargs):
+    debito = Debito.objects.get(id=kwargs.get('debito_id'))
+    debito.aprovada = False
+    debito.save()
+    return HttpResponseRedirect('/tbl_debito.html')

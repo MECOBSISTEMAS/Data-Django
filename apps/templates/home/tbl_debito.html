@@ -93,6 +93,66 @@
                 </table>
               </div>
             </div>
+
+
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-debito-nao-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome do Pagador</th>
+                      <th>Valor Debito</th>
+                      <th>Debito Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for debito in debitos_nao_aprovadas %}
+                    <tr>
+                      <th><a name="aprovar-debito" id="aprovar-debito" class="btn btn-success" href="{% url 'home:aprovar_debito' debito.id %}" role="button">Aprovar</a></th>
+                      <th>{{debito.cliente.id}}</th>
+                      <th>{{debito.cliente.nome}}</th>
+                      <th>{{debito.vl_debito}}</th>
+                      <th>{{debito.dt_debitado}}</th>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-debito-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome do Pagador</th>
+                      <th>Valor Debito</th>
+                      <th>Debito Data</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for debito in debitos_aprovadas %}
+                    <tr>
+                      <th><a name="desaprovar-debito" id="desaprovar-debito" class="btn btn-danger" href="{% url 'home:desaprovar_debito' debito.id %}" role="button">Desaprovar</a></th>
+                      <th>{{debito.cliente.id}}</th>
+                      <th>{{debito.cliente.nome}}</th>
+                      <th>{{debito.vl_debito}}</th>
+                      <th>{{debito.dt_debitado}}</th>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
           </div>
         </div>    
       </div>
@@ -108,6 +168,8 @@
 <script>
   $(document).ready(function(){
     $('#table-debito').DataTable();
+    $('#table-debito-nao-aprovadas').DataTable();
+    $('#table-debito-aprovadas').DataTable();
   })
 </script>
 {% endblock javascripts %}

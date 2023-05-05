@@ -49,9 +49,11 @@
                     type="date"
                     name="data-inicio"
                     id="data-inicio"
+                    {% if data_inicio %} value={{data_inicio}} {% endif %}
                   />
                   até
-                  <input type="date" name="data-fim" id="data-fim" />
+                  <input type="date" name="data-fim" id="data-fim" 
+                  {% if data_fim %} value={{data_fim}} {% endif %} />
                   <button class="btn btn-primary" type="submit" name="filtrar-credito">Filtrar</button>
                   <button
                     type="button"
@@ -93,6 +95,60 @@
                 </table>
               </div>
             </div>
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-credito-nao-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome do Credor</th>
+                      <th>Valor Credito</th>
+                      <th>Data Credito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for credito in creditos_nao_aprovadas %}
+                    <tr>
+                      <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success" href="{% url 'home:aprovar_credito' credito.id  %}" role="button">Aprovar</a></th>
+                      <th>{{credito.cliente.id}}</th>
+                      <th>{{credito.cliente.nome}}</th>
+                      <th>{{credito.vl_credito}}</th>
+                      <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-credito-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome do Credor</th>
+                      <th>Valor Credito</th>
+                      <th>Data Credito</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for credito in creditos_aprovadas %}
+                    <tr>
+                      <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger" href="{% url 'home:desaprovar_credito' credito.id %}" role="button">Desaprovar</a></th>
+                      <th>{{credito.cliente.id}}</th>
+                      <th>{{credito.cliente.nome}}</th>
+                      <th>{{credito.vl_credito}}</th>
+                      <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>    
       </div>
@@ -108,6 +164,8 @@
 <script>
   $(document).ready(function(){
     $('#table-credito').DataTable();
+    $('#table-credito-nao-aprovadas').DataTable();
+    $('#table-credito-aprovadas').DataTable();
   })
 </script>
 {% endblock javascripts %}

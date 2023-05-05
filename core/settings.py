@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.home',                                    # Enable the inner home (home)
     'django_extensions',
+    'debug_toolbar',
     'widget_tweaks',
     'allauth',                                      # OAuth new
     'allauth.account',                              # OAuth new
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -168,9 +170,12 @@ AUTHENTICATION_BACKENDS = (
 )
 
 SITE_ID                    = 1 
+#ACCOUNT_EMAIL_VERIFICATION = 'django.contrib.auth.views.PasswordResetView'
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_USERNAME_REQUIRED = False
 
 SOCIALACCOUNT_PROVIDERS = {}
+
 
 if GITHUB_AUTH:
     SOCIALACCOUNT_PROVIDERS['github'] = {
@@ -183,3 +188,9 @@ if GITHUB_AUTH:
 
 #*Solução para o erro de (models.W042) abaixo
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+""" INTERNAL_IPS = [
+    # ...
+    "127.0.0.1",
+    # ...
+]   """
