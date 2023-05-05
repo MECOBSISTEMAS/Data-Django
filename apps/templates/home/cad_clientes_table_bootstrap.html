@@ -95,12 +95,12 @@
                       <form action="" method="post" name="form-novo-cliente" id="form-novo-cliente">
                         {% csrf_token %}
                         <p class="text-c-red">Deixar mais automatico a pesquisa do novo cadastro de um cliente</p>
-                        <label for="cliente-id">Digite o ID do cliente</label>
+                        <label for="cliente-id">Digite o ID do cliente (caso não for inserido sera automatico gerado pelo sistema) </label>
                         <input class="form-control w-100" type="number" id="cliente-id" name="cliente-id">
                         <hr>
 
                         <label for="nome">nome</label>
-                        <input type="text" class="form-control w-100" id="nome" name="nome">
+                        <input required type="text" class="form-control w-100" id="nome" name="nome">
                         
                         <label for="email">email</label>
                         <input type="text" class="form-control w-100" id="email" name="email">

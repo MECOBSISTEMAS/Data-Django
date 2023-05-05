@@ -87,24 +87,23 @@ def pages(request):
                     evento = request.POST.get('evento') """
                     informar_repasse = request.POST.get('informar_repasse')
                     
-                    if nome and email:
-                        pessoa = Pessoas.objects.create(nome=nome, email=email)
-                        cliente_id = pessoa.id
-                    elif nome:
-                        pessoa = Pessoas.objects.create(nome=nome)
-                        cliente_id = pessoa.id
-                    else:
-                        try:
-                            pessoa = Pessoas.objects.get(id=cliente_id)
-                        except Exception as e:
-                            return HttpResponse('Cliente não encontrado, erro: ' + str(e))
-                        if CadCliente.objects.filter(cliente_id=cliente_id).exists():
-                            return HttpResponse('Cliente já cadastrado')
-                    CadCliente.objects.create(
-                        vendedor = pessoa, sim=sim, nao=nao, 
-                        operacional=operacional, tcc=tcc, 
-                        honorarios=honorarios, informar_repasse=informar_repasse
-                    )
+                    
+                    try:
+                        pessoa = Pessoas.objects.get(id=cliente_id)
+                        return HttpResponse('Cliente já cadastrado')
+                    except Pessoas.DoesNotExist:
+                        pessoa = Pessoas.objects.create(
+                            nome=nome,
+                            id=cliente_id,
+                        )
+                        if email:
+                            pessoa.email = email
+                            pessoa.save()
+                        CadCliente.objects.create(
+                            vendedor = pessoa, sim=sim, nao=nao, 
+                            operacional=operacional, tcc=tcc, 
+                            honorarios=honorarios, informar_repasse=informar_repasse
+                        )
                         
             context['cad_clientes'] = CadCliente.objects.all()
             
