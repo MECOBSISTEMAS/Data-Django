@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'apps.home',                                    # Enable the inner home (home)
     'django_extensions',
-    'debug_toolbar',
+    #'debug_toolbar',
     'widget_tweaks',
     'allauth',                                      # OAuth new
     'allauth.account',                              # OAuth new
