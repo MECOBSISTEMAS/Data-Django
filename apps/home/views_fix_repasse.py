@@ -244,9 +244,43 @@ def pages(request):
                                 0,
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                         )
-                    ).filter(total_credito__gt=0).values()
+                    ).filter(total_credito__gt=0).values('vendedor__id','vendedor__nome','total_credito',*dados_dias.keys())
                     #*ou repasse_retido maior que 0
                     context['dados_dias'] = dados_dias
+                    
+                    tbody = "<tr>"
+                    for repasse_clientes in context['repasses_clientes']:
+                        tbody += f"<td><a class='btn btn-success' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
+                        tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
+                        tbody += f"<td>Repasses Retido</td>"
+                        for dia in dados_dias:
+                            tbody += f"<td>{repasse_clientes[dia]}</td>"
+                        tbody += f"<td>{repasse_clientes['total_credito']}</td>"
+                        tbody += f"<td>Taxas</td>"
+                        tbody += f"<td>Debitos</td>"
+                        tbody += f"<td>Total Repasses</td>"
+                        tbody += "</tr>"
+                    context['tbody'] = tbody
+                        
+                    
+                    
+                    """ tbody = "<tr>"
+                    for dado in context['dados']:
+                        tbody += '<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="/aprovar_repasse/{}/{}/{}/{}/{}/{}/{}/{}">Aprovar Repasse</a></td>'.format(
+                            dado['id_vendedor'],data_inicio,data_fim, dado['total_repasses_retidos'],dado['total_credito'],dado['total_taxa'],dado['total_debito'],dado['total_repasse'])
+                        #tbody += f'<td><a name="aprovar-repasse" id="aprovar-repasse" class="btn btn-success btn-sm" href="/aprovar_repasse/{}/{data_inicio}/{data_fim}">Aprovar Repasse</a></td>'
+                        tbody += f"<td>{dado['id_vendedor']}</td>"
+                        tbody += f"<td>{dado['vendedor']}</td>"
+                        tbody += f"<td>{dado['total_repasses_retidos']}</td>"
+                        for dia in dados_dias:
+                            tbody += f"<td>{dado[dia]}</td>"
+                        tbody += f"<td>{dado['total_credito']}</td>"
+                        tbody += f"<td>{dado['total_taxa']}</td>"
+                        tbody += f"<td>{dado['total_debito']}</td>"
+                        tbody += f"<td>{dado['total_repasse']}</td>"
+                        tbody += "</tr>"
+                    context['tbody'] = tbody """
                     
                     """ 
                     context['dados'] = Dado.objects.filter(
