@@ -222,6 +222,19 @@ def pages(request):
                         
                     context['repasses_clientes'] = CadCliente.objects.annotate(
                         **dados_dias,
+                        #some todos os repasses dentro da data de inicio e fim
+                        todos_os_repasses=Coalesce(
+                            Subquery(
+                                Dado.objects.filter(
+                                    id_vendedor=OuterRef('vendedor__id'),
+                                    dt_credito__range=(data_inicio, data_fim),
+                                ).values('id_vendedor').annotate(
+                                    repasses_totais=Sum('repasses')
+                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
                         total_credito = Coalesce(
                             Subquery(
                                 Credito.objects.filter(
@@ -243,23 +256,76 @@ def pages(request):
                                 ),
                                 0,
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
+                        ),
+                        total_repasse_retido = Coalesce(
+                            Subquery(
+                                RepasseRetido.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_rep_retido__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                ).values().annotate(total=Sum('vlr_rep_retido')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                        ),
+                        total_taxas = Coalesce(
+                            Subquery(
+                                Taxa.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_taxa__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                ).values().annotate(total=Sum('taxas')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                        ),
+                        total_debitos = Coalesce(
+                            Subquery(
+                                Debito.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_debitado__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                ).values().annotate(total=Sum('vl_debito')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2),
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                        ) + Coalesce(
+                            Subquery(
+                                ParcelaTaxa.objects.filter(
+                                    id_comprador=OuterRef('vendedor__id'),
+                                    dt_vencimento__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                ).values().annotate(total=Sum('desconto_total')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2),
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                        ),
+                        total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') + F('total_repasse_retido') + F('todos_os_repasses'),
+                    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0)).values(
+                        'vendedor__id','vendedor__nome',
+                        'total_repasse_retido',*dados_dias.keys(), 'total_credito',
+                        'total_taxas', 'total_debitos', 'total_repasses'
                         )
-                    ).filter(total_credito__gt=0).values('vendedor__id','vendedor__nome','total_credito',*dados_dias.keys())
                     #*ou repasse_retido maior que 0
                     context['dados_dias'] = dados_dias
                     
                     tbody = "<tr>"
                     for repasse_clientes in context['repasses_clientes']:
-                        tbody += f"<td><a class='btn btn-success' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        tbody += "<td><a class='btn btn-success' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
-                        tbody += f"<td>Repasses Retido</td>"
+                        tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
                         for dia in dados_dias:
                             tbody += f"<td>{repasse_clientes[dia]}</td>"
                         tbody += f"<td>{repasse_clientes['total_credito']}</td>"
-                        tbody += f"<td>Taxas</td>"
-                        tbody += f"<td>Debitos</td>"
-                        tbody += f"<td>Total Repasses</td>"
+                        tbody += f"<td>{repasse_clientes['total_taxas']}</td>"
+                        tbody += f"<td>{repasse_clientes['total_debitos']}</td>"
+                        tbody += f"<td>{repasse_clientes['total_repasses']}</td>"
+                        #tbody += f"<td>Total Repasses</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
                         
