@@ -2,7 +2,7 @@
 """
 Copyright (c) 2019 - present AppSeed.us
 """
-from typing import Self
+#from typing import Self
 from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
