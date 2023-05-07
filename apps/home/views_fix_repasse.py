@@ -315,7 +315,7 @@ def pages(request):
                     
                     tbody = "<tr>"
                     for repasse_clientes in context['repasses_clientes']:
-                        tbody += "<td><a class='btn btn-success' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        tbody += "<td><a class='btn btn-success' href='#em-desenvolvimento' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
