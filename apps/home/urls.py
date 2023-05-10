@@ -64,7 +64,7 @@ urlpatterns = [
          name="upload_planilha_parcelas_taxas"),
     path("upload_planilha_dados_brutos", views_fix_repasse.upload_planilha_dados_brutos,
          name="upload_planilha_dados_brutos"),
-    path('aprovar_repasse/<id_cliente>/<data_inicial>/<data_final>/<total_repasse_retido>/<total_credito>/<total_taxa>/<total_debito>/<total_repasses>',
+    path('aprovar-repasse/<id_cliente>/<data_inicial>/<data_final>/<total_repasse_retido>/<total_credito>/<total_taxa>/<total_debito>/<total_repasses>',
          views_fix_repasse.aprovar_repasse, name="aprovar_repasse"),
     path('aprovar_parcela_taxa/<parcela_taxa_id>/<data_inicio>/<data_fim>',
          views_fix_repasse.aprovar_parcela_taxa, name="aprovar_parcela_taxa"),

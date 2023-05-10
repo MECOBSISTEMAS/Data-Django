@@ -51,6 +51,7 @@ class RepasseRetido(models.Model):
     dt_rep_retido = models.DateField(_(""), blank=True, null=True)
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
     aprovada = models.BooleanField(_("O campo aprovada é utilizado para saber se sera computado para a tabela repasses ou não"), default=False, blank=True, null=True)
+    aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     
     class Meta:
         verbose_name = _("RepasseRetido")
@@ -72,7 +73,7 @@ class Debito(models.Model):
     #taxas = models.ForeignKey('Taxa', on_delete=models.DO_NOTHING, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
     aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
-    
+    aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     class Meta:
         verbose_name = _("debito")
         verbose_name_plural = _("debitos")
@@ -92,6 +93,7 @@ class Credito(models.Model):
     cliente = models.ForeignKey('Pessoas', on_delete=models.DO_NOTHING, blank=True, null=True, related_name='creditos')
     descricao = models.CharField(_(""), max_length=128, blank=True, null=True)
     aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
+    aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
 
     class Meta:
         verbose_name = _("credito")
@@ -115,6 +117,7 @@ class Taxa(models.Model):
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
     dt_taxa = models.DateField(_(""), blank=True, null=True)
     aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
+    aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     
     class Meta:
         verbose_name = _("taxas")
@@ -225,6 +228,7 @@ class Dado(models.Model):
     repasse_aprovado = models.BooleanField(_("Essa opção serve para identificar se determinado dado foi aprovado para repasse"),
                                            default=False, blank=True, null=True)
     criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
+    aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     
 
     class Meta:
@@ -241,7 +245,7 @@ class Dado(models.Model):
 
 class RepasseAprovado(models.Model):
     cliente = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
-    dado = models.ManyToManyField(Dado, blank=True)
+    dados = models.ManyToManyField(Dado, blank=True)
     total_repasses_retidos = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     total_credito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     total_debito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
@@ -274,6 +278,7 @@ class ParcelaTaxa(models.Model):
     honorarios = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     aprovada = models.BooleanField(_(""), blank=True, null=True, default=False)
+    aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
     #ParcelaTaxa.objects.filter(data_criado=datetime.date.today())
     

@@ -310,7 +310,8 @@ def pages(request):
                     
                     tbody = "<tr>"
                     for repasse_clientes in context['repasses_clientes']:
-                        tbody += f"<td><a class='btn btn-success' href='/aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_clientes['total_repasse_retido']}/{repasse_clientes['total_credito']}/{repasse_clientes['total_taxas']}/{repasse_clientes['total_debitos']}/{repasse_clientes['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_clientes['total_repasse_retido']}/{repasse_clientes['total_credito']}/{repasse_clientes['total_taxas']}/{repasse_clientes['total_debitos']}/{repasse_clientes['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        tbody += "<td><a class='btn btn-success' href='aprovar-repasse/' name='aprovar-repasse'>Aprovar Repasses</a></td>"
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
@@ -1148,6 +1149,7 @@ def upload_planilha_dados_brutos(request):
     return HttpResponse("HTTP REQUEST")
 
 def aprovar_repasse(request, *args, **kwargs) :
+    return HttpResponseRedirect('/tbl_bootstrap.html')
     id_cliente = kwargs.get('id_cliente')
     data_inicial = kwargs.get('data_inicial')
     data_final = kwargs.get('data_final')
@@ -1164,25 +1166,7 @@ def aprovar_repasse(request, *args, **kwargs) :
         return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {id_cliente}")
     dados = Dado.objects.filter(id_vendedor=id_cliente, dt_credito__range=(data_inicial, data_final))
     
-
-    repasse_aprovado = RepasseAprovado.objects.create(
-        cliente=cliente,
-        total_repasses_retidos=total_repasses_retidos,
-        total_credito=total_credito,
-        total_debito=total_debito,
-        total_taxa=total_taxa,
-        total_repasse=total_repasses,
-        data_inicial=data_inicial,
-        data_final=data_final,
-    )
-    for dado in dados:
-        dado.repasse_aprovado = True
-        dado.save()
-        repasse_aprovado.dado.add(dado)
-    #dados_nao_aprovados = Dado.objects.filter(dt_credito__range=(data_inicial, data_final), repasse_aprovado=False)
-    dados = funcoes.repasses_nao_aprovados(data_inicial, data_final)
     
-    return HttpResponseRedirect('/tbl_bootstrap.html')
     return JsonResponse(
         {
         'dados':list(dados[0]),
