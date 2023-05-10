@@ -109,6 +109,7 @@ def exportar_planilha_prestacao_diaria(request, *args, **kwargs):
             return response
         
 def repasses_nao_aprovados(data_inicial, data_final):
+    """ Essa função ira retornar todos os dados não aprovadas porem  """
     dados_dias = {}
     for i in range((datetime.strptime(data_final, '%Y-%m-%d') - datetime.strptime(data_inicial, '%Y-%m-%d')).days + 1):
         dia = datetime.strptime(data_inicial, '%Y-%m-%d') + timedelta(days=i)

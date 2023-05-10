@@ -83,7 +83,7 @@
                       {% for dia in repasses_retidos_dias %}
                       <th>{{dia}}</th>
                       {% endfor %}
-                      <th>Total Taxa</th>
+                      <th>Valor Repasse Retido</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -92,6 +92,62 @@
                 </table>
               </div>
             </div>
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-repasses-retidos-nao-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome</th>
+                      <th>Data</th>
+                      <th>Valor Repasse Retido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for repasse_retido in repasses_retidos_nao_aprovadas %}
+                    <tr>
+                      <td><a href="{% url 'home:aprovar_repasse_retido' repasse_retido.id %}" class="btn btn-success">Aprovar</a></td>
+                      <td>{{repasse_retido.cliente.id}}</td>
+                      <td>{{repasse_retido.cliente.nome}}</td>
+                      <td>{{repasse_retido.dt_rep_retido}}</td>
+                      <td>{{repasse_retido.vlr_rep_retido}}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-repasses-retidos-aprovadas">
+                  <thead>
+                    <tr>
+                      <th>Ações</th>
+                      <th>Cliente ID</th>
+                      <th>Nome</th>
+                      <th>Data</th>
+                      <th>Valor Repasse Retido</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for repasse_retido in repasses_retidos_aprovadas %}
+                    <tr>
+                      <td><a href="{% url 'home:desaprovar_repasse_retido' repasse_retido.id %}" class="btn btn-success">Desaprovar</a></td>
+                      <td>{{repasse_retido.cliente.id}}</td>
+                      <td>{{repasse_retido.cliente.nome}}</td>
+                      <td>{{repasse_retido.dt_rep_retido}}</td>
+                      <td>{{repasse_retido.vlr_rep_retido}}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         </div>    
       </div>
@@ -107,6 +163,8 @@
 <script>
   $(document).ready(function(){
     $('#table-repasse-retido').DataTable();
+    $('#table-repasses-retidos-nao-aprovadas').DataTable();
+    $('#table-repasses-retidos-aprovadas').DataTable();
   })
 </script>
 {% endblock javascripts %}

@@ -92,13 +92,8 @@ def pages(request):
                         pessoa = Pessoas.objects.get(id=cliente_id)
                         return HttpResponse('Cliente já cadastrado')
                     except Pessoas.DoesNotExist:
-                        pessoa = Pessoas.objects.create(
-                            nome=nome,
-                            id=cliente_id,
-                        )
-                        if email:
-                            pessoa.email = email
-                            pessoa.save()
+                        #crie uma pessoa passando o nome e id_cliente e caso não exista o id passado pelo usuario crie um aleatorio
+                        pessoa = Pessoas.objects.create(nome=nome, email=email, id_cliente=cliente_id)
                         CadCliente.objects.create(
                             vendedor = pessoa, sim=sim, nao=nao, 
                             operacional=operacional, tcc=tcc, 
@@ -315,7 +310,7 @@ def pages(request):
                     
                     tbody = "<tr>"
                     for repasse_clientes in context['repasses_clientes']:
-                        tbody += "<td><a class='btn btn-success' href='#em-desenvolvimento' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        tbody += f"<td><a class='btn btn-success' href='/aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_clientes['total_repasse_retido']}/{repasse_clientes['total_credito']}/{repasse_clientes['total_taxas']}/{repasse_clientes['total_debitos']}/{repasse_clientes['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
@@ -579,7 +574,7 @@ def pages(request):
                     repasses_retidos_dias = {}
                     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
                         dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        repasses_retidos_dias[f'dia_{dia.day}'] = Sum(
+                        repasses_retidos_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
                             Case(
                                 When(dt_rep_retido__day=dia.day, then=F('vlr_rep_retido')),
                                 default=0,
@@ -587,7 +582,6 @@ def pages(request):
                             ),
                         )
 
-                    context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
                     context['repasses_retidos_dias'] = repasses_retidos_dias
                     
@@ -612,6 +606,16 @@ def pages(request):
                         tbody += f"<td>{repasse_retido['total_repasse_retido']}</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
+                    
+                    context['repasses_retidos_nao_aprovadas'] = RepasseRetido.objects.filter(
+                        dt_rep_retido__range=[data_inicio, data_fim],
+                        aprovada=False,
+                    )
+                    
+                    context['repasses_retidos_aprovadas'] = RepasseRetido.objects.filter(
+                        dt_rep_retido__range=[data_inicio, data_fim],
+                        aprovada=True,
+                    )
 
         elif load_template == 'tbl_resultado_financeiro.html':
             if request.method == 'POST':
@@ -1144,21 +1148,22 @@ def upload_planilha_dados_brutos(request):
     return HttpResponse("HTTP REQUEST")
 
 def aprovar_repasse(request, *args, **kwargs) :
-    id_vendedor = kwargs.get('id_vendedor')
+    id_cliente = kwargs.get('id_cliente')
     data_inicial = kwargs.get('data_inicial')
     data_final = kwargs.get('data_final')
     total_repasses_retidos = kwargs.get('total_repasses_retidos')
     total_credito = kwargs.get('total_credito')
     total_debito = kwargs.get('total_debito')
     total_taxa = kwargs.get('total_taxa')
-    total_repasse = kwargs.get('total_repasse')
+    total_repasses = kwargs.get('total_repasses')
     try:
-        cliente = Pessoas.objects.get(id=id_vendedor)
+        cliente = Pessoas.objects.get(id=id_cliente)
     except Pessoas.DoesNotExist:
-        cliente = Pessoas.objects.create(id=id_vendedor)
+        return HttpResponse(f"Erro cliente não encontrado, id_cliente: {id_cliente}")
     except Pessoas.MultipleObjectsReturned:
-        return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {id_vendedor}")
-    dados = Dado.objects.filter(id_vendedor=id_vendedor, dt_credito__range=(data_inicial, data_final))
+        return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {id_cliente}")
+    dados = Dado.objects.filter(id_vendedor=id_cliente, dt_credito__range=(data_inicial, data_final))
+    
 
     repasse_aprovado = RepasseAprovado.objects.create(
         cliente=cliente,
@@ -1166,7 +1171,7 @@ def aprovar_repasse(request, *args, **kwargs) :
         total_credito=total_credito,
         total_debito=total_debito,
         total_taxa=total_taxa,
-        total_repasse=total_repasse,
+        total_repasse=total_repasses,
         data_inicial=data_inicial,
         data_final=data_final,
     )
@@ -1177,7 +1182,7 @@ def aprovar_repasse(request, *args, **kwargs) :
     #dados_nao_aprovados = Dado.objects.filter(dt_credito__range=(data_inicial, data_final), repasse_aprovado=False)
     dados = funcoes.repasses_nao_aprovados(data_inicial, data_final)
     
-    
+    return HttpResponseRedirect('/tbl_bootstrap.html')
     return JsonResponse(
         {
         'dados':list(dados[0]),
@@ -1289,3 +1294,15 @@ def desaprovar_debito(request, *args, **kwargs):
     debito.aprovada = False
     debito.save()
     return HttpResponseRedirect('/tbl_debito.html')
+
+def aprovar_repasse_retido(request, *args, **kwargs):
+    repasse_retido = RepasseRetido.objects.get(id=kwargs.get('repasse_retido_id'))
+    repasse_retido.aprovada = True
+    repasse_retido.save()
+    return HttpResponseRedirect('/tbl_repasse_retido.html')
+
+def desaprovar_repasse_retido(request, *args, **kwargs):
+    repasse_retido = RepasseRetido.objects.get(id=kwargs.get('repasse_retido_id'))
+    repasse_retido.aprovada = False
+    repasse_retido.save()
+    return HttpResponseRedirect('/tbl_repasse_retido.html')

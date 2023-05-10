@@ -50,7 +50,7 @@ class RepasseRetido(models.Model):
     vlr_rep_retido = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     dt_rep_retido = models.DateField(_(""), blank=True, null=True)
     tipo = models.CharField(_(""), max_length=128, blank=True, null=True)
-    aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
+    aprovada = models.BooleanField(_("O campo aprovada é utilizado para saber se sera computado para a tabela repasses ou não"), default=False, blank=True, null=True)
     
     class Meta:
         verbose_name = _("RepasseRetido")
@@ -224,6 +224,8 @@ class Dado(models.Model):
     #!abaixo estão os campos para identificar quais são os dados aprovados
     repasse_aprovado = models.BooleanField(_("Essa opção serve para identificar se determinado dado foi aprovado para repasse"),
                                            default=False, blank=True, null=True)
+    criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
+    
 
     class Meta:
         verbose_name = _("Dado")
@@ -272,7 +274,8 @@ class ParcelaTaxa(models.Model):
     honorarios = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     aprovada = models.BooleanField(_(""), blank=True, null=True, default=False)
-    data_criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
+    criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
+    #ParcelaTaxa.objects.filter(data_criado=datetime.date.today())
     
     def __str__(self):
         return f'{self.id_contrato}, {self.comprador}'
