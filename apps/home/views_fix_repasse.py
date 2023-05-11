@@ -236,6 +236,7 @@ def pages(request):
                                     cliente__id=OuterRef('vendedor__id'),
                                     dt_creditado__range=(data_inicio, data_fim),
                                     aprovada=True,
+                                    aprovada_para_repasse=False
                                 ).values().annotate(total=Sum('vl_credito')).values('total')
                                 ,output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
@@ -247,6 +248,7 @@ def pages(request):
                                         id_vendedor=OuterRef('vendedor__id'),
                                         dt_vencimento__range=(data_inicio, data_fim),
                                         aprovada=True,
+                                        aprovada_para_repasse=False
                                     ).values().annotate(total=Sum('repasse')).values('total')
                                 ),
                                 0,
@@ -258,6 +260,7 @@ def pages(request):
                                     cliente__id=OuterRef('vendedor__id'),
                                     dt_rep_retido__range=(data_inicio, data_fim),
                                     aprovada=True,
+                                    aprovada_para_repasse=False
                                 ).values().annotate(total=Sum('vlr_rep_retido')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
@@ -270,6 +273,7 @@ def pages(request):
                                     cliente__id=OuterRef('vendedor__id'),
                                     dt_taxa__range=(data_inicio, data_fim),
                                     aprovada=True,
+                                    aprovada_para_repasse=False
                                 ).values().annotate(total=Sum('taxas')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
@@ -282,6 +286,7 @@ def pages(request):
                                     cliente__id=OuterRef('vendedor__id'),
                                     dt_debitado__range=(data_inicio, data_fim),
                                     aprovada=True,
+                                    aprovada_para_repasse=False
                                 ).values().annotate(total=Sum('vl_debito')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2),
                             ),
@@ -293,6 +298,7 @@ def pages(request):
                                     id_comprador=OuterRef('vendedor__id'),
                                     dt_vencimento__range=(data_inicio, data_fim),
                                     aprovada=True,
+                                    aprovada_para_repasse=False
                                 ).values().annotate(total=Sum('desconto_total')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2),
                             ),
@@ -1148,28 +1154,50 @@ def upload_planilha_dados_brutos(request):
         return HttpResponse("Planilha recebida com sucesso <br> linhas lidas: {} <br> Dados Criados: {} <br> Dados Modificados : {} <br> erros: {}".format(linhas,dados_criados,dados_modificados, erros_html))
     return HttpResponse("HTTP REQUEST")
 
-def aprovar_repasse(request, *args, **kwargs) :
+def aprovar_repasse(request, *args, **kwargs):
+    data_inicio = kwargs.get('data_inicio')
+    data_fim = kwargs.get('data_fim')
     pessoa = Pessoas.objects.get(id=kwargs.get('id_pessoa'))
-    creditos = Credito.objects.filter(cliente__id=pessoa.id)
-    debitos = Debito.objects.filter(cliente__id=pessoa.id)
-    taxas = Taxa.objects.filter(cliente__id=pessoa.id)
-    return HttpResponseRedirect('/tbl_bootstrap.html')
-    id_cliente = kwargs.get('id_cliente')
-    data_inicial = kwargs.get('data_inicial')
-    data_final = kwargs.get('data_final')
-    total_repasses_retidos = kwargs.get('total_repasses_retidos')
-    total_credito = kwargs.get('total_credito')
-    total_debito = kwargs.get('total_debito')
-    total_taxa = kwargs.get('total_taxa')
-    total_repasses = kwargs.get('total_repasses')
-    try:
-        cliente = Pessoas.objects.get(id=id_cliente)
-    except Pessoas.DoesNotExist:
-        return HttpResponse(f"Erro cliente não encontrado, id_cliente: {id_cliente}")
-    except Pessoas.MultipleObjectsReturned:
-        return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {id_cliente}")
-    dados = Dado.objects.filter(id_vendedor=id_cliente, dt_credito__range=(data_inicial, data_final))
+    creditos = Credito.objects.filter(cliente__id=pessoa.id, dt_creditado__range=[data_inicio, data_fim], aprovada=True)
+    debitos = Debito.objects.filter(cliente__id=pessoa.id, dt_debitado__range=[data_inicio, data_fim], aprovada=True)
+    taxas = Taxa.objects.filter(cliente__id=pessoa.id, dt_taxa__range=[data_inicio, data_fim], aprovada=True)
+    repasses = Dado.objects.filter(id_vendedor=pessoa.id, dt_credito__range=[data_inicio, data_fim])
+    repasses_retidos = RepasseRetido.objects.filter(cliente__id=pessoa.id, dt_rep_retido__range=[data_inicio, data_fim], aprovada=True)
+    parcelas_taxas = ParcelaTaxa.objects.filter(Q(id_vendedor=pessoa.id) | Q(id_comprador=pessoa.id), dt_vencimento__range=[data_inicio, data_fim], aprovada=True)
+    repasse_aprovado = RepasseAprovado.objects.create(
+        cliente=pessoa,
+        data_inicial=data_inicio,
+        data_final=data_fim
+    )
+    for credito in creditos:
+        credito.aprovada_para_repasse = True
+        credito.save()
+        repasse_aprovado.creditos.add(credito)
+    for debito in debitos:
+        debito.aprovada_para_repasse = True
+        debito.save()
+        repasse_aprovado.debitos.add(debito)
+    for taxa in taxas:
+        taxa.aprovada_para_repasse = True
+        taxa.save()
+        repasse_aprovado.taxas.add(taxa)
+    for repasse_retido in repasses_retidos:
+        repasse_retido.aprovada_para_repasse = True
+        repasse_retido.save()
+        repasse_aprovado.repasses_retidos.add(repasse_retido)
+    for parcela_taxa in parcelas_taxas:
+        parcela_taxa.aprovada_para_repasse = True
+        parcela_taxa.save()
+        repasse_aprovado.parcelas_taxas.add(parcela_taxa)
+    for repasse in repasses:
+        repasse.aprovada_para_repasse = True
+        repasse.save()
+        repasse_aprovado.repasses.add(repasse)
+        
+    repasse_aprovado.save()
     
+        
+    return HttpResponseRedirect('/tbl_bootstrap.html')
     
     return JsonResponse(
         {
@@ -1180,47 +1208,28 @@ def aprovar_repasse(request, *args, **kwargs) :
         'status':200
         }
     )
-    dados_consultados_string = kwargs.get('dados_consultados')
-    #dados_consultados_dict = ast.literal_eval(dados_consultados_string)
-    data_inicial = kwargs.get('data_inicial')
-    data_final = kwargs.get('data_final')
-    id_vendedor = kwargs.get('id_vendedor')
-    dados_consultados_string = dados_consultados_string.replace("Decimal('", "'").replace("')", "'")
-    dados_consultados_dict = ast.literal_eval(dados_consultados_string)
-    
-    
-    try:
-        cliente = Pessoas.objects.get(id=id_vendedor)
-    except Pessoas.DoesNotExist:
-        cliente = Pessoas.objects.create(id=id_vendedor)
-    except Pessoas.MultipleObjectsReturned:
-        return HttpResponse(f"Erro ao criar cliente, mais de um cliente com o mesmo id, {dados_consultados_dict.get('id_vendedor')}")
-    
-    dados = Dado.objects.filter(id_vendedor=id_vendedor, dt_credito__range=(data_inicial, data_final))
-    repasse_aprovado = RepasseAprovado.objects.create(
-        cliente=cliente,
-        total_repasses_retidos=dados_consultados_dict.get('total_repasses_retidos'),
-        total_credito=dados_consultados_dict.get('total_credito'),
-        total_debito=dados_consultados_dict.get('total_debito'),
-        total_taxa=dados_consultados_dict.get('total_taxa'),
-        total_repasse=dados_consultados_dict.get('total_repasse'),
-        data_inicial=data_inicial,
-        data_final=data_final,
-    )
-    for dado in dados:
-        dado.repasse_aprovado = True
-        dado.save()
-        repasse_aprovado.dado.add(dado)
-    #return HttpResponseRedirect('/tbl_bootstrap.html')
-    dados_nao_aprovados = Dado.objects.filter(dt_credito__range=(data_inicial, data_final), repasse_aprovado=False).values()
-    dados_nao_aprovados_json = json.dumps(list(dados_nao_aprovados))
     return JsonResponse({'dados': dados_nao_aprovados_json, 'data_inicial': data_inicial, 'data_final': data_final, 'status': 200})
 
 def desaprovar_repasse(request, *args, **kwargs):
     repasse_aprovado = RepasseAprovado.objects.get(id=kwargs.get('repasse_aprovado_id'))
-    for dado in repasse_aprovado.dado.all():
-        dado.repasse_aprovado = False
-        dado.save()
+    for credito in repasse_aprovado.creditos.all():
+        credito.aprovada_para_repasse = False
+        credito.save()
+    for debito in repasse_aprovado.debitos.all():
+        debito.aprovada_para_repasse = False
+        debito.save()
+    for taxa in repasse_aprovado.taxas.all():
+        taxa.aprovada_para_repasse = False
+        taxa.save()
+    for repasse_retido in repasse_aprovado.repasses_retidos.all():
+        repasse_retido.aprovada_para_repasse = False
+        repasse_retido.save()
+    for parcela_taxa in repasse_aprovado.parcelas_taxas.all():
+        parcela_taxa.aprovada_para_repasse = False
+        parcela_taxa.save()
+    for repasse in repasse_aprovado.repasses.all():
+        repasse.aprovada_para_repasse = False
+        repasse.save()
     repasse_aprovado.delete()
     return HttpResponseRedirect('/tbl_repasses_aprovados.html')
 

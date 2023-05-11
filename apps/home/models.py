@@ -250,6 +250,7 @@ class RepasseAprovado(models.Model):
     creditos = models.ManyToManyField("home.Credito", verbose_name=_("creditos"))
     debitos = models.ManyToManyField("home.Debito", verbose_name=_("debitos"))
     taxas = models.ManyToManyField("home.Taxa", verbose_name=_("taxas"))
+    parcelas_taxas = models.ManyToManyField("home.ParcelaTaxa", verbose_name=_("parcelas_taxas"))
     data_inicial = models.DateField(_(""), blank=True, null=True)
     data_final = models.DateField(_(""), blank=True, null=True)
     data_aprovado = models.DateTimeField(_(""), blank=True, null=True, auto_now_add=True)
