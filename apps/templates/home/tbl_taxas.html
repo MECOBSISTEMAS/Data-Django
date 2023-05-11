@@ -70,7 +70,21 @@
                 <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Taxado">
                 <input required type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
                 <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
-                <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa">
+                {% comment %} <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa"> {% endcomment %}
+                <div class="form-group">
+                  <label for="selecionar-tipo-taxa">Tipo</label>
+                  <select class="form-control" name="selecionar-tipo-taxa" name="tipo" id="selecionar-tipo-taxa">
+                    <option value="TBB - Taxa de baixa de boleto">TBB - Taxa de baixa de boleto</option>
+                    <option value="TEC - Taxa de elaboração de contrato ">TEC - Taxa de elaboração de contrato </option>
+                    <option value="TAC - Taxa de análise de crédito">TAC - Taxa de análise de crédito</option>
+                    <option value="TCC - Taxa de controle de compra">TCC - Taxa de controle de compra</option>
+                    <option value="SPC - Restrição de CPF e/ou CNPJ">SPC - Restrição de CPF e/ou CNPJ</option>
+                    <option value="Honorários Iniciais - Confecção de ação judicial ">Honorários Iniciais - Confecção de ação judicial </option>
+                    <option value="Honorários Judiciais">Honorários Judiciais</option>
+                    <option value="Honorários de recebimento direto">Honorários de recebimento direto</option>
+                  </select>
+                </div>
+                
                 <button class="btn btn-primary" type="submit" name="nova-taxa">Nova Taxa</button>
               </form>
             </div>

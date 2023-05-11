@@ -311,7 +311,7 @@ def pages(request):
                     tbody = "<tr>"
                     for repasse_clientes in context['repasses_clientes']:
                         #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_clientes['total_repasse_retido']}/{repasse_clientes['total_credito']}/{repasse_clientes['total_taxas']}/{repasse_clientes['total_debitos']}/{repasse_clientes['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
-                        tbody += "<td><a class='btn btn-success' href='aprovar-repasse/' name='aprovar-repasse'>Aprovar Repasses</a></td>"
+                        tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
@@ -494,7 +494,7 @@ def pages(request):
                     valor = request.POST.get('valor')
                     data_taxa = request.POST.get('data-taxa')
                     descricao = request.POST.get('descricao')
-                    tipo = request.POST.get('tipo')
+                    tipo = request.POST.get('selecionar-tipo-taxa')
                     Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao, tipo=tipo)
                 if 'filtrar-taxa' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
@@ -1149,6 +1149,10 @@ def upload_planilha_dados_brutos(request):
     return HttpResponse("HTTP REQUEST")
 
 def aprovar_repasse(request, *args, **kwargs) :
+    pessoa = Pessoas.objects.get(id=kwargs.get('id_pessoa'))
+    creditos = Credito.objects.filter(cliente__id=pessoa.id)
+    debitos = Debito.objects.filter(cliente__id=pessoa.id)
+    taxas = Taxa.objects.filter(cliente__id=pessoa.id)
     return HttpResponseRedirect('/tbl_bootstrap.html')
     id_cliente = kwargs.get('id_cliente')
     data_inicial = kwargs.get('data_inicial')

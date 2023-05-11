@@ -245,15 +245,14 @@ class Dado(models.Model):
 
 class RepasseAprovado(models.Model):
     cliente = models.ForeignKey('Pessoas', on_delete=models.CASCADE, blank=True, null=True)
-    dados = models.ManyToManyField(Dado, blank=True)
-    total_repasses_retidos = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    total_credito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    total_debito = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    total_taxa = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
-    total_repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
+    repasses = models.ManyToManyField(Dado, blank=True)
+    repasses_retidos = models.ManyToManyField("home.RepasseRetido", verbose_name=_("repasses_retidos"))
+    creditos = models.ManyToManyField("home.Credito", verbose_name=_("creditos"))
+    debitos = models.ManyToManyField("home.Debito", verbose_name=_("debitos"))
+    taxas = models.ManyToManyField("home.Taxa", verbose_name=_("taxas"))
     data_inicial = models.DateField(_(""), blank=True, null=True)
     data_final = models.DateField(_(""), blank=True, null=True)
-    data_aprovado = models.DateTimeField(_(""), blank=True, null=True)
+    data_aprovado = models.DateTimeField(_(""), blank=True, null=True, auto_now_add=True)
     def __str__(self):
         return f'{self.cliente}, {self.total_repasse}'
 
