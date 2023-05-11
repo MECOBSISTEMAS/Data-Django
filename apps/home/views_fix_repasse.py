@@ -1164,7 +1164,7 @@ def aprovar_repasse(request, *args, **kwargs):
     repasses = Dado.objects.filter(id_vendedor=pessoa.id, dt_credito__range=[data_inicio, data_fim])
     repasses_retidos = RepasseRetido.objects.filter(cliente__id=pessoa.id, dt_rep_retido__range=[data_inicio, data_fim], aprovada=True)
     parcelas_taxas = ParcelaTaxa.objects.filter(Q(id_vendedor=pessoa.id) | Q(id_comprador=pessoa.id), dt_vencimento__range=[data_inicio, data_fim], aprovada=True)
-    repasse_aprovado = RepasseAprovado.objects.create(
+    repasse_aprovado = RepasseAprovado(
         cliente=pessoa,
         data_inicial=data_inicio,
         data_final=data_fim
@@ -1195,7 +1195,6 @@ def aprovar_repasse(request, *args, **kwargs):
         repasse_aprovado.repasses.add(repasse)
         
     repasse_aprovado.save()
-    
         
     return HttpResponseRedirect('/tbl_bootstrap.html')
     

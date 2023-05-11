@@ -3,6 +3,7 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.db.models import Sum
 import decimal
 import math
 from . import existing_models
@@ -254,6 +255,19 @@ class RepasseAprovado(models.Model):
     data_inicial = models.DateField(_(""), blank=True, null=True)
     data_final = models.DateField(_(""), blank=True, null=True)
     data_aprovado = models.DateTimeField(_(""), blank=True, null=True, auto_now_add=True)
+    
+    def total_repasses_retidos(self):
+        return self.repasses_retidos.aggregate(Sum('vlr_rep_retido'))['vlr_rep_retido__sum'] or 0
+    
+    def total_creditos(self):
+        return self.creditos.aggregate(Sum('vl_credito'))['vl_credito__sum'] or 0
+    
+    def total_debitos(self):
+        return self.debitos.aggregate(Sum('vl_debito'))['vl_debito__sum'] or 0
+    """ def total_taxas(self):
+        return self.taxas.aggregate(Sum('taxas'))['taxas'] - self.total_taxas()"""
+    def total_repasse(self):
+        return self.total_creditos()  - self.total_debitos() + self.total_repasses_retidos()
     def __str__(self):
         return f'{self.cliente}, {self.total_repasse}'
 
