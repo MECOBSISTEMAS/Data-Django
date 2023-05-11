@@ -264,10 +264,12 @@ class RepasseAprovado(models.Model):
     
     def total_debitos(self):
         return self.debitos.aggregate(Sum('vl_debito'))['vl_debito__sum'] or 0
-    """ def total_taxas(self):
-        return self.taxas.aggregate(Sum('taxas'))['taxas'] - self.total_taxas()"""
+    
+    def total_taxas(self):
+        return self.taxas.aggregate(Sum('taxas'))['taxas__sum'] or 0
+    
     def total_repasse(self):
-        return self.total_creditos()  - self.total_debitos() + self.total_repasses_retidos()
+        return self.total_creditos() - self.total_taxas()  - self.total_debitos() + self.total_repasses_retidos()
     def __str__(self):
         return f'{self.cliente}, {self.total_repasse}'
 
