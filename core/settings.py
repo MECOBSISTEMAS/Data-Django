@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'django.contrib.staticfiles',
     'apps.home',                                    # Enable the inner home (home)
+    'apps.access',
     'django_extensions',
     #'debug_toolbar',
     'widget_tweaks',
