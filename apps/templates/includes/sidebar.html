@@ -35,42 +35,44 @@
             <span class="pcoded-mtext">Usuário</span></a
           >
         </li> -->
+          {% if user.is_superuser %}
           <li class="nav-item pcoded-menu-caption">
-          <label>UI Elementos</label>
-        </li>
-         <li
-          data-username="basic components Button Alert Badges breadcrumb Paggination progress Tooltip popovers Carousel Cards Collapse Tabs pills Modal Grid System Typography Extra Shadows Embeds"
-          class="nav-item pcoded-hasmenu"
-        >
-          <a href="javascript:" class="nav-link"
-            ><span class="pcoded-micon"><i class="feather icon-box"></i></span
-            ><span class="pcoded-mtext">Componentes</span></a
+            <label>UI Elementos</label>
+          </li>
+           <li
+            data-username="basic components Button Alert Badges breadcrumb Paggination progress Tooltip popovers Carousel Cards Collapse Tabs pills Modal Grid System Typography Extra Shadows Embeds"
+            class="nav-item pcoded-hasmenu"
           >
-          <ul class="pcoded-submenu">
-            <li class=""><a href="/bc_button.html" class="">Button</a></li>
-            <li class=""><a href="/bc_badges.html" class="">Badges</a></li>
-            <li class="">
-              <a href="/bc_breadcrumb-pagination.html" class=""
-                >Breadcrumb & paggination</a
-              >
-            </li>
-            <li class=""><a href="/bc_collapse.html" class="">Collapse</a></li>
-            <li class=""><a href="/bc_tabs.html" class="">Tabs & pills</a></li>
-            <li class="">
-              <a href="/bc_typography.html" class="">Typography</a>
-            </li>
-
-            <li class="">
-              <a href="/icon-feather.html" class=""
-                >Feather<span class="pcoded-badge label label-danger"
-                  >NEW</span
-                ></a
-              >
-            </li>
-          </ul>
-        </li>
+            <a href="javascript:" class="nav-link"
+              ><span class="pcoded-micon"><i class="feather icon-box"></i></span
+              ><span class="pcoded-mtext">Componentes</span></a
+            >
+            <ul class="pcoded-submenu">
+              <li class=""><a href="/bc_button.html" class="">Button</a></li>
+              <li class=""><a href="/bc_badges.html" class="">Badges</a></li>
+              <li class="">
+                <a href="/bc_breadcrumb-pagination.html" class=""
+                  >Breadcrumb & paggination</a
+                >
+              </li>
+              <li class=""><a href="/bc_collapse.html" class="">Collapse</a></li>
+              <li class=""><a href="/bc_tabs.html" class="">Tabs & pills</a></li>
+              <li class="">
+                <a href="/bc_typography.html" class="">Typography</a>
+              </li>
+  
+              <li class="">
+                <a href="/icon-feather.html" class=""
+                  >Feather<span class="pcoded-badge label label-danger"
+                    >NEW</span
+                  ></a
+                >
+              </li>
+            </ul>
+          </li>
+          {% endif %}
         <li class="nav-item pcoded-menu-caption">
-          <label>Menu 3</label>
+          <label>Menu 2</label>
         </li>
         <li
           data-username="form elements advance componant validation masking wizard picker select"

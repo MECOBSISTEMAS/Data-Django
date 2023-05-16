@@ -85,7 +85,11 @@
                   </select>
                 </div>
                 
-                <button class="btn btn-primary" type="submit" name="nova-taxa">Nova Taxa</button>
+                {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
+                  <button class="btn btn-primary" type="submit" name="nova-taxa">Nova Taxa</button>
+                {% else %}
+                  <button class="btn btn-primary disabled" type="button" name="nova-taxa">Nova Taxa</button>
+                {% endif %}
               </form>
             </div>
 
@@ -122,6 +126,7 @@
                     </tr>
                   </thead>
                   <tbody>
+                    {% if user.is_superuser %}
                     {% for taxa in taxas_nao_aprovadas %}
                       <tr>
                         <th>
@@ -138,6 +143,24 @@
                         <th>{{taxa.taxas}}</th>
                       </tr>
                     {% endfor %}
+                    {% else %}
+                      {% for taxa in taxas_nao_aprovadas %}
+                        <tr>
+                          <th>
+                            <a 
+                            name="aprovar-taxa" 
+                            id="aprovar-taxa" 
+                            class="btn btn-primary disabled"
+                            href="#sem-autorizacao" 
+                            role="button">Aprovar</a>
+                          </th>
+                          <th>{{taxa.cliente_id}}</th>
+                          <th>{{taxa.cliente.nome}}</th>
+                          <th>{{taxa.dt_taxa}}</th>
+                          <th>{{taxa.taxas}}</th>
+                        </tr>
+                      {% endfor %}
+                    {% endif %}
                   </tbody>
                 </table>
               </div>
@@ -154,14 +177,15 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for taxa in taxas_aprovadas %}
+                    {% if user.is_superuser %}
+                      {% for taxa in taxas_aprovadas %}
                       <tr>
                         <th>
                           <a 
                           name="desaprovar-taxa" 
                           id="desaprovar-taxa" 
                           class="btn btn-danger" 
-                          href="#" 
+                          href="{% url 'home:aprovar_taxa_manual' taxa.id %}"
                           role="button">Desaprovar</a>
                         </th>
                         <th>{{taxa.cliente_id}}</th>
@@ -170,6 +194,24 @@
                         <th>{{taxa.taxas}}</th>
                       </tr>
                     {% endfor %}
+                    {% else %}
+                      {% for taxa in taxas_aprovadas %}
+                        <tr>
+                          <th>
+                            <a 
+                            name="desaprovar-taxa" 
+                            id="desaprovar-taxa" 
+                            class="btn btn-danger disabled" 
+                            href="#sem-autorizacao"
+                            role="button">Desaprovar</a>
+                          </th>
+                          <th>{{taxa.cliente_id}}</th>
+                          <th>{{taxa.cliente.nome}}</th>
+                          <th>{{taxa.dt_taxa}}</th>
+                          <th>{{taxa.taxas}}</th>
+                        </tr>
+                      {% endfor %}
+                    {% endif %}
                   </tbody>
                 </table>
               </div>

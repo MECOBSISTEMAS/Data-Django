@@ -74,6 +74,7 @@
                           </tr>
                         </thead>
                         <tbody>
+                          {% if user.is_superuser %}
                           {% for repasse_aprovado in repasses_aprovados %}
                             <tr>
                               <th><a name="desaprovar-repasse" id="desaprovar-repasse" class="btn btn-danger btn-sm" href="{% url 'home:desaprovar_repasse' repasse_aprovado.id  %}" role="button">Desaprovar Repasse</a></th>
@@ -88,6 +89,23 @@
                               <th>{{repasse_aprovado.total_repasse}}</th>
                             </tr>
                           {% endfor %}
+                          {% else %}
+                          {% for repasse_aprovado in repasses_aprovados %}
+                            <tr>
+                              <th><a name="desaprovar-repasse" id="desaprovar-repasse" class="btn btn-danger btn-sm disabled" href="#sem-autorizacao" role="button">Desaprovar Repasse</a></th>
+                              <th>{{repasse_aprovado.cliente.id}}</th>
+                              <th>{{repasse_aprovado.cliente.nome}}</th>
+                              <th>{{repasse_aprovado.data_inicial|date:'d/m/y'}}</th>
+                              <th>{{repasse_aprovado.data_final|date:'d/m/y'}}</th>
+                              <th>{{repasse_aprovado.total_repasses_retidos}}</th>
+                              <th>{{repasse_aprovado.total_creditos}}</th>
+                              <th>{{repasse_aprovado.total_taxas}}</th>
+                              <th>{{repasse_aprovado.total_debitos}}</th>
+                              <th>{{repasse_aprovado.total_repasse}}</th>
+                            </tr>
+                          {% endfor %}
+                          
+                          {% endif %}
                         </tbody>
                       </table>
                     </div>

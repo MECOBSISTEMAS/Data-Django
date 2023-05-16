@@ -1,5 +1,4 @@
-{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %} {%
-load utils %} {% load humanize %} {% load static %}
+{% extends "layouts/base.html" %} {% block title %} UI Tables {% endblock %} {% load utils %} {% load humanize %} {% load static %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} {% block content %}
@@ -51,6 +50,7 @@ load utils %} {% load humanize %} {% load static %}
 											<button type="submit" class="btn btn-primary">Enviar pLanilha</button>
 										</form> {% endcomment %}
 										<br>
+                    {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
 										<h4>Importar Planilha CADCLIENTE</h4>
 										<form action="{% url 'home:upload_planilha_cad_clientes' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
                       {% csrf_token %}
@@ -69,6 +69,9 @@ load utils %} {% load humanize %} {% load static %}
 											<input type="file" name="docpicker">
 											<button type="submit" class="btn btn-primary">Enviar pLanilha</button>
 										</form>
+                    {% else %}
+                    <p>Sem permissão para importação de planilhas</p>
+                    {% endif %}
 									</div>
                 </div>
               </div>

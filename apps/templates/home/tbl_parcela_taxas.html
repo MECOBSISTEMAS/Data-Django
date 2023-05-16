@@ -66,11 +66,15 @@
                 </p>
               </form>
               <h4>Importar Planilha Taxas</h4>
+              {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
               <form action="{% url 'home:upload_planilha_parcelas_taxas' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
                 {% csrf_token %}
                 <input type="file" name="docpicker">
-                <button type="submit" class="btn btn-primary">Enviar pLanilha</button>
+                <button type="submit" class="btn btn-primary">Enviar planilha</button>
               </form>
+              {% else %}
+              <p>Sem permissão para enviar planilha ({{user.acesso.permissao}}).</p>
+              {% endif %}
             </div>
 
             <div class="card-block table-border-style">
@@ -94,9 +98,28 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for parcela_taxa in parcelas_taxas %}
+                    {% if user.is_superuser %}
+                      {% for parcela_taxa in parcelas_taxas %}
+                        <tr>
+                          <th><a class="btn btn-success aprovar-parcela-taxa-btn" href="/aprovar_parcela_taxa/{{parcela_taxa.id}}/{{data_inicio}}/{{data_fim}}">Aprovar</a></th>
+                          <td>{{parcela_taxa.id_contrato}}</td>
+                          <td>{{parcela_taxa.comprador}}</td>
+                          <td>{{parcela_taxa.id_comprador}}</td>
+                          <td>{{parcela_taxa.vendedor}}</td>
+                          <td>{{parcela_taxa.id_vendedor}}</td>
+                          <td>{{parcela_taxa.parcela}}</td>
+                          <td>{{parcela_taxa.dt_vencimento}}</td>
+                          <td>{{parcela_taxa.valor}}</td>
+                          <td>{{parcela_taxa.tcc}}</td>
+                          <td>{{parcela_taxa.desconto_total}}</td>
+                          <td>{{parcela_taxa.honorarios}}</td>
+                          <td>{{parcela_taxa.repasse}}</td>
+                        </tr>
+                      {% endfor %}
+                    {% else %}
+                      {% for parcela_taxa in parcelas_taxas %}
                       <tr>
-                        <th><a class="btn btn-success aprovar-parcela-taxa-btn" href="/aprovar_parcela_taxa/{{parcela_taxa.id}}/{{data_inicio}}/{{data_fim}}">Aprovar</a></th>
+                        <th><a class="btn btn-success aprovar-parcela-taxa-btn disabled" href="#sem-autorizacao">Aprovar</a></th>
                         <td>{{parcela_taxa.id_contrato}}</td>
                         <td>{{parcela_taxa.comprador}}</td>
                         <td>{{parcela_taxa.id_comprador}}</td>
@@ -111,6 +134,7 @@
                         <td>{{parcela_taxa.repasse}}</td>
                       </tr>
                     {% endfor %}
+                    {% endif %}
                   </tbody>
                 </table>
               </div>

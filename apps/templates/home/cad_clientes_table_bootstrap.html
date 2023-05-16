@@ -94,7 +94,6 @@
                     <div class="more-content align-center justify-content-center text-center w-100 form-inline">
                       <form action="" method="post" name="form-novo-cliente" id="form-novo-cliente">
                         {% csrf_token %}
-                        <p class="text-c-red">Deixar mais automatico a pesquisa do novo cadastro de um cliente</p>
                         <label for="cliente-id">Digite o ID do cliente (caso não for inserido sera automatico gerado pelo sistema) </label>
                         <input class="form-control w-100" type="number" id="cliente-id" name="cliente-id">
                         <hr>
@@ -121,10 +120,23 @@
                         <label for="honorarios">honorarios</label>
                         <input type="number" class="form-control w-100" id="honorarios" name="honorarios" value="0.03">
                         
-                        <label for="informar-repasse">informar-repasse</label>
-                        <input type="text" class="form-control w-100" id="informar-repasse" name="informar-repasse">
+                        <span>Repasse semanal ?</span>
+                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                          <label class="btn btn-secondary active">
+                            <input type="radio" name="valor_sim" id="option1" autocomplete="off" checked> SIM
+                          </label>
+                          <label class="btn btn-secondary">
+                            <input type="radio" name="valor_nao" id="option2" autocomplete="off"> NÃO
+                          </label>
+                        </div>
+                        <br>
+                        <br>
                         
-                        <button type="submit" name="novo-cliente-cadastro" id="" class="btn btn-primary">Cadastrar</button>
+                        {% if user.is_superuser or user.permissao.acesso == 'alimentacao' %}
+                          <button type="submit" name="novo-cliente-cadastro" id="" class="btn btn-primary">Cadastrar</button>
+                          {% else %}
+                          <button type="button" name="novo-cliente-cadastro" id="" class="btn btn-primary disabled">Cadastrar</button>
+                        {% endif %}
                       </form>
                     </div>
                   </div>

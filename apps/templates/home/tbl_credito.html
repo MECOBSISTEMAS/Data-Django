@@ -72,7 +72,11 @@
                 <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Creditado">
                 <input required type="date" name="data-credito" class="form-control" id="data-credito" placeholder="Data a ser creditada">
                 <input type="text" name="descricao" class="form-control" placeholder="Descrição do Credito">
+                {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
                 <button class="btn btn-primary" type="submit" name="novo-credito">Novo Credito</button>
+                {% else %}
+                <button class="btn btn-primary disabled" type="button" name="novo-credito">Novo Credito</button>
+                {% endif %}
               </form>
             </div>
 
@@ -109,15 +113,27 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for credito in creditos_nao_aprovadas %}
-                    <tr>
-                      <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success" href="{% url 'home:aprovar_credito' credito.id  %}" role="button">Aprovar</a></th>
-                      <th>{{credito.cliente.id}}</th>
-                      <th>{{credito.cliente.nome}}</th>
-                      <th>{{credito.vl_credito}}</th>
-                      <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
-                    </tr>
-                    {% endfor %}
+                    {% if user.is_superuser %}
+                      {% for credito in creditos_nao_aprovadas %}
+                      <tr>
+                        <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success" href="{% url 'home:aprovar_credito' credito.id  %}" role="button">Aprovar</a></th>
+                        <th>{{credito.cliente.id}}</th>
+                        <th>{{credito.cliente.nome}}</th>
+                        <th>{{credito.vl_credito}}</th>
+                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                      </tr>
+                      {% endfor %}
+                    {% else %}
+                      {% for credito in creditos_nao_aprovadas %}
+                      <tr>
+                        <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success disabled" href="#sem-autorizacao" role="button">Aprovar</a></th>
+                        <th>{{credito.cliente.id}}</th>
+                        <th>{{credito.cliente.nome}}</th>
+                        <th>{{credito.vl_credito}}</th>
+                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                      </tr>
+                      {% endfor %}
+                    {% endif %}
                   </tbody>
                 </table>
               </div>
@@ -136,15 +152,27 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {% for credito in creditos_aprovadas %}
-                    <tr>
-                      <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger" href="{% url 'home:desaprovar_credito' credito.id %}" role="button">Desaprovar</a></th>
-                      <th>{{credito.cliente.id}}</th>
-                      <th>{{credito.cliente.nome}}</th>
-                      <th>{{credito.vl_credito}}</th>
-                      <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
-                    </tr>
-                    {% endfor %}
+                    {% if user.is_superuser %}
+                      {% for credito in creditos_aprovadas %}
+                      <tr>
+                        <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger" href="{% url 'home:desaprovar_credito' credito.id %}" role="button">Desaprovar</a></th>
+                        <th>{{credito.cliente.id}}</th>
+                        <th>{{credito.cliente.nome}}</th>
+                        <th>{{credito.vl_credito}}</th>
+                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                      </tr>
+                      {% endfor %}
+                    {% else %}
+                      {% for credito in creditos_aprovadas %}
+                      <tr>
+                        <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
+                        <th>{{credito.cliente.id}}</th>
+                        <th>{{credito.cliente.nome}}</th>
+                        <th>{{credito.vl_credito}}</th>
+                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                      </tr>
+                      {% endfor %}
+                    {% endif %}
                   </tbody>
                 </table>
               </div>

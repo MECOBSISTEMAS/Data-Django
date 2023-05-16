@@ -83,9 +83,10 @@ def pages(request):
                     operacional = request.POST.get('operacional')
                     tcc = request.POST.get('tcc')
                     honorarios = request.POST.get('honorarios')
+                    sim = request.POST.get('valor_sim') or None
                     """ animal = request.POST.get('animal')
                     evento = request.POST.get('evento') """
-                    informar_repasse = request.POST.get('informar_repasse')
+                    #!informar_repasse = request.POST.get('informar_repasse')
                     
                     
                     try:
@@ -97,7 +98,7 @@ def pages(request):
                         CadCliente.objects.create(
                             vendedor = pessoa, sim=sim, nao=nao, 
                             operacional=operacional, tcc=tcc, 
-                            honorarios=honorarios, informar_repasse=informar_repasse
+                            honorarios=honorarios, repasse_semanal = True if sim else False
                         )
                         
             context['cad_clientes'] = CadCliente.objects.all()
@@ -317,7 +318,11 @@ def pages(request):
                     tbody = "<tr>"
                     for repasse_clientes in context['repasses_clientes']:
                         #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_clientes['total_repasse_retido']}/{repasse_clientes['total_credito']}/{repasse_clientes['total_taxas']}/{repasse_clientes['total_debitos']}/{repasse_clientes['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
-                        tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
+                        if request.user.is_superuser:
+                            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
+                        else:
+                            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success disabled' href='#sem-autorizacao'>Aprovar Repasses</a></td>"
+                            
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"

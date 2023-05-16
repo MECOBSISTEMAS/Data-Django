@@ -77,6 +77,7 @@
                           </tr>
                         </thead>
                         <tbody>
+                          {% if user.is_superuser %}
                           {% for parcela_taxa_aprovada in parcelas_taxas_aprovadas %}
                           <tr>
                             <th><a name="" id="" class="btn btn-primary btn-sm" href="{% url 'home:desaprovar_parcela_taxa' parcela_taxa_aprovada.id %}" role="button">Desaprovar</a></th>
@@ -94,6 +95,26 @@
                             <th>{{parcela_taxa_aprovada.repasse}}</th>
                           </tr>
                           {% endfor %}
+                          {% else %}
+                          {% for parcela_taxa_aprovada in parcelas_taxas_aprovadas %}
+                            <tr>
+                              <th><a name="" id="" class="btn btn-primary btn-sm disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
+                              <th>{{parcela_taxa_aprovada.id_contrato}}</th>
+                              <th>{{parcela_taxa_aprovada.id_comprador}}</th>
+                              <th>{{parcela_taxa_aprovada.comprador}}</th>
+                              <th>{{parcela_taxa_aprovada.id_vendedor}}</th>
+                              <th>{{parcela_taxa_aprovada.vendedor}}</th>
+                              <th>{{parcela_taxa_aprovada.parcela}}</th>
+                              <th>{{parcela_taxa_aprovada.dt_vencimento}}</th>
+                              <th>{{parcela_taxa_aprovada.valor}}</th>
+                              <th>{{parcela_taxa_aprovada.tcc}}</th>
+                              <th>{{parcela_taxa_aprovada.desconto_total}}</th>
+                              <th>{{parcela_taxa_aprovada.honorarios}}</th>
+                              <th>{{parcela_taxa_aprovada.repasse}}</th>
+                            </tr>
+                          {% endfor %}
+                          {% endif %}
+                          
                         </tbody>
                       </table>
                     </div>
