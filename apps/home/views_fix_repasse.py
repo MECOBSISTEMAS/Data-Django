@@ -328,8 +328,8 @@ def pages(request):
                         tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
-                        for dia in dados_dias.keys():
-                            tbody += f"<td>{dia}</td>"
+                        """ for dia in dados_dias.keys():
+                            tbody += f"<td>{dia}</td>" """
                         tbody += f"<td>{repasse_clientes['total_credito']}</td>"
                         tbody += f"<td>{repasse_clientes['total_taxas']}</td>"
                         tbody += f"<td>{repasse_clientes['total_debitos']}</td>"
