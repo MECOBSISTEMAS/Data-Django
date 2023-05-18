@@ -2,6 +2,7 @@
 {% block title %} UI Forms {% endblock %}
 {% load widget_tweaks %}
 {% load utils %}
+{% load static %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -134,7 +135,7 @@
                           name="aprovar-taxa" 
                           id="aprovar-taxa" 
                           class="btn btn-primary" 
-                          href="{% url 'home:aprovar_taxa_manual' taxa.id %}" 
+                          href="{% url 'home:aprovar_taxa_manual' taxa.id data_inicio data_fim %}" 
                           role="button">Aprovar</a>
                         </th>
                         <th>{{taxa.cliente_id}}</th>
@@ -185,7 +186,7 @@
                           name="desaprovar-taxa" 
                           id="desaprovar-taxa" 
                           class="btn btn-danger" 
-                          href="{% url 'home:desaprovar_taxa_manual' taxa.id %}"
+                          href="{% url 'home:desaprovar_taxa_manual' taxa.id data_inicio data_fim %}"
                           role="button">Desaprovar</a>
                         </th>
                         <th>{{taxa.cliente_id}}</th>
@@ -235,4 +236,5 @@
     $('#table-taxas-nao-aprovadas').DataTable();
   })
 </script>
+{% comment %} <script src="{% static 'assets/js/taxas/scripts.js' %}"></script> {% endcomment %}
 {% endblock javascripts %}

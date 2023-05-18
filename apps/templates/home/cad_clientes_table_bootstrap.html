@@ -131,8 +131,7 @@
                         </div>
                         <br>
                         <br>
-                        
-                        {% if user.is_superuser or user.permissao.acesso == 'alimentacao' %}
+                        {% if user.acesso.permissao == 'alimentacao' or user.is_superuser %}
                           <button type="submit" name="novo-cliente-cadastro" id="" class="btn btn-primary">Cadastrar</button>
                           {% else %}
                           <button type="button" name="novo-cliente-cadastro" id="" class="btn btn-primary disabled">Cadastrar</button>

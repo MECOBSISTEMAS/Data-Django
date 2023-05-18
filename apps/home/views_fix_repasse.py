@@ -1259,16 +1259,39 @@ def desaprovar_parcela_taxa(request, *args, **kwargs):
     return HttpResponseRedirect('tbl_taxas_aprovadas.html')
 
 def aprovar_taxa_manual(request, *args, **kwargs):
+    data_inicio = kwargs.get('data_inicio')
+    data_fim = kwargs.get('data_fim')
+    print(data_inicio, data_fim)
     taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
     taxa.aprovada = True
     taxa.save()
-    return HttpResponseRedirect('/tbl_taxas.html')
+    taxas_nao_aprovadas = Taxa.objects.filter(aprovada=False, dt_taxa__range=(data_inicio, data_fim))
+    taxas_aprovadas = Taxa.objects.filter(aprovada=True, dt_taxa__range=(data_inicio, data_fim))
+    return HttpResponseRedirect('/tbl_taxas.html')  
+    return JsonResponse(
+        status = 200,
+        data = {
+            'taxas_nao_aprovadas': list(taxas_nao_aprovadas.values()),
+            'taxas_aprovadas': list(taxas_aprovadas.values()),
+        },
+    )
 
 def desaprovar_taxa_manual(request, *args, **kwargs):
+    data_inicio = kwargs.get('data_inicio')
+    data_fim = kwargs.get('data_fim')
     taxa = Taxa.objects.get(id=kwargs.get('taxa_id'))
     taxa.aprovada = False
     taxa.save()
+    taxas_nao_aprovadas = Taxa.objects.filter(aprovada=False, dt_taxa__range=(data_inicio, data_fim))
+    taxas_aprovadas = Taxa.objects.filter(aprovada=True, dt_taxa__range=(data_inicio, data_fim))
     return HttpResponseRedirect('/tbl_taxas.html')
+    return JsonResponse(
+        status = 200,
+        data = {
+            'taxas_nao_aprovadas': list(taxas_nao_aprovadas.values()),
+            'taxas_aprovadas': list(taxas_aprovadas.values()),
+        },
+    )
 
 def aprovar_credito(request, *args, **kwargs):
     credito = Credito.objects.get(id=kwargs.get('credito_id'))
