@@ -74,33 +74,36 @@ def pages(request):
         if load_template == 'cad_clientes_table_bootstrap.html':
             if request.method == 'POST':
                 if 'novo-cliente-cadastro' in request.POST:
-                    cliente_id = request.POST.get('cliente_id')
-                    
+                    cliente_id = request.POST.get('cliente-id')
                     nome = request.POST.get('nome')
                     email = request.POST.get('email')
-                    
                     sim = request.POST.get('sim')
                     nao = request.POST.get('nao')
                     operacional = request.POST.get('operacional')
                     tcc = request.POST.get('tcc')
                     honorarios = request.POST.get('honorarios')
-                    sim = request.POST.get('valor_sim') or None
-                    """ animal = request.POST.get('animal')
-                    evento = request.POST.get('evento') """
+                    repasse_semanal = request.POST.get('valor_sim') == 'on'
                     #!informar_repasse = request.POST.get('informar_repasse')
                     
-                    
-                    try:
-                        pessoa = Pessoas.objects.get(id=cliente_id)
-                        return HttpResponse('Cliente já cadastrado')
-                    except Pessoas.DoesNotExist:
-                        #crie uma pessoa passando o nome e id_cliente e caso não exista o id passado pelo usuario crie um aleatorio
-                        pessoa = Pessoas.objects.create(nome=nome, email=email, id_cliente=cliente_id)
+                    if cliente_id == '' or cliente_id == None:
+                        pessoa = Pessoas.objects.create(nome=nome, email=email)
                         CadCliente.objects.create(
-                            vendedor = pessoa, sim=sim, nao=nao, 
-                            operacional=operacional, tcc=tcc, 
-                            honorarios=honorarios, repasse_semanal = True if sim else False
+                            vendedor = pessoa, sim=sim, nao=nao,
+                            operacional=operacional, tcc=tcc,
+                            honorarios=honorarios, repasse_semanal = repasse_semanal
                         )
+                    else:    
+                        try:
+                            pessoa = Pessoas.objects.get(id=cliente_id)
+                            return HttpResponse('Cliente já cadastrado')
+                        except Pessoas.DoesNotExist:
+                            #crie uma pessoa passando o nome e id_cliente e caso não exista o id passado pelo usuario crie um aleatorio
+                            pessoa = Pessoas.objects.create(nome=nome, email=email, id=cliente_id)
+                            CadCliente.objects.create(
+                                vendedor = pessoa, sim=sim, nao=nao, 
+                                operacional=operacional, tcc=tcc, 
+                                honorarios=honorarios, repasse_semanal = repasse_semanal
+                            )
                         
             context['cad_clientes'] = CadCliente.objects.all()
             

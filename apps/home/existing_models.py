@@ -56,7 +56,7 @@ class Pessoas(models.Model):
     cpf_cnpj = models.CharField(max_length=45, blank=True, null=True)
     rg = models.CharField(max_length=45, blank=True, null=True)
     foto = models.CharField(max_length=500, blank=True, null=True)
-    email = models.CharField(unique=True, max_length=200, blank=True, null=True)
+    email = models.CharField(max_length=200, blank=True, null=True)
     password = models.CharField(max_length=200, blank=True, null=True)
     saltdb = models.CharField(max_length=100, blank=True, null=True)
     dt_ativo = models.DateTimeField(blank=True, null=True)

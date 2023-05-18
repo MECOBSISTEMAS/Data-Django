@@ -67,7 +67,7 @@
                 {% csrf_token %}
                 <input required type="text" name="pagador" class="form-control" placeholder="ID do Pagador">
                 <input type="text" name="credor" class="form-control" placeholder="ID do Credor (Opcional)">
-                <input required type="number" name="valor" class="form-control" placeholder="Valor a ser Debitado">
+                <input required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor a ser Debitado">
                 <input required type="date" name="data-debito" class="form-control" id="data-debito" placeholder="Data a ser Debitado">
                 <input type="text" name="descricao" class="form-control" placeholder="Descrição do Debito">
                 {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
