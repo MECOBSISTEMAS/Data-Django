@@ -261,12 +261,15 @@ class RepasseAprovado(models.Model):
         return self.repasses_retidos.aggregate(Sum('vlr_rep_retido'))['vlr_rep_retido__sum'] or 0
     
     def total_creditos(self):
-        credito_parcelas_taxas = self.parcelas_taxas.filter(id_vendedor = self.cliente.id).aggregate(Sum('repasse'))['repasse__sum'] or 0
-        return self.creditos.aggregate(Sum('vl_credito'))['vl_credito__sum'] + credito_parcelas_taxas or 0
+        #unsupported operand type(s) for +: 'NoneType' and 'decimal.Decimal'
+        credito_parcelas_taxas = self.parcelas_taxas.filter(id_vendedor=self.cliente.id).aggregate(Sum('repasse'))['repasse__sum'] or 0
+        total_creditos = self.creditos.aggregate(Sum('vl_credito'))['vl_credito__sum'] or 0
+        return (total_creditos or 0) + credito_parcelas_taxas
     
     def total_debitos(self):
         debito_parcelas_taxas = self.parcelas_taxas.filter(id_comprador = self.cliente.id).aggregate(Sum('desconto_total'))['desconto_total__sum'] or 0
-        return self.debitos.aggregate(Sum('vl_debito'))['vl_debito__sum'] + debito_parcelas_taxas or 0
+        total_debito = self.debitos.aggregate(Sum('vl_debito'))['vl_debito__sum'] or 0
+        return (total_debito or 0) + (debito_parcelas_taxas or 0)
     
     def total_taxas(self):
         return self.taxas.aggregate(Sum('taxas'))['taxas__sum'] or 0
