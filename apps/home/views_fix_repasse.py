@@ -82,7 +82,9 @@ def pages(request):
                     operacional = request.POST.get('operacional')
                     tcc = request.POST.get('tcc')
                     honorarios = request.POST.get('honorarios')
-                    repasse_semanal = request.POST.get('valor_sim') == 'on'
+                    repasse_semanal = request.POST.get('valor_sim')  == 'true' or False
+                    
+                    
                     #!informar_repasse = request.POST.get('informar_repasse')
                     
                     if cliente_id == '' or cliente_id == None:

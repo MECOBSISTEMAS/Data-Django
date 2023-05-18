@@ -123,12 +123,13 @@
                         <span>Repasse semanal ?</span>
                         <div class="btn-group btn-group-toggle" data-toggle="buttons">
                           <label class="btn btn-secondary active">
-                            <input type="radio" name="valor_sim" id="option1" autocomplete="off" checked> SIM
+                            <input type="radio" name="valor_sim" id="option1" value="true" autocomplete="off" checked> SIM
                           </label>
                           <label class="btn btn-secondary">
-                            <input type="radio" name="valor_nao" id="option2" autocomplete="off"> NÃO
+                            <input type="radio" name="valor_nao" id="option2" value="false" autocomplete="off"> NÃO
                           </label>
                         </div>
+                        
                         <br>
                         <br>
                         {% if user.acesso.permissao == 'alimentacao' or user.is_superuser %}
