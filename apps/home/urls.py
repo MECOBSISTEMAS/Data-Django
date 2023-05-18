@@ -72,6 +72,8 @@ urlpatterns = [
          views_fix_repasse.aprovar_parcela_taxa, name="aprovar_parcela_taxa"),
     path('aprovar-taxa-manual/<taxa_id>',
          views_fix_repasse.aprovar_taxa_manual, name="aprovar_taxa_manual"),
+    path('desaprovar-taxa-manual/<taxa_id>', views_fix_repasse.desaprovar_taxa_manual,
+         name="desaprovar_taxa_manual"),
     path('desaprovar_parcela_taxa/<parcela_taxa_id>/',
          views_fix_repasse.desaprovar_parcela_taxa, name="desaprovar_parcela_taxa"),
     path('aprovar-credito/<credito_id>',
