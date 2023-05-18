@@ -269,10 +269,13 @@ class RepasseAprovado(models.Model):
     def total_taxas(self):
         return self.taxas.aggregate(Sum('taxas'))['taxas__sum'] or 0
     
-    def total_repasse(self):
-        return self.total_creditos() - self.total_taxas()  - self.total_debitos() + self.total_repasses_retidos()
+    def todos_os_repasses(self):
+        return self.repasses.aggregate(Sum('repasses'))['repasses__sum'] or 0
+    
+    def total_repasse(self) -> decimal.Decimal:
+        return self.total_creditos() - self.total_taxas() + self.todos_os_repasses() - self.total_debitos() + self.total_repasses_retidos()
     def __str__(self):
-        return f'{self.cliente}, {self.total_repasse}'
+        return f'{self.total_repasse()}'
 
     class Meta:
         db_table = 'repasses_aprovados'

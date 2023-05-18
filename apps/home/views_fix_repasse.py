@@ -210,6 +210,7 @@ def pages(request):
                                 Dado.objects.filter(
                                     id_vendedor=OuterRef('vendedor__id'),
                                     dt_credito=dia,
+                                    aprovada_para_repasse=False
                                 ).values('id_vendedor').annotate(
                                     repasses_totais=Sum('repasses')
                                 ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
@@ -217,15 +218,28 @@ def pages(request):
                         0,
                         output_field=DecimalField(max_digits=8, decimal_places=2))
                         
-                        
+                        """ todos_os_repasses=Coalesce(
+                            Subquery(
+                                Dado.objects.filter(
+                                    id_vendedor=OuterRef('vendedor__id'),
+                                    dt_credito__range=(data_inicio, data_fim),
+                                    aprovada_para_repasse=False
+                                ).values('id_vendedor').annotate(
+                                    repasses_totais=Sum('repasses')
+                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ) """
                     context['repasses_clientes'] = CadCliente.objects.annotate(
-                        #**dados_dias,
+                        **dados_dias,
                         #some todos os repasses dentro da data de inicio e fim
                         todos_os_repasses=Coalesce(
                             Subquery(
                                 Dado.objects.filter(
                                     id_vendedor=OuterRef('vendedor__id'),
                                     dt_credito__range=(data_inicio, data_fim),
+                                    aprovada_para_repasse=False
                                 ).values('id_vendedor').annotate(
                                     repasses_totais=Sum('repasses')
                                 ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
@@ -309,31 +323,31 @@ def pages(request):
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
                         total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') + F('total_repasse_retido') + F('todos_os_repasses'),
-                    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0) ).values(
+                    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
                         'vendedor__id','vendedor__nome',
                         'total_repasse_retido', 'total_credito',
-                        'total_taxas', 'total_debitos', 'total_repasses'
+                        'total_taxas', 'total_debitos', 'total_repasses', *dados_dias.keys()
                         ).order_by('vendedor__nome')
                     #*ou repasse_retido maior que 0
-                    context['dados_dias'] = dados_dias
+                    context['dados_dias'] = dados_dias.keys()
                     
                     tbody = "<tr>"
-                    for repasse_clientes in context['repasses_clientes']:
-                        #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_clientes['total_repasse_retido']}/{repasse_clientes['total_credito']}/{repasse_clientes['total_taxas']}/{repasse_clientes['total_debitos']}/{repasse_clientes['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+                    for repasse_cliente in context['repasses_clientes']:
+                        #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_cliente['total_repasse_retido']}/{repasse_cliente['total_credito']}/{repasse_cliente['total_taxas']}/{repasse_cliente['total_debitos']}/{repasse_cliente['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
                         if request.user.is_superuser:
-                            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_clientes['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
+                            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
                         else:
                             tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success disabled' href='#sem-autorizacao'>Aprovar Repasses</a></td>"
                             
-                        tbody += f"<td>{repasse_clientes['vendedor__id']}</td>"
-                        tbody += f"<td>{repasse_clientes['vendedor__nome']}</td>"
-                        tbody += f"<td>{repasse_clientes['total_repasse_retido']}</td>"
-                        """ for dia in dados_dias.keys():
-                            tbody += f"<td>{dia}</td>" """
-                        tbody += f"<td>{repasse_clientes['total_credito']}</td>"
-                        tbody += f"<td>{repasse_clientes['total_taxas']}</td>"
-                        tbody += f"<td>{repasse_clientes['total_debitos']}</td>"
-                        tbody += f"<td>{repasse_clientes['total_repasses']}</td>"
+                        tbody += f"<td>{repasse_cliente['vendedor__id']}</td>"
+                        tbody += f"<td>{repasse_cliente['vendedor__nome']}</td>"
+                        tbody += f"<td>{repasse_cliente['total_repasse_retido']}</td>"
+                        for dia in dados_dias.keys():
+                            tbody += f"<td>{repasse_cliente[dia]}</td>"
+                        tbody += f"<td>{repasse_cliente['total_credito']}</td>"
+                        tbody += f"<td>{repasse_cliente['total_taxas']}</td>"
+                        tbody += f"<td>{repasse_cliente['total_debitos']}</td>"
+                        tbody += f"<td>{repasse_cliente['total_repasses']}</td>"
                         #tbody += f"<td>Total Repasses</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
@@ -1171,38 +1185,28 @@ def aprovar_repasse(request, *args, **kwargs):
     repasses = Dado.objects.filter(id_vendedor=pessoa.id, dt_credito__range=[data_inicio, data_fim])
     repasses_retidos = RepasseRetido.objects.filter(cliente__id=pessoa.id, dt_rep_retido__range=[data_inicio, data_fim], aprovada=True)
     parcelas_taxas = ParcelaTaxa.objects.filter(Q(id_vendedor=pessoa.id) | Q(id_comprador=pessoa.id), dt_vencimento__range=[data_inicio, data_fim], aprovada=True)
-    repasse_aprovado = RepasseAprovado(
+    repasse_aprovado = RepasseAprovado.objects.create(
         cliente=pessoa,
         data_inicial=data_inicio,
         data_final=data_fim
     )
-    for credito in creditos:
-        credito.aprovada_para_repasse = True
-        credito.save()
-        repasse_aprovado.creditos.add(credito)
-    for debito in debitos:
-        debito.aprovada_para_repasse = True
-        debito.save()
-        repasse_aprovado.debitos.add(debito)
-    for taxa in taxas:
-        taxa.aprovada_para_repasse = True
-        taxa.save()
-        repasse_aprovado.taxas.add(taxa)
-    for repasse_retido in repasses_retidos:
-        repasse_retido.aprovada_para_repasse = True
-        repasse_retido.save()
-        repasse_aprovado.repasses_retidos.add(repasse_retido)
-    for parcela_taxa in parcelas_taxas:
-        parcela_taxa.aprovada_para_repasse = True
-        parcela_taxa.save()
-        repasse_aprovado.parcelas_taxas.add(parcela_taxa)
-    for repasse in repasses:
-        repasse.aprovada_para_repasse = True
-        repasse.save()
-        repasse_aprovado.repasses.add(repasse)
+    creditos.update(aprovada_para_repasse=True)
+    debitos.update(aprovada_para_repasse=True)
+    taxas.update(aprovada_para_repasse=True)
+    repasses.update(aprovada_para_repasse=True)
+    repasses_retidos.update(aprovada_para_repasse=True)
+    parcelas_taxas.update(aprovada_para_repasse=True)
+    
+    repasse_aprovado.creditos.add(*creditos)
+    repasse_aprovado.debitos.add(*debitos)
+    repasse_aprovado.taxas.add(*taxas)
+    repasse_aprovado.repasses_retidos.add(*repasses_retidos)
+    repasse_aprovado.repasses.add(*repasses)
+    repasse_aprovado.parcelas_taxas.add(*parcelas_taxas)
         
     repasse_aprovado.save()
-        
+    
+    return JsonResponse({'message': 'Repasse aprovado com sucesso'}, status=200)
     return HttpResponseRedirect('/tbl_bootstrap.html')
     
     return JsonResponse(
@@ -1218,24 +1222,13 @@ def aprovar_repasse(request, *args, **kwargs):
 
 def desaprovar_repasse(request, *args, **kwargs):
     repasse_aprovado = RepasseAprovado.objects.get(id=kwargs.get('repasse_aprovado_id'))
-    for credito in repasse_aprovado.creditos.all():
-        credito.aprovada_para_repasse = False
-        credito.save()
-    for debito in repasse_aprovado.debitos.all():
-        debito.aprovada_para_repasse = False
-        debito.save()
-    for taxa in repasse_aprovado.taxas.all():
-        taxa.aprovada_para_repasse = False
-        taxa.save()
-    for repasse_retido in repasse_aprovado.repasses_retidos.all():
-        repasse_retido.aprovada_para_repasse = False
-        repasse_retido.save()
-    for parcela_taxa in repasse_aprovado.parcelas_taxas.all():
-        parcela_taxa.aprovada_para_repasse = False
-        parcela_taxa.save()
-    for repasse in repasse_aprovado.repasses.all():
-        repasse.aprovada_para_repasse = False
-        repasse.save()
+    repasse_aprovado.creditos.all().update(aprovada_para_repasse=False)
+    repasse_aprovado.debitos.all().update(aprovada_para_repasse=False)
+    repasse_aprovado.taxas.all().update(aprovada_para_repasse=False)
+    repasse_aprovado.repasses_retidos.all().update(aprovada_para_repasse=False)
+    repasse_aprovado.repasses.all().update(aprovada_para_repasse=False)
+    repasse_aprovado.parcelas_taxas.all().update(aprovada_para_repasse=False)
+    
     repasse_aprovado.delete()
     return HttpResponseRedirect('/tbl_repasses_aprovados.html')
 
