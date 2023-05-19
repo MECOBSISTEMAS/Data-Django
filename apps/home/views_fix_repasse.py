@@ -94,7 +94,7 @@ def pages(request):
                             operacional=operacional, tcc=tcc,
                             honorarios=honorarios, repasse_semanal = repasse_semanal
                         )
-                    else:    
+                    else:
                         try:
                             pessoa = Pessoas.objects.get(id=cliente_id)
                             return HttpResponse('Cliente já cadastrado')
