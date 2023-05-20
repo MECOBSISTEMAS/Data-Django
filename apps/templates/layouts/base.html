@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+{% load unicorn %}
 
 <head>
     <title>
@@ -34,13 +35,13 @@
 
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.css"/>
 
-
+    {% unicorn_scripts %}
     <!-- Specific CSS goes HERE -->
     {% block stylesheets %}{% endblock stylesheets %}
 
 </head>
 <body>
-
+    {% csrf_token %}
     <!-- [ Pre-loader ] start -->
     <!-- <div class="loader-bg">
         <div class="loader-track">

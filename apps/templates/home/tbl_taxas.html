@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load utils %}
 {% load static %}
+{% load unicorn %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -18,7 +19,6 @@
           <div class="page-block">
             <div class="row align-items-center">
               <div class="col-md-12">
-                
                 <div class="page-header-title">
                   <h5 class="m-b-10">Taxa</h5>
                 </div>
@@ -38,187 +38,7 @@
           </div>
         </div>
 
-        <div class="col-xl-12">
-          <div class="card">
-            <div class="card-header">
-              <h5>Taxas</h5>
-              <form action="" method="post">
-                {% csrf_token %}
-                <p>
-                  filtrar de
-                  <input
-                    type="date"
-                    name="data-inicio"
-                    id="data-inicio"
-                    {% if data_inicio %}value={{data_inicio}}{% endif %}
-                  />
-                  até
-                  <input type="date" name="data-fim" id="data-fim" {% if data_fim %}value={{data_fim}}{% endif %} />
-                  <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
-                  <button
-                    type="button"
-                    name=""
-                    id=""
-                    class="btn btn-danger"
-                  >
-                    Limpar Filtro
-                  </button>
-                </p>
-              </form>
-              <form method="POST" class="form w-100">
-                {% csrf_token %}
-                <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-                <input required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor a ser Taxado">
-                <input required type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
-                <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
-                {% comment %} <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa"> {% endcomment %}
-                <div class="form-group">
-                  <label for="selecionar-tipo-taxa">Tipo</label>
-                  <select class="form-control" name="selecionar-tipo-taxa" name="tipo" id="selecionar-tipo-taxa">
-                    <option value="TBB - Taxa de baixa de boleto">TBB - Taxa de baixa de boleto</option>
-                    <option value="TEC - Taxa de elaboração de contrato ">TEC - Taxa de elaboração de contrato </option>
-                    <option value="TAC - Taxa de análise de crédito">TAC - Taxa de análise de crédito</option>
-                    <option value="TCC - Taxa de controle de compra">TCC - Taxa de controle de compra</option>
-                    <option value="SPC - Restrição de CPF e/ou CNPJ">SPC - Restrição de CPF e/ou CNPJ</option>
-                    <option value="Honorários Iniciais - Confecção de ação judicial ">Honorários Iniciais - Confecção de ação judicial </option>
-                    <option value="Honorários Judiciais">Honorários Judiciais</option>
-                    <option value="Honorários de recebimento direto">Honorários de recebimento direto</option>
-                  </select>
-                </div>
-                
-                {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
-                  <button class="btn btn-primary" type="submit" name="nova-taxa">Nova Taxa</button>
-                {% else %}
-                  <button class="btn btn-primary disabled" type="button" name="nova-taxa">Nova Taxa</button>
-                {% endif %}
-              </form>
-            </div>
-
-            <div class="card-block table-border-style">
-              {% comment %} start table {% endcomment %}
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-taxas">
-                  <thead>
-                    <tr>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      {% for dia in taxas_dias %}
-                      <th>{{dia}}</th>
-                      {% endfor %}
-                      <th>Total Taxa</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{tbody|safe}}
-                  </tbody>
-                </table>
-              </div>
-              {% comment %} end table {% endcomment %}
-
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-taxas-aprovadas">
-                  <thead>
-                    <tr>
-                      <th>Ações</th>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      <th>Data Taxa</th>
-                      <th>Taxa Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% if user.is_superuser %}
-                    {% for taxa in taxas_nao_aprovadas %}
-                      <tr>
-                        <th>
-                          <a 
-                          name="aprovar-taxa" 
-                          id="aprovar-taxa" 
-                          class="btn btn-primary" 
-                          href="{% url 'home:aprovar_taxa_manual' taxa.id data_inicio data_fim %}" 
-                          role="button">Aprovar</a>
-                        </th>
-                        <th>{{taxa.cliente_id}}</th>
-                        <th>{{taxa.cliente.nome}}</th>
-                        <th>{{taxa.dt_taxa}}</th>
-                        <th>{{taxa.taxas}}</th>
-                      </tr>
-                    {% endfor %}
-                    {% else %}
-                      {% for taxa in taxas_nao_aprovadas %}
-                        <tr>
-                          <th>
-                            <a 
-                            name="aprovar-taxa" 
-                            id="aprovar-taxa" 
-                            class="btn btn-primary disabled"
-                            href="#sem-autorizacao" 
-                            role="button">Aprovar</a>
-                          </th>
-                          <th>{{taxa.cliente_id}}</th>
-                          <th>{{taxa.cliente.nome}}</th>
-                          <th>{{taxa.dt_taxa}}</th>
-                          <th>{{taxa.taxas}}</th>
-                        </tr>
-                      {% endfor %}
-                    {% endif %}
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-taxas-nao-aprovadas">
-                  <thead>
-                    <tr>
-                      <th>Ações</th>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      <th>Data Taxa</th>
-                      <th>Taxa Valor</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% if user.is_superuser %}
-                      {% for taxa in taxas_aprovadas %}
-                      <tr>
-                        <th>
-                          <a 
-                          name="desaprovar-taxa" 
-                          id="desaprovar-taxa" 
-                          class="btn btn-danger" 
-                          href="{% url 'home:desaprovar_taxa_manual' taxa.id data_inicio data_fim %}"
-                          role="button">Desaprovar</a>
-                        </th>
-                        <th>{{taxa.cliente_id}}</th>
-                        <th>{{taxa.cliente.nome}}</th>
-                        <th>{{taxa.dt_taxa}}</th>
-                        <th>{{taxa.taxas}}</th>
-                      </tr>
-                    {% endfor %}
-                    {% else %}
-                      {% for taxa in taxas_aprovadas %}
-                        <tr>
-                          <th>
-                            <a 
-                            name="desaprovar-taxa" 
-                            id="desaprovar-taxa" 
-                            class="btn btn-danger disabled" 
-                            href="#sem-autorizacao"
-                            role="button">Desaprovar</a>
-                          </th>
-                          <th>{{taxa.cliente_id}}</th>
-                          <th>{{taxa.cliente.nome}}</th>
-                          <th>{{taxa.dt_taxa}}</th>
-                          <th>{{taxa.taxas}}</th>
-                        </tr>
-                      {% endfor %}
-                    {% endif %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>    
+        {% unicorn 'taxas' %}
       </div>
     </div>
   </div>
@@ -226,15 +46,23 @@
 <!-- [ Main Content ] end -->
 
 {% endblock content %}
-
 <!-- Specific Page JS goes HERE  -->
 {% block javascripts %}
-<script>
+<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.js"></script>
+{% comment %} <script>
   $(document).ready(function(){
     $('#table-taxas').DataTable();
     $('#table-taxas-aprovadas').DataTable();
     $('#table-taxas-nao-aprovadas').DataTable();
   })
-</script>
+  function reinitializeDataTables() {
+    $('#table-taxas').DataTable();
+    $('#table-taxas-aprovadas').DataTable();
+    $('#table-taxas-nao-aprovadas').DataTable();
+}
+</script> {% endcomment %}
 {% comment %} <script src="{% static 'assets/js/taxas/scripts.js' %}"></script> {% endcomment %}
 {% endblock javascripts %}
+<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.js"></script>

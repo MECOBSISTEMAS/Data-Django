@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'apps.home',                                    # Enable the inner home (home)
     'apps.access',
     'django_extensions',
+    'django_unicorn',
     #'debug_toolbar',
     'widget_tweaks',
     'allauth',                                      # OAuth new

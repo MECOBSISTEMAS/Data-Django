@@ -9,6 +9,7 @@ autopep8
 backcall
 beautifulsoup4
 bleach
+cachetools
 certifi
 cffi
 charset-normalizer
@@ -25,6 +26,7 @@ django-debug-toolbar
 django-environ
 django-extensions
 django-sslserver
+django-unicorn
 django-widget-tweaks
 et-xmlfile
 executing
@@ -63,6 +65,7 @@ notebook
 notebook_shim
 oauthlib
 openpyxl
+orjson
 packaging
 pandocfilters
 parso
@@ -82,8 +85,8 @@ python-dateutil
 python-json-logger
 python3-openid
 pytz
-#pywin32
-#pywinpty
+pywin32
+pywinpty
 PyYAML
 pyzmq
 qtconsole
@@ -94,6 +97,7 @@ requests-oauthlib
 rfc3339-validator
 rfc3986-validator
 Send2Trash
+shortuuid
 six
 sniffio
 soupsieve
