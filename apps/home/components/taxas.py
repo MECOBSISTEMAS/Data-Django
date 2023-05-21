@@ -39,7 +39,7 @@ class TaxasView(UnicornView):
     valor:float = None
     data_taxa:str = ""
     descricao:str = ""
-    tipo_taxa:str = ""
+    tipo_taxa:str = "TBB - Taxa de baixa de boleto"
     
 
     def filtrar_taxas(self):
