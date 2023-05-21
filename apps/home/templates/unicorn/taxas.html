@@ -1,4 +1,5 @@
 {% load static %}
+{% load unicorn %}
 <div class="col-xl-12">
     <div class="card">
       <div class="card-header">
@@ -27,26 +28,25 @@
           </p>
         </form> {% endcomment %}
         <div>
-          <form unicorn:submit.prevent="filtrar_taxas">
+          <form unicorn:submit.prevent.defer="filtrar_taxas">
             data inicio :<input type="date" unicorn:model.lazy="data_inicio" name="data_inicio" id="data_inicio" required>
             data fim: <input type="date" unicorn:model.lazy="data_fim" name="data_fim" id="data_fim" required>
           <button unicorn:click="filtrar_taxas" unicorn:key="filtrar_taxa" class="btn btn-primary" type="submit" name="filtrar_taxa">Filtrar</button>
           </form>
           <form>
-            {{data_inicio }} {{data_fim}} {{taxas_aprovadas}} {{taxas_nao_aprovadas}}
           </form>
         </div>
-        <form method="POST" class="form w-100">
-          {% csrf_token %}
-          <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-          <input required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor a ser Taxado">
-          <input required type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
-          <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
+        {{mensagem_error_nova_taxa}}
+        <form class="form w-100" unicorn:submit.prevent.defer="nova_taxa">
+          <input required unicorn:model.defer="cliente_id" type="text" name="cliente" class="form-control" placeholder="ID Cliente">
+          <input required unicorn:model.defer="valor" type="number" name="valor" step="0.01" class="form-control" placeholder="Valor a ser Taxado">
+          <input required unicorn:model.defer="data_taxa" type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
+          <input type="text" unicorn:model.defer="descricao" name="descricao" class="form-control" placeholder="Descrição do taxa">
           {% comment %} <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa"> {% endcomment %}
           <div class="form-group">
             <label for="selecionar-tipo-taxa">Tipo</label>
-            <select class="form-control" name="selecionar-tipo-taxa" name="tipo" id="selecionar-tipo-taxa">
-              <option value="TBB - Taxa de baixa de boleto">TBB - Taxa de baixa de boleto</option>
+            <select unicorn:model.defer="tipo_taxa" class="form-control" name="selecionar-tipo-taxa" id="selecionar-tipo-taxa">
+              <option value="TBB - Taxa de baixa de boleto" checked >TBB - Taxa de baixa de boleto</option>
               <option value="TEC - Taxa de elaboração de contrato ">TEC - Taxa de elaboração de contrato </option>
               <option value="TAC - Taxa de análise de crédito">TAC - Taxa de análise de crédito</option>
               <option value="TCC - Taxa de controle de compra">TCC - Taxa de controle de compra</option>
@@ -58,16 +58,16 @@
           </div>
           
           {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
-            <button class="btn btn-primary" type="submit" name="nova-taxa">Nova Taxa</button>
+            <button class="btn btn-primary" unicorn:click="nova_taxa" id="nova-taxa" type="submit" name="nova-taxa">Nova Taxa</button>
           {% else %}
             <button class="btn btn-primary disabled" type="button" name="nova-taxa">Nova Taxa</button>
           {% endif %}
         </form>
       </div>
 
-      <div class="card-block table-border-style">
+      <div class="card-block table-border-style" id="table-border-style">
         {% comment %} start table {% endcomment %}
-        <div class="table-responsive">
+        <div class="table-responsive" unicorn:key="table-taxas">
           <table class="table table-hover" id="table-taxas">
             <thead>
               <tr>
@@ -86,7 +86,7 @@
         </div>
         {% comment %} end table {% endcomment %}
         <h4>Taxa não aprovadas</h4>
-        <div class="table-responsive">
+        <div class="table-responsive" unicorn:key="table-taxas-aprovadas">
           <table class="table table-hover" id="table-taxas-aprovadas">
             <thead>
               <tr>
@@ -96,10 +96,10 @@
                 <th>Data Taxa</th>
                 <th>Taxa Valor</th>
                 <th>Tipo</th>
+                <th>Descricao</th>
               </tr>
             </thead>
             <tbody>
-              <input type="hidden" name="">
               {% if user.is_superuser %}
               {% for taxa in taxas_nao_aprovadas %}
                 <tr>
@@ -111,14 +111,15 @@
                     href="{% url 'home:aprovar_taxa_manual' taxa.id data_inicio data_fim %}" 
                     role="button">Aprovar</a> {% endcomment %}
                     {% comment %} <input role="button" type="button" unicorn:click="aprovar_taxa({{ taxa.id }})" name="aprovar-taxa" id="aprovar-taxa{{taxa.id}}" unicorn:kek="aprovar-taxa{{taxa.id}}" value="Aprovar Taxa" class="btn btn-success"> {% endcomment %}
-                    <button unicorn:click="aprovar_taxa({{ taxa.id }})" class="btn btn-success" name="aprovar-taxa">Aprovar Taxa</button>
-                    <button unicorn:click="deletar_taxa({{ taxa.id }})" unicorn:key="deletar-taxa{{taxa.id}}" class="btn btn-warning btn-sm" name="deletar-taxa" id="deletar-taxa">DEL</button>
+                    <button unicorn:click="aprovar_taxa({{ taxa.id }})" id="aprovar-taxa{{taxa.id}}" unicorn:key="aprovar-taxas{{taxa.id}}" class="btn btn-success" name="aprovar-taxa">Aprovar Taxa</button>
+                    <button unicorn:click="deletar_taxa({{ taxa.id }})" id="deletar-taxa{{taxa.id}}" unicorn:key="deletar-taxa{{taxa.id}}" class="btn btn-warning btn-sm" name="deletar-taxa">DEL</button>
                   </th>
                   <th>{{taxa.cliente_id}}</th>
                   <th>{{taxa.cliente.nome}}</th>
                   <th>{{taxa.dt_taxa}}</th>
                   <th>{{taxa.taxas}}</th>
                   <th>{{taxa.tipo}}</th>
+                  <th>{{taxa.descricao}}</th>
                 </tr>
               {% endfor %}
               {% else %}
@@ -136,7 +137,7 @@
                     <th>{{taxa.cliente.nome}}</th>
                     <th>{{taxa.dt_taxa}}</th>
                     <th>{{taxa.taxas}}</th>
-                    <th>{{taxa.tipo}}</th>
+                    <th>{{taxa.descricao}}</th>
                   </tr>
                 {% endfor %}
               {% endif %}
@@ -145,7 +146,7 @@
         </div>
 
         <h4>Taxas aprovadas</h4>
-        <div class="table-responsive">
+        <div class="table-responsive" unicorn:key="table-taxas-nao-aprovadas">
           <table class="table table-hover" id="table-taxas-nao-aprovadas">
             <thead>
               <tr>
@@ -155,6 +156,7 @@
                 <th>Data Taxa</th>
                 <th>Taxa Valor</th>
                 <th>Tipo</th>
+                <th>Descricao</th>
               </tr>
             </thead>
             <tbody>
@@ -177,6 +179,7 @@
                   <th>{{taxa.dt_taxa}}</th>
                   <th>{{taxa.taxas}}</th>
                   <th>{{taxa.tipo}}</th>
+                  <th>{{taxa.descricao}}</th>
                 </tr>
               {% endfor %}
               {% else %}
@@ -195,6 +198,7 @@
                     <th>{{taxa.dt_taxa}}</th>
                     <th>{{taxa.taxas}}</th>
                     <th>{{taxa.tipo}}</th>
+                    <th>{{taxa.descricao}}</th>
                   </tr>
                 {% endfor %}
               {% endif %}
@@ -205,26 +209,7 @@
     </div>
     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.js"></script>
+
     
-    <script type="application/javascript">
-      function reinitializeDataTables() {
-        
-          console.log('reinitializeDataTables')
-          $('#table-taxas').DataTable();
-          $('#table-taxas-aprovadas').DataTable();
-          $('#table-taxas-nao-aprovadas').DataTable();
-        
-      }
-      window.addEventListener("DOMContentLoaded", (event) => {
-        Unicorn.addEventListener("updated", (component) =>
-          console.log("got updated", component),
-          reinitializeDataTables()
-        );
-      });
-      $(document).ready(function(){
-        reinitializeDataTables()
-      })
-    </script>
-    
-    
+    <script src="{% static 'assets/js/taxas/taxas_unicorn.js' %}"></script>    
 </div> <!-- LAST DIV -->

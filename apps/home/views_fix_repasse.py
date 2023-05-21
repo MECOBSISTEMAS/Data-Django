@@ -546,7 +546,6 @@ def pages(request):
                             ),
                         )
 
-                    context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
                     #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
                     context['taxas_dias'] = taxas_dias
                     
