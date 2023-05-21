@@ -518,70 +518,7 @@ def pages(request):
                         dt_debitado__range=[data_inicio, data_fim],
                         aprovada=True,
                     )
-                    
-        elif load_template == 'tbl_taxas.html':
-            if request.method == 'POST':
-                if 'nova-taxa' in request.POST:
-                    cliente_id = request.POST.get('cliente')
-                    valor = request.POST.get('valor')
-                    data_taxa = request.POST.get('data-taxa')
-                    descricao = request.POST.get('descricao')
-                    tipo = request.POST.get('selecionar-tipo-taxa')
-                    Taxa.objects.create(cliente=Pessoas.objects.get(id=cliente_id), taxas=valor, dt_taxa=data_taxa, descricao=descricao, tipo=tipo)
-                if 'filtrar-taxa' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')
-                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
-                    data_fim = request.POST.get('data-fim')
-                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    context['data_inicio'] = data_inicio
-                    context['data_fim'] = data_fim
-                    taxas_dias = {}
-                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
-                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        taxas_dias[f'dia_{dia.day}'] = Sum(
-                            Case(
-                                When(dt_taxa__day=dia.day, then=F('taxas')),
-                                default=0,
-                                output_field=DecimalField(),
-                            ),
-                        )
-
-                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    context['taxas_dias'] = taxas_dias
-                    
-                    context['taxas'] = Taxa.objects.filter(
-                        dt_taxa__gte=data_inicio, 
-                        dt_taxa__lte=data_fim,
-                    ).values(
-                        'cliente_id', 'cliente__nome'
-                    ).annotate(
-                        **taxas_dias,
-                        total_taxa=Sum('taxas')
-                    ).order_by('cliente_id')
-                    
-                    tbody = ""
-                    for taxa in context['taxas']:
-                        tbody += "<tr>"
-                        tbody += f"<td>{taxa['cliente_id']}</td>"
-                        tbody += f"<td>{taxa['cliente__nome']}</td>"
-                        for dia in taxas_dias:
-                            taxa_dia = taxa[f'{dia}']
-                            tbody += f"<td>{taxa_dia}</td>"
-                        tbody += f"<td>{taxa['total_taxa']}</td>"
-                        tbody += "</tr>"
-                    context['tbody'] = tbody
-                    
-                    context['taxas_nao_aprovadas'] = Taxa.objects.filter(
-                        dt_taxa__gte=data_inicio,
-                        dt_taxa__lte=data_fim,
-                        aprovada=False,
-                    )
-                    
-                    context['taxas_aprovadas'] = Taxa.objects.filter(
-                        dt_taxa__gte=data_inicio,
-                        dt_taxa__lte=data_fim,
-                        aprovada=True,
-                    )
+                
 
                     
         elif load_template == 'tbl_repasse_retido.html':
