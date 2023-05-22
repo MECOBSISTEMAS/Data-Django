@@ -42,7 +42,7 @@ class CreditosView(UnicornView):
             dia = datetime.strptime(self.data_inicio, '%Y-%m-%d') + timedelta(days=i)
             creditos_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
                 Case(
-                    When(dt_creditado__day=dia.day, then=F('vl_credito')),
+                    When(dt_creditado=dia, then=F('vl_credito')),
                     default=0,
                     output_field=DecimalField(),
                 ),

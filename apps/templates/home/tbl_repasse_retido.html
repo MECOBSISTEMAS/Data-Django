@@ -2,6 +2,7 @@
 {% block title %} UI Forms {% endblock %}
 {% load widget_tweaks %}
 {% load utils %}
+{% load unicorn %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -37,147 +38,7 @@
           </div>
         </div>
 
-        <div class="col-xl-12">
-          <div class="card">
-            <div class="card-header">
-              <h5>Repasse Retido</h5>
-              <form action="" method="post">
-                {% csrf_token %}
-                <p>
-                  filtrar de
-                  <input
-                    type="date"
-                    name="data-inicio"
-                    id="data-inicio"
-                  />
-                  até
-                  <input type="date" name="data-fim" id="data-fim" />
-                  <button class="btn btn-primary" type="submit" name="filtrar-repasse-retido">Filtrar</button>
-                  <button
-                    type="button"
-                    name=""
-                    id=""
-                    class="btn btn-danger"
-                  >
-                    Limpar Filtro
-                  </button>
-                </p>
-              </form>
-              <form method="POST" class="form w-100">
-                {% csrf_token %}
-                <input required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-                <input required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor do Repasse Retido">
-                <input required type="date" name="data-repasse-retido" class="form-control" id="data-taxa" placeholder="Data do Repasse Retido">
-                <input type="text" name="tipo" class="form-control" placeholder="Tipo do Repasse Retido">
-                {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
-                  <button class="btn btn-primary" type="submit" name="novo-repasse-retido">Novo Repasse Retido</button>
-                  {% else %}
-                  <button class="btn btn-primary disabled" type="button" name="novo-repasse-retido">Novo Repasse Retido</button>
-                {% endif %}
-              </form>
-            </div>
-
-            <div class="card-block table-border-style">
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-repasse-retido">
-                  <thead>
-                    <tr>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      {% for dia in repasses_retidos_dias %}
-                      <th>{{dia}}</th>
-                      {% endfor %}
-                      <th>Valor Repasse Retido</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{tbody|safe}}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card-block table-border-style">
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-repasses-retidos-nao-aprovadas">
-                  <thead>
-                    <tr>
-                      <th>Ações</th>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      <th>Data</th>
-                      <th>Valor Repasse Retido</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% if user.is_superuser %}
-                      {% for repasse_retido in repasses_retidos_nao_aprovadas %}
-                      <tr>
-                        <td><a href="{% url 'home:aprovar_repasse_retido' repasse_retido.id %}" class="btn btn-success">Aprovar</a></td>
-                        <td>{{repasse_retido.cliente.id}}</td>
-                        <td>{{repasse_retido.cliente.nome}}</td>
-                        <td>{{repasse_retido.dt_rep_retido}}</td>
-                        <td>{{repasse_retido.vlr_rep_retido}}</td>
-                      </tr>
-                      {% endfor %}
-                    {% else %}
-                      {% for repasse_retido in repasses_retidos_nao_aprovadas %}
-                      <tr>
-                        <td><a href="#sem-permissao" class="btn btn-success disabled">Aprovar</a></td>
-                        <td>{{repasse_retido.cliente.id}}</td>
-                        <td>{{repasse_retido.cliente.nome}}</td>
-                        <td>{{repasse_retido.dt_rep_retido}}</td>
-                        <td>{{repasse_retido.vlr_rep_retido}}</td>
-                      </tr>
-                      {% endfor %}
-                    {% endif %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-
-            <div class="card-block table-border-style">
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-repasses-retidos-aprovadas">
-                  <thead>
-                    <tr>
-                      <th>Ações</th>
-                      <th>Cliente ID</th>
-                      <th>Nome</th>
-                      <th>Data</th>
-                      <th>Valor Repasse Retido</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% if user.is_superuser %}
-                      {% for repasse_retido in repasses_retidos_aprovadas %}
-                      <tr>
-                        <td><a href="{% url 'home:desaprovar_repasse_retido' repasse_retido.id %}" class="btn btn-danger">Desaprovar</a></td>
-                        <td>{{repasse_retido.cliente.id}}</td>
-                        <td>{{repasse_retido.cliente.nome}}</td>
-                        <td>{{repasse_retido.dt_rep_retido}}</td>
-                        <td>{{repasse_retido.vlr_rep_retido}}</td>
-                      </tr>
-                      {% endfor %}
-                    {% else %}
-                      {% for repasse_retido in repasses_retidos_aprovadas %}
-                      <tr>
-                        <td><a href="#sem-acesso" class="btn btn-danger disabled">Desaprovar</a></td>
-                        <td>{{repasse_retido.cliente.id}}</td>
-                        <td>{{repasse_retido.cliente.nome}}</td>
-                        <td>{{repasse_retido.dt_rep_retido}}</td>
-                        <td>{{repasse_retido.vlr_rep_retido}}</td>
-                      </tr>
-                      {% endfor %}
-                    {% endif %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-          </div>
-        </div>    
+        {% unicorn 'repasses_retidos' %}
       </div>
     </div>
   </div>
@@ -187,12 +48,3 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}
-<script>
-  $(document).ready(function(){
-    $('#table-repasse-retido').DataTable();
-    $('#table-repasses-retidos-nao-aprovadas').DataTable();
-    $('#table-repasses-retidos-aprovadas').DataTable();
-  })
-</script>
-{% endblock javascripts %}

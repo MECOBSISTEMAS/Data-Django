@@ -1,7 +1,7 @@
 function reinitializeDataTables() {
-  $('#table-credito').DataTable();
-  $('#table-credito-aprovadas').DataTable();
-  $('#table-credito-nao-aprovadas').DataTable();
+  $('#table-repasse-retido').DataTable();
+  $('#table-repasses-retidos-nao-aprovadas').DataTable();
+  $('#table-repasses-retidos-aprovadas').DataTable();
 }
 window.addEventListener("DOMContentLoaded", (event) => {
   Unicorn.addEventListener("updated", async (component) => {

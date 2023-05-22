@@ -42,7 +42,7 @@ class DebitosView(UnicornView):
             dia = datetime.strptime(self.data_inicio, '%Y-%m-%d') + timedelta(days=i)
             debito_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
                 Case(
-                    When(dt_debitado__day=dia.day, then=F('vl_debito')),
+                    When(dt_debitado=dia, then=F('vl_debito')),
                     default=0,
                     output_field=DecimalField(),
                 ),

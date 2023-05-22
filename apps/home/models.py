@@ -62,7 +62,7 @@ class RepasseRetido(models.Model):
         managed = True
 
     def __str__(self):
-        return f'{self.cliente.nome or None}'
+        return f'{self.cliente} - {self.vlr_rep_retido}'
 
     def get_absolute_url(self):
         return reverse("RepasseRetido_detail", kwargs={"pk": self.pk})
