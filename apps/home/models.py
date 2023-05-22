@@ -41,7 +41,7 @@ class CadCliente(models.Model):
         managed = True
 
     def __str__(self):
-        return f'{self.vendedor.nome or None}'
+        return f'{self.vendedor or None}'
 
     def get_absolute_url(self):
         return reverse("cad_cliente_model_detail", kwargs={"pk": self.pk})
