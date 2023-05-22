@@ -82,8 +82,7 @@ def pages(request):
                     operacional = request.POST.get('operacional')
                     tcc = request.POST.get('tcc')
                     honorarios = request.POST.get('honorarios')
-                    repasse_semanal = request.POST.get('valor_sim')  == 'true' or False
-                    
+                    repasse_semanal = request.POST.get('valor_nao') == 'false'
                     
                     #!informar_repasse = request.POST.get('informar_repasse')
                     
@@ -92,7 +91,7 @@ def pages(request):
                         CadCliente.objects.create(
                             vendedor = pessoa, sim=sim, nao=nao,
                             operacional=operacional, tcc=tcc,
-                            honorarios=honorarios, repasse_semanal = repasse_semanal
+                            honorarios=honorarios, repasse_semanal = not repasse_semanal
                         )
                     else:
                         try:
@@ -104,7 +103,7 @@ def pages(request):
                             CadCliente.objects.create(
                                 vendedor = pessoa, sim=sim, nao=nao, 
                                 operacional=operacional, tcc=tcc, 
-                                honorarios=honorarios, repasse_semanal = repasse_semanal
+                                honorarios=honorarios, repasse_semanal = not repasse_semanal
                             )
                         
             context['cad_clientes'] = CadCliente.objects.all()
