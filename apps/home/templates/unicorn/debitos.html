@@ -1,0 +1,168 @@
+{% load static %}
+<div class="col-xl-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Debito</h5>
+				<h6>{{mensagem_error_novo_debito}}</h6>
+        <form unicorn:submit.prevent.defer="filtrar_debitos" name="filtrar-debitos" id="filtrar-debitos">
+            data inicio: <input type="date" unicorn:model.lazy="data_inicio" name="data-inicio" id="data-inicio" required>
+            data fim: <input type="date" unicorn:model.lazy="data_fim" name="data-fim" id="data-fim" required>
+            <button unicorn:click="filtrar_debitos" type="submit" class="btn btn-primary">Filtrar</button>
+        </form>
+        <form unicorn:submit.prevent.defer="novo_debito" class="form w-100">
+          <input unicorn:model.lazy="id_pagador" required type="text" name="pagador" class="form-control" placeholder="ID do Pagador">
+          <input unicorn:model.lazy="id_credor" type="text" name="credor" class="form-control" placeholder="ID do Credor (Opcional)">
+          <input unicorn:model.lazy="valor" required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor a ser Debitado">
+          <input unicorn:model.lazy="data_debito" required type="date" name="data-debito" class="form-control" id="data-debito" placeholder="Data a ser Debitado">
+          <input unicorn.model.lazy="descricao" type="text" name="descricao" class="form-control" placeholder="Descrição do Debito">
+          {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
+            <button unicorn:click="novo_debito" class="btn btn-primary" type="submit" name="novo-debito">Novo Debito</button>
+          {% else %}
+            <button class="btn btn-primary disabled" type="button" name="novo-debito">Novo Debito</button>
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="card-block table-border-style" id="table-border-style-table-debito" unicorn:key="table-border-style-table-debito">
+        <div class="table-responsive" unicorn:key="table-debito">
+          <table class="table table-hover" id="table-debito">
+            <thead>
+              <tr>
+                <th>Cliente ID</th>
+                <th>Nome do Pagador</th>
+                {% for dia in debitos_dias %}
+                <th>{{dia}}</th>
+                {% endfor %}
+                <th>Total Debito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{tbody|safe}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+
+      <div class="card-block table-border-style" id="table-border-style-table-debito-aprovadas" unicorn:kek="table-border-style-table-debito-aprovadas">
+        <div class="table-responsive" unicorn:key="table-debito-nao-aprovadas">
+          <table class="table table-hover" id="table-debito-nao-aprovadas">
+            <thead>
+              <tr>
+                <th>Ações</th>
+                <th>Cliente ID</th>
+                <th>Nome do Pagador</th>
+                <th>Valor Debito</th>
+                <th>Debito Data</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if user.is_superuser %}
+                {% for debito in debitos_nao_aprovadas %}
+                <tr>
+                  <th>
+										<button 
+										unicorn:click="aprovar_debito({{ debito.id }})"
+										unicorn:key="aprovar-debito{{debito.id}}" 
+										id="aprovar-debito{{debito.id}}" 
+										name="aprovar-debito" 
+										class="btn btn-success btn-sm">Aprovar Debito</button>
+										<button
+										unicorn:click="deletar_debito({{ debito.id }})"
+										unicorn:kek="del-debito{{debito.id}}"
+										id="del-debito{{debito.id}}"
+										name="del-debito"
+										class="btn btn-warning"
+										>DEL</button>
+									</th>
+                  <th>{{debito.cliente.id}}</th>
+                  <th>{{debito.cliente.nome}}</th>
+                  <th>{{debito.vl_debito}}</th>
+                  <th>{{debito.dt_debitado}}</th>
+                  <th>{{debito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% else %}
+                {% for debito in debitos_nao_aprovadas %}
+                <tr>
+                  <th><a name="aprovar-debito" id="aprovar-debito" class="btn btn-success disabled" href="#sem-autorizacao" role="button">Aprovar</a></th>
+                  <th>{{debito.cliente.id}}</th>
+                  <th>{{debito.cliente.nome}}</th>
+                  <th>{{debito.vl_debito}}</th>
+                  <th>{{debito.dt_debitado}}</th>
+									<th>{{debito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+
+      <div class="card-block table-border-style" id="table-border-style-table-debito-aprovadas" unicorn:kek="table-border-style-table-debito-aprovadas">
+        <div class="table-responsive" unicorn:key="table-debito-aprovadas">
+          <table class="table table-hover" id="table-debito-aprovadas">
+            <thead>
+              <tr>
+                <th>Ações</th>
+                <th>Cliente ID</th>
+                <th>Nome do Pagador</th>
+                <th>Valor Debito</th>
+                <th>Debito Data</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if user.is_superuser %}
+                {% for debito in debitos_aprovadas %}
+                <tr>
+                  <th>
+										<button 
+										unicorn:click="desaprovar_debito({{ debito.id }})"
+										unicorn:key="desaprovar-debito{{debito.id}}"
+										id="desaprovar-debito{{debito.id}}"
+										name="desaprovar-debito"
+										class="btn btn-danger"
+										>Desaprovar Debito</button>
+										<button
+										unicorn:click="deletar_debito({{ debito.id }})"
+										unicorn:kek="del-debito{{debito.id}}"
+										id="del-debito{{debito.id}}"
+										name="del-debito"
+										class="btn btn-warning"
+										>DEL</button>
+									</th>
+                  <th>{{debito.cliente.id}}</th>
+                  <th>{{debito.cliente.nome}}</th>
+                  <th>{{debito.vl_debito}}</th>
+                  <th>{{debito.dt_debitado}}</th>
+									<th>{{debito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% else %}
+                {% for debito in debitos_aprovadas %}
+                <tr>
+                  <th><a name="desaprovar-debito" id="desaprovar-debito" class="btn btn-danger disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
+                  <th>{{debito.cliente.id}}</th>
+                  <th>{{debito.cliente.nome}}</th>
+                  <th>{{debito.vl_debito}}</th>
+                  <th>{{debito.dt_debitado}}</th>
+									<th>{{debito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.js"></script>
+    <script src="{% static 'assets/js/debitos/debitos_unicorn.js' %}"></script>
+  </div>    

@@ -104,13 +104,6 @@
               {% for taxa in taxas_nao_aprovadas %}
                 <tr>
                   <th>
-                    {% comment %} <a 
-                    name="aprovar-taxa" 
-                    id="aprovar-taxa" 
-                    class="btn btn-primary" 
-                    href="{% url 'home:aprovar_taxa_manual' taxa.id data_inicio data_fim %}" 
-                    role="button">Aprovar</a> {% endcomment %}
-                    {% comment %} <input role="button" type="button" unicorn:click="aprovar_taxa({{ taxa.id }})" name="aprovar-taxa" id="aprovar-taxa{{taxa.id}}" unicorn:kek="aprovar-taxa{{taxa.id}}" value="Aprovar Taxa" class="btn btn-success"> {% endcomment %}
                     <button unicorn:click="aprovar_taxa({{ taxa.id }})" id="aprovar-taxa{{taxa.id}}" unicorn:key="aprovar-taxas{{taxa.id}}" class="btn btn-success" name="aprovar-taxa">Aprovar Taxa</button>
                     <button unicorn:click="deletar_taxa({{ taxa.id }})" id="deletar-taxa{{taxa.id}}" unicorn:key="deletar-taxa{{taxa.id}}" class="btn btn-warning btn-sm" name="deletar-taxa">DEL</button>
                   </th>
@@ -164,13 +157,6 @@
                 {% for taxa in taxas_aprovadas %}
                 <tr>
                   <th>
-                    {% comment %} <a 
-                    name="desaprovar-taxa" 
-                    id="desaprovar-taxa" 
-                    class="btn btn-danger" 
-                    href="{% url 'home:desaprovar_taxa_manual' taxa.id data_inicio data_fim %}"
-                    role="button">Desaprovar</a> {% endcomment %}
-                    {% comment %} <input type="button" unicorn:click="desaprovar_taxa({{ taxa.id }})" name="desaprovar-taxa" id="desaprovar-taxa{{taxa.id}}" unicorn:key="desaprovar-taxa{{taxa.id}}" value="Desaprovar Taxa" class="btn btn-danger"> {% endcomment %}
                     <button class="btn btn-danger" id="desaprovar-taxa{{taxa.id}}" unicorn:key="desaprovar-taxa{{taxa.id}}" unicorn:click="desaprovar_taxa({{ taxa.id }})">Desaprovar Taxa</button>
                     <button unicorn:click="deletar_taxa({{ taxa.id }})" unicorn:key="deletar-taxa{{taxa.id}}" class="btn btn-warning" name="deletar-taxa" id="deletar-taxa">DEL</button>
                   </th>

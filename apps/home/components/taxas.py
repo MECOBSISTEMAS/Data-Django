@@ -107,6 +107,7 @@ class TaxasView(UnicornView):
                 descricao=self.descricao,
                 tipo=self.tipo_taxa,
             )
+            self.mensagem_error_nova_taxa = ""
         except Pessoas.DoesNotExist:
             self.mensagem_error_nova_taxa = "Cliente não encontrado"
         self.filtrar_taxas()
