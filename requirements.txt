@@ -85,8 +85,8 @@ python-dateutil
 python-json-logger
 python3-openid
 pytz
-pywin32
-pywinpty
+#pywin32
+#pywinpty
 PyYAML
 pyzmq
 qtconsole
