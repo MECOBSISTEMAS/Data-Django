@@ -20,18 +20,18 @@ realizar uma venda ela é adicionada na tabela CadCliente"""
 
 class CadCliente(models.Model):
     vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, null=True, related_name='cliente')
-    codigo = models.IntegerField(_(""), blank=True, null=True)
+    codigo = models.IntegerField(blank=True, null=True)
 
-    taxas = models.DecimalField(_("Taxas"), max_digits=5, decimal_places=2, blank=True, null=True)
-    sim = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    nao = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    operacional = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    tcc = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    honorarios = models.DecimalField(_(""), max_digits=5, decimal_places=2, blank=True, null=True)
-    animal = models.CharField(_(""), max_length=256, blank=True, null=True)
-    evento = models.CharField(_(""), max_length=256, blank=True, null=True)
-    informar_repasse = models.CharField(_(""), max_length=50, blank=True, null=True)
-    repasse_semanal = models.BooleanField(_(""), default=False, blank=True, null=True)
+    taxas = models.DecimalField("Taxas", max_digits=5, decimal_places=2, blank=True, null=True)
+    sim = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    nao = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    operacional = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    tcc = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    honorarios = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    animal = models.CharField(max_length=256, blank=True, null=True)
+    evento = models.CharField(max_length=256, blank=True, null=True)
+    informar_repasse = models.CharField(max_length=50, blank=True, null=True)
+    repasse_semanal = models.BooleanField(default=False, blank=True, null=True)
 
 
     class Meta:
@@ -41,10 +41,8 @@ class CadCliente(models.Model):
         managed = True
 
     def __str__(self):
-        return f'{self.vendedor}'
+        return f'{self.vendedor or "SEM NOME"}'
 
-    def get_absolute_url(self):
-        return reverse("cad_cliente_model_detail", kwargs={"pk": self.pk})
 
 
 class RepasseRetido(models.Model):

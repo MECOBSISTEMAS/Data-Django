@@ -90,7 +90,7 @@ class Pessoas(models.Model):
     operador = models.CharField(max_length=1, blank=True, null=True)
     
     def __str__(self):
-        return f'{self.nome}'
+        return f'{self.nome or "NA"}'
 
     class Meta:
         managed = True
