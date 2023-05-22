@@ -1,25 +1,13 @@
 from django.utils.text import slugify
 from datetime import datetime, date, timedelta
-from django import template
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch
 from django.db.models.functions import Coalesce, Cast
-from django.template import loader
-from django.urls import reverse
-from django.shortcuts import render
 from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
-import random
-import ast
-import tempfile
-import os
-import json
-import openpyxl
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
 from django_unicorn.components import UnicornView, QuerySetType
 
-from apps.home.models import Debito
+from apps.home.models import Debito, Credito
 from apps.home.existing_models import Pessoas
 
 class DebitosView(UnicornView):
@@ -87,6 +75,14 @@ class DebitosView(UnicornView):
                 descricao=self.descricao,
                 dt_debitado=self.data_debito,
             )
+            if self.id_credor is not None and self.id_credor != "":
+                credor = Pessoas.objects.get(id=self.id_credor)
+                Credito.objects.create(
+                    cliente=credor,
+                    vl_credito=self.valor,
+                    descricao=self.descricao,
+                    dt_creditado=self.data_debito,
+                )
             self.mensagem_error_novo_debito = ""
         except Pessoas.DoesNotExist:
             self.mensagem_error_novo_debito = "Pagador não encontrado"

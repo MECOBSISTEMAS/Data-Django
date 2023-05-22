@@ -45,7 +45,7 @@
 
 
 
-      <div class="card-block table-border-style" id="table-border-style-table-debito-aprovadas" unicorn:kek="table-border-style-table-debito-aprovadas">
+      <div class="card-block table-border-style" id="table-border-style-table-debito-aprovadas" unicorn:key="table-border-style-table-debito-aprovadas">
         <div class="table-responsive" unicorn:key="table-debito-nao-aprovadas">
           <table class="table table-hover" id="table-debito-nao-aprovadas">
             <thead>
@@ -71,7 +71,7 @@
 										class="btn btn-success btn-sm">Aprovar Debito</button>
 										<button
 										unicorn:click="deletar_debito({{ debito.id }})"
-										unicorn:kek="del-debito{{debito.id}}"
+										unicorn:key="del-debito{{debito.id}}"
 										id="del-debito{{debito.id}}"
 										name="del-debito"
 										class="btn btn-warning"
@@ -103,7 +103,7 @@
 
 
 
-      <div class="card-block table-border-style" id="table-border-style-table-debito-aprovadas" unicorn:kek="table-border-style-table-debito-aprovadas">
+      <div class="card-block table-border-style" id="table-border-style-table-debito-aprovadas" unicorn:key="table-border-style-table-debito-aprovadas">
         <div class="table-responsive" unicorn:key="table-debito-aprovadas">
           <table class="table table-hover" id="table-debito-aprovadas">
             <thead>
@@ -130,7 +130,7 @@
 										>Desaprovar Debito</button>
 										<button
 										unicorn:click="deletar_debito({{ debito.id }})"
-										unicorn:kek="del-debito{{debito.id}}"
+										unicorn:key="del-debito{{debito.id}}"
 										id="del-debito{{debito.id}}"
 										name="del-debito"
 										class="btn btn-warning"

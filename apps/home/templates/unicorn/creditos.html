@@ -1,0 +1,170 @@
+{% load static %}
+{% load unicorn %}
+<div class="col-xl-12">
+    <div class="card">
+      <div class="card-header">
+        <h5>Credito</h5>
+				{{ errors }}
+        <form unicorn:submit.prevent.defer="filtrar_creditos">
+					data inicio: <input unicorn:model.lazy="data_inicio" required type="date" name="data-inicio" id="data-inicio">
+					data fim: <input unicorn:model.lazy="data_fim" required type="date" name="data-fim" id="data-fim">
+					<button 
+					unicorn:click="filtrar_creditos"
+					id="filtrar-creditos" 
+					name="filtrar-creditos" 
+					type="submit" 
+					class="btn btn-primary btn-sm">Filtrar</button>
+				</form>
+				<h6>{{mensagem_error_novo_credito}}</h6>
+        <form unicorn:submit.prevent.defer="novo_credito" class="form w-100" name="form-criar-novo-credito">
+          <input unicorn:model.lazy="id_credor" required type="text" name="credor" class="form-control" placeholder="ID do Credor">
+          <input unicorn:model.lazy="id_pagador" type="text" name="pagador" class="form-control" placeholder="ID do Pagador (Opcional)">
+          <input unicorn:model.lazy="valor" required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor a ser Creditado">
+          <input unicorn:model.lazy="data_credito" required type="date" name="data-credito" class="form-control" id="data-credito" placeholder="Data a ser creditada">
+          <input unicorn:model.lazy="descricao" type="text" name="descricao" class="form-control" placeholder="Descrição do Credito">
+          {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
+          <button unicorn:click="novo_credito" class="btn btn-primary" type="submit" name="novo-credito">Novo Credito</button>
+          {% else %}
+          <button class="btn btn-primary disabled" type="button" name="novo-credito">Novo Credito</button>
+          {% endif %}
+        </form>
+      </div>
+
+      <div class="card-block table-border-style" id="table-border-style-table-credito" unicorn:key="table-border-style-table-credito">
+        <div class="table-responsive" unicorn:key="table-credito">
+          <table class="table table-hover" id="table-credito">
+            <thead>
+              <tr>
+                <th>Cliente ID</th>
+                <th>Nome do Credor</th>
+                {% for dia in creditos_dias %}
+                <th>{{dia|title}}</th>
+                {% endfor %}
+                <th>Total Credito</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{tbody|safe}}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-block table-border-style" id="table-border-style-table-credito-nao-aprovadas" unicorn:key="table-border-style-table-credito-nao-aprovadas">
+        <div class="table-responsive" unicorn:key="table-credito-nao-aprovadas">
+          <table class="table table-hover" id="table-credito-nao-aprovadas">
+            <thead>
+              <tr>
+                <th>Ações</th>
+                <th>Cliente ID</th>
+                <th>Nome do Credor</th>
+                <th>Valor Credito</th>
+                <th>Data Credito</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if user.is_superuser %}
+                {% for credito in creditos_nao_aprovadas %}
+                <tr>
+                  <th>
+										<button
+										unicorn:click="aprovar_credito({{ credito.id }})"
+										unicorn:key="aprovar-credito{{credito.id}}"
+										id="aprovar-credito{{credito.id}}"
+										name="aprovar-credito"
+										class="btn btn-success btn-sm"
+										>Aprovar Credito</button>
+										<button
+										unicorn:click="deletar_credito({{ credito.id }})"
+										unicorn:key="del-credito{{credito.id}}"
+										id="del-credito{{credito.id}}"
+										name="del-credito"
+										class="btn btn-warning btn-sm"
+										>DEL</button>
+									</th>
+                  <th>{{credito.cliente.id}}</th>
+                  <th>{{credito.cliente.nome}}</th>
+                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                  <th>{{credito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% else %}
+                {% for credito in creditos_nao_aprovadas %}
+                <tr>
+                  <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success disabled" href="#sem-autorizacao" role="button">Aprovar</a></th>
+                  <th>{{credito.cliente.id}}</th>
+                  <th>{{credito.cliente.nome}}</th>
+                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+									<th>{{credito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-block table-border-style" id="table-border-style-table-credito-aprovadas" unicorn:key="table-border-style-table-credito-aprovadas">
+        <div class="table-responsive" unicorn:key="table-credito-aprovadas">
+          <table class="table table-hover" id="table-credito-aprovadas">
+            <thead>
+              <tr>
+                <th>Ações</th>
+                <th>Cliente ID</th>
+                <th>Nome do Credor</th>
+                <th>Valor Credito</th>
+                <th>Data Credito</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if user.is_superuser %}
+                {% for credito in creditos_aprovadas %}
+                <tr>
+                  <th>
+										<button
+										unicorn:click="desaprovar_credito({{ credito.id }})"
+										unicorn:key="desaprovar-credito{{credito.id}}"
+										id="desaprovar-credito{{credito.id}}}"
+										name="desaprovar-credito"
+										class="btn btn-danger btn-sm"
+										>Desaprovar Credito</button>
+										<button
+										unicorn:click="deletar_credito({{ credito.id }})"
+										unicorn:key="del-credito{{credito.id}}"
+										id="del-credito{{credito.id}}"
+										name="del-credito"
+										class="btn btn-warning btn-sm"
+										>DEL</button>
+									</th>
+                  <th>{{credito.cliente.id}}</th>
+                  <th>{{credito.cliente.nome}}</th>
+                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+                  <th>{{credito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% else %}
+                {% for credito in creditos_aprovadas %}
+                <tr>
+                  <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
+                  <th>{{credito.cliente.id}}</th>
+                  <th>{{credito.cliente.nome}}</th>
+                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
+									<th>{{credito.descricao}}</th>
+                </tr>
+                {% endfor %}
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.js"></script>
+    <script src="{% static 'assets/js/creditos/creditos_unicorn.js' %}"></script>
+  </div>

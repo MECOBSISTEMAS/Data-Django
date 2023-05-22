@@ -105,7 +105,7 @@ class Credito(models.Model):
 
     def __str__(self):
         #retorne o id
-        return f'{self.cliente.nome} - {self.vl_credito}'
+        return f'{self.cliente} - {self.vl_credito}'
 
     def get_absolute_url(self):
         return reverse("credito_detail", kwargs={"pk": self.pk})

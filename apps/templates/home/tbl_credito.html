@@ -2,6 +2,7 @@
 {% block title %} UI Forms {% endblock %}
 {% load widget_tweaks %}
 {% load utils %}
+{% load unicorn %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} 
@@ -37,148 +38,7 @@
           </div>
         </div>
 
-        <div class="col-xl-12">
-          <div class="card">
-            <div class="card-header">
-              <h5>Credito</h5>
-              <form action="" method="post">
-                {% csrf_token %}
-                <p>
-                  Filtrar de
-                  <input
-                    type="date"
-                    name="data-inicio"
-                    id="data-inicio"
-                    {% if data_inicio %} value={{data_inicio}} {% endif %}
-                  />
-                  até
-                  <input type="date" name="data-fim" id="data-fim" 
-                  {% if data_fim %} value={{data_fim}} {% endif %} />
-                  <button class="btn btn-primary" type="submit" name="filtrar-credito">Filtrar</button>
-                  <button
-                    type="button"
-                    name=""
-                    id=""
-                    class="btn btn-danger"
-                  >
-                    Limpar
-                  </button>
-                </p>
-              </form>
-              <form method="POST" class="form w-100" name="form-criar-novo-credito">
-                {% csrf_token %}
-                <input required type="text" name="credor" class="form-control" placeholder="ID do Credor">
-                <input type="text" name="pagador" class="form-control" placeholder="ID do Pagador (Opcional)">
-                <input required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor a ser Creditado">
-                <input required type="date" name="data-credito" class="form-control" id="data-credito" placeholder="Data a ser creditada">
-                <input type="text" name="descricao" class="form-control" placeholder="Descrição do Credito">
-                {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
-                <button class="btn btn-primary" type="submit" name="novo-credito">Novo Credito</button>
-                {% else %}
-                <button class="btn btn-primary disabled" type="button" name="novo-credito">Novo Credito</button>
-                {% endif %}
-              </form>
-            </div>
-
-            <div class="card-block table-border-style">
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-credito">
-                  <thead>
-                    <tr>
-                      <th>Cliente ID</th>
-                      <th>Nome do Credor</th>
-                      {% for dia in creditos_dias %}
-                      <th>{{dia|title}}</th>
-                      {% endfor %}
-                      <th>Total Credito</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {{tbody|safe}}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card-block table-border-style">
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-credito-nao-aprovadas">
-                  <thead>
-                    <tr>
-                      <th>Ações</th>
-                      <th>Cliente ID</th>
-                      <th>Nome do Credor</th>
-                      <th>Valor Credito</th>
-                      <th>Data Credito</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% if user.is_superuser %}
-                      {% for credito in creditos_nao_aprovadas %}
-                      <tr>
-                        <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success" href="{% url 'home:aprovar_credito' credito.id  %}" role="button">Aprovar</a></th>
-                        <th>{{credito.cliente.id}}</th>
-                        <th>{{credito.cliente.nome}}</th>
-                        <th>{{credito.vl_credito}}</th>
-                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
-                      </tr>
-                      {% endfor %}
-                    {% else %}
-                      {% for credito in creditos_nao_aprovadas %}
-                      <tr>
-                        <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success disabled" href="#sem-autorizacao" role="button">Aprovar</a></th>
-                        <th>{{credito.cliente.id}}</th>
-                        <th>{{credito.cliente.nome}}</th>
-                        <th>{{credito.vl_credito}}</th>
-                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
-                      </tr>
-                      {% endfor %}
-                    {% endif %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card-block table-border-style">
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-credito-aprovadas">
-                  <thead>
-                    <tr>
-                      <th>Ações</th>
-                      <th>Cliente ID</th>
-                      <th>Nome do Credor</th>
-                      <th>Valor Credito</th>
-                      <th>Data Credito</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% if user.is_superuser %}
-                      {% for credito in creditos_aprovadas %}
-                      <tr>
-                        <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger" href="{% url 'home:desaprovar_credito' credito.id %}" role="button">Desaprovar</a></th>
-                        <th>{{credito.cliente.id}}</th>
-                        <th>{{credito.cliente.nome}}</th>
-                        <th>{{credito.vl_credito}}</th>
-                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
-                      </tr>
-                      {% endfor %}
-                    {% else %}
-                      {% for credito in creditos_aprovadas %}
-                      <tr>
-                        <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
-                        <th>{{credito.cliente.id}}</th>
-                        <th>{{credito.cliente.nome}}</th>
-                        <th>{{credito.vl_credito}}</th>
-                        <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
-                      </tr>
-                      {% endfor %}
-                    {% endif %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>    
+        {% unicorn 'creditos' %} 
       </div>
     </div>
   </div>
@@ -188,12 +48,3 @@
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}
-<script>
-  $(document).ready(function(){
-    $('#table-credito').DataTable();
-    $('#table-credito-nao-aprovadas').DataTable();
-    $('#table-credito-aprovadas').DataTable();
-  })
-</script>
-{% endblock javascripts %}
