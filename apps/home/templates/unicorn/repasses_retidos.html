@@ -9,9 +9,9 @@
 					<button unicorn:click="filtrar_repasses_retidos" name="filtrar-repasses-retidos" class="btn btn-primary btn-sm" type="submit">Filtrar</button>
 				</form>
 				<h6>{% if messages %}
-					<ul class="messages" class="list-group">
+					<ul class="messages">
 							{% for message in messages %}
-									<li{% if message.tags %} class="{{ message.tags }} list-group-item" {% endif %}>{{ message }}</li>
+									<li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
 							{% endfor %}
 					</ul>
 			{% endif %}</h6>

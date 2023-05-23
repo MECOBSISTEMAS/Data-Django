@@ -365,71 +365,6 @@ def pages(request):
             context['repasses_aprovados'] = RepasseAprovado.objects.all()
                 
 
-                    
-        elif load_template == 'tbl_repasse_retido.html':
-            if request.method == 'POST':
-                if 'novo-repasse-retido' in request.POST:
-                    cliente_id = request.POST.get('cliente')
-                    valor = request.POST.get('valor')
-                    data_repasse_retido = request.POST.get('data-repasse-retido')
-                    tipo = request.POST.get('tipo')
-                    try:
-                        cliente = Pessoas.objects.get(id=cliente_id)
-                        RepasseRetido.objects.create(cliente=cliente, vlr_rep_retido=valor, dt_rep_retido=data_repasse_retido, tipo=tipo)
-                    except Pessoas.DoesNotExist:
-                        return HttpResponse("Cliente não encontrado")
-                    except Pessoas.MultipleObjectsReturned:
-                        return HttpResponse("Mais de um cliente encontrado, {}".format(Pessoas.objects.filter(id=cliente_id)))
-                elif 'filtrar-repasse-retido' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')
-                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
-                    data_fim = request.POST.get('data-fim')
-                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
-                    repasses_retidos_dias = {}
-                    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
-                        dia = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
-                        repasses_retidos_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Sum(
-                            Case(
-                                When(dt_rep_retido__day=dia.day, then=F('vlr_rep_retido')),
-                                default=0,
-                                output_field=DecimalField(),
-                            ),
-                        )
-
-                    #context['dias_de_consulta'] = [(data_inicio_dt + timedelta(days=x)).day for x in range((data_fim_dt - data_inicio_dt).days + 1)]
-                    context['repasses_retidos_dias'] = repasses_retidos_dias
-                    
-                    context['repasses_retidos'] = RepasseRetido.objects.filter(
-                        dt_rep_retido__gte=data_inicio, 
-                        dt_rep_retido__lte=data_fim,
-                    ).values(
-                        'cliente_id', 'cliente__nome'
-                    ).annotate(
-                        **repasses_retidos_dias,
-                        total_repasse_retido=Sum('vlr_rep_retido')
-                    ).order_by('cliente_id')
-                    
-                    tbody = ""
-                    for repasse_retido in context['repasses_retidos']:
-                        tbody += "<tr>"
-                        tbody += f"<td>{repasse_retido['cliente_id']}</td>"
-                        tbody += f"<td>{repasse_retido['cliente__nome']}</td>"
-                        for dia in repasses_retidos_dias:
-                            repasse_retido_dia = repasse_retido[f'{dia}']
-                            tbody += f"<td>{repasse_retido_dia}</td>"
-                        tbody += f"<td>{repasse_retido['total_repasse_retido']}</td>"
-                        tbody += "</tr>"
-                    context['tbody'] = tbody
-                    
-                    context['repasses_retidos_nao_aprovadas'] = RepasseRetido.objects.filter(
-                        dt_rep_retido__range=[data_inicio, data_fim],
-                        aprovada=False,
-                    )
-                    
-                    context['repasses_retidos_aprovadas'] = RepasseRetido.objects.filter(
-                        dt_rep_retido__range=[data_inicio, data_fim],
-                        aprovada=True,
-                    )
 
         elif load_template == 'tbl_resultado_financeiro.html':
             if request.method == 'POST':
@@ -902,7 +837,6 @@ def upload_planilha_dados_brutos(request):
             op = row[17]
             repasses = row[18]
             comissao = row[19]
-            id_excel = row[21]
             
             try:
                 dado = Dado.objects.get(id_vendedor=vendedor_id, id_contrato=contrato_id,nu_parcela=parcela_paga, comprador=comprador, vl_pago=valor, contrato=contrato, evento=evento)
