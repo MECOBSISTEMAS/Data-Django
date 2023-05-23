@@ -302,6 +302,7 @@ class ParcelaTaxa(models.Model):
     repasse = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     aprovada = models.BooleanField(_(""), blank=True, null=True, default=False)
     aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
+    data_aprovada = models.DateField(_(""), blank=True, null=True)
     criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
     #ParcelaTaxa.objects.filter(data_criado=datetime.date.today())
     

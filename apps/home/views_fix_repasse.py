@@ -267,7 +267,7 @@ def pages(request):
                                 Subquery(
                                     ParcelaTaxa.objects.filter(
                                         id_vendedor=OuterRef('vendedor__id'),
-                                        dt_vencimento__range=(data_inicio, data_fim),
+                                        data_aprovada__range=(data_inicio, data_fim),
                                         aprovada=True,
                                         aprovada_para_repasse=False
                                     ).values().annotate(total=Sum('repasse')).values('total')
@@ -317,7 +317,7 @@ def pages(request):
                             Subquery(
                                 ParcelaTaxa.objects.filter(
                                     id_comprador=OuterRef('vendedor__id'),
-                                    dt_vencimento__range=(data_inicio, data_fim),
+                                    data_aprovada__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
                                 ).values().annotate(total=Sum('desconto_total')).values('total'),
@@ -465,9 +465,7 @@ def pages(request):
                 if 'filtrar-parcela-taxa-aprovada' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
-                    context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio, data_fim) , aprovada=True)
-            else:
-                context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(aprovada=True)
+                    context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(data_aprovada__range=(data_inicio, data_fim) , aprovada=True)
         
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
@@ -966,6 +964,8 @@ def aprovar_parcela_taxa(request, *args, **kwargs):
     data_inicio = kwargs.get('data_inicio')
     data_fim = kwargs.get('data_fim')
     parcela_taxa.aprovada = True
+    #coloque a data de hoje no campo data_aprovada
+    parcela_taxa.data_aprovada = datetime.now()
     parcela_taxa.save()
     
     return JsonResponse(

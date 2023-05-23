@@ -8,10 +8,10 @@
 					data fim: <input required unicorn:model.lazy="data_fim" type="date" name="data-fim" id="data-fim">
 					<button unicorn:click="filtrar_repasses_retidos" name="filtrar-repasses-retidos" class="btn btn-primary btn-sm" type="submit">Filtrar</button>
 				</form>
-				<h6>{% if messages %}
+				<h6>{% if mensagem_error_novo_repasse_retido %}
 					<ul class="messages">
-							{% for message in messages %}
-									<li{% if message.tags %} class="{{ message.tags }}" {% endif %}>{{ message }}</li>
+							{% for message in mensagem_error_novo_repasse_retido %}
+									<li>{{ message }}</li>
 							{% endfor %}
 					</ul>
 			{% endif %}</h6>

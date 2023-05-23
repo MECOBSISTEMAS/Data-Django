@@ -31,7 +31,9 @@ class RepassesRetidosView(UnicornView):
     data_repasse_retido:str = ""
     tipo_repasse_retido:str = ""
     
-    mensagem_error_novo_repasse_retido:str = ""
+    #? campo para controolar as mensgens de erro
+    mensagem_error_novo_repasse_retido:list = []
+    
     def filtrar_repasses_retidos(self):
         self.repasses_retidos_aprovadas = RepasseRetido.objects.filter(aprovada=True, dt_rep_retido__range=[self.data_inicio, self.data_fim])
         self.repasses_retidos_nao_aprovadas = RepasseRetido.objects.filter(aprovada=False, dt_rep_retido__range=[self.data_inicio, self.data_fim])
@@ -66,7 +68,6 @@ class RepassesRetidosView(UnicornView):
         self.tbody = tbody
         
     def novo_repasse_retido(self):
-        self.mensagem_error_novo_repasse_retido = ""
         try:
             pessoa = Pessoas.objects.get(id=self.id_pessoa)
             RepasseRetido.objects.create(
@@ -75,10 +76,12 @@ class RepassesRetidosView(UnicornView):
                 dt_rep_retido=self.data_repasse_retido,
                 tipo=self.tipo_repasse_retido,
             )
-            messages.success(self.request, "Repasse retido criado com sucesso")
-
+            self.mensagem_error_novo_repasse_retido.append("Repasse retido criado com sucesso")
+            self.limpar_campos()
         except Pessoas.DoesNotExist:
-            messages.error(self.request, "Pessoa não encontrada")
+            self.mensagem_error_novo_repasse_retido.append("Pessoa não encontrada")
+        except Exception as e:
+            print(e)
         self.filtrar_repasses_retidos()
         
         
@@ -93,3 +96,10 @@ class RepassesRetidosView(UnicornView):
     def desaprovar_repasse_retido(self, id_repasse_retido):
         RepasseRetido.objects.filter(id=id_repasse_retido).update(aprovada=False)
         self.filtrar_repasses_retidos()
+        
+    def limpar_campos(self):
+        self.id_pessoa = ""
+        self.valor = None
+        self.data_repasse_retido = ""
+        self.tipo_repasse_retido = ""
+        
