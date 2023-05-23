@@ -466,7 +466,8 @@ def pages(request):
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
                     context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio, data_fim) , aprovada=True)
-            context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(aprovada=True)
+            else:
+                context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(aprovada=True)
         
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
@@ -839,7 +840,15 @@ def upload_planilha_dados_brutos(request):
             comissao = row[19]
             
             try:
-                dado = Dado.objects.get(id_vendedor=vendedor_id, id_contrato=contrato_id,nu_parcela=parcela_paga, comprador=comprador, vl_pago=valor, contrato=contrato, evento=evento)
+                dado = Dado.objects.get(
+                    id_vendedor=vendedor_id, 
+                    id_contrato=contrato_id, 
+                    nu_parcela=parcela_paga, 
+                    comprador=comprador, 
+                    vl_pago=valor, 
+                    contrato=contrato, 
+                    evento=evento
+                )
                 """ altere todos os dados para a atual linha, exceto os id_vendedor=vendedor_id, id_contrato=contrato_id, comprador=comprador, vl_pago=valor """
                 #dado.nu_parcela = parcela_paga
                 dado.parcelas_contrato = parcelas_contrato
