@@ -3,6 +3,7 @@ from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, 
 from django.db.models.functions import Coalesce, Cast
 from decimal import Decimal
 from django_unicorn.components import UnicornView, QuerySetType
+from django.contrib import messages
 
 from apps.home.models import RepasseRetido
 from apps.home.existing_models import Pessoas
@@ -65,6 +66,7 @@ class RepassesRetidosView(UnicornView):
         self.tbody = tbody
         
     def novo_repasse_retido(self):
+        self.mensagem_error_novo_repasse_retido = ""
         try:
             pessoa = Pessoas.objects.get(id=self.id_pessoa)
             RepasseRetido.objects.create(
@@ -73,9 +75,10 @@ class RepassesRetidosView(UnicornView):
                 dt_rep_retido=self.data_repasse_retido,
                 tipo=self.tipo_repasse_retido,
             )
-            self.mensagem_error_novo_repasse_retido = ""
+            messages.success(self.request, "Repasse retido criado com sucesso")
+
         except Pessoas.DoesNotExist:
-            self.mensagem_error_novo_repasse_retido = "Pessoa não encontrada"
+            messages.error(self.request, "Pessoa não encontrada")
         self.filtrar_repasses_retidos()
         
         
