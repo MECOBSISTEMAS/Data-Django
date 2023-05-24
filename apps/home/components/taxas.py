@@ -32,7 +32,6 @@ class TaxasView(UnicornView):
     taxas:QuerySetType(Taxa) = Taxa.objects.none()
     tbody:str = ""
     
-    mensagem_error_nova_taxa:str = ""
     
     #!campos para adicionar nova taxa
     cliente_id:str = ""
@@ -41,6 +40,8 @@ class TaxasView(UnicornView):
     descricao:str = ""
     tipo_taxa:str = "TBB - Taxa de baixa de boleto"
     
+    #? mensagem de erro para adicionar nova taxa
+    mensagem_error_nova_taxa:list = []
 
     def filtrar_taxas(self):
         self.taxas_nao_aprovadas = Taxa.objects.filter(aprovada=False, dt_taxa__range=[self.data_inicio, self.data_fim])
@@ -107,9 +108,9 @@ class TaxasView(UnicornView):
                 descricao=self.descricao,
                 tipo=self.tipo_taxa,
             )
-            self.mensagem_error_nova_taxa = ""
+            self.mensagem_error_nova_taxa.append("Taxa adicionada com sucesso")
         except Pessoas.DoesNotExist:
-            self.mensagem_error_nova_taxa = "Cliente não encontrado"
+            self.mensagem_error_nova_taxa.append("Cliente não encontrado")
         self.filtrar_taxas()
     
     """ def __del__(self):

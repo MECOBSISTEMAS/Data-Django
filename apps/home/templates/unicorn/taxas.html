@@ -4,29 +4,6 @@
     <div class="card">
       <div class="card-header">
         <h5>Taxas</h5>
-        {% comment %} <form action="" method="post">
-          {% csrf_token %}
-          <p>
-            filtrar de
-            <input
-              type="date"
-              name="data-inicio"
-              id="data-inicio"
-              {% if data_inicio %}value={{data_inicio}}{% endif %}
-            />
-            até
-            <input type="date" name="data-fim" id="data-fim" {% if data_fim %}value={{data_fim}}{% endif %} />
-            <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
-            <button
-              type="button"
-              name=""
-              id=""
-              class="btn btn-danger"
-            >
-              Limpar Filtro
-            </button>
-          </p>
-        </form> {% endcomment %}
         <div>
           <form unicorn:submit.prevent.defer="filtrar_taxas">
             data inicio :<input type="date" unicorn:model.lazy="data_inicio" name="data_inicio" id="data_inicio" required>
@@ -36,7 +13,13 @@
           <form>
           </form>
         </div>
-        <h6>{{mensagem_error_nova_taxa}}</h6>
+        <h6>{% if mensagem_error_nova_taxa %}
+					<ul class="messages">
+							{% for message in mensagem_error_nova_taxa %}
+									<li>{{ message }}</li>
+							{% endfor %}
+					</ul>
+			{% endif %}</h6>
         <form class="form w-100" unicorn:submit.prevent.defer="nova_taxa">
           <input required unicorn:model.lazy="cliente_id" type="text" name="cliente" class="form-control" placeholder="ID Cliente">
           <input required unicorn:model.lazy="valor" type="number" name="valor" step="0.01" class="form-control" placeholder="Valor a ser Taxado">

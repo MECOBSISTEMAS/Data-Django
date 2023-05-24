@@ -31,7 +31,7 @@ class CreditosView(UnicornView):
     data_credito:str = ""
     descricao:str = ""
     
-    mensagem_error_novo_credito:str = ""
+    mensagem_error_novo_credito:list = []
     
     def filtrar_creditos(self):
         self.creditos_nao_aprovadas = Credito.objects.filter(aprovada=False, dt_creditado__range=[self.data_inicio, self.data_fim])
@@ -84,9 +84,9 @@ class CreditosView(UnicornView):
                     descricao=self.descricao,
                     vl_debito=self.valor,
                 )
-            self.mensagem_error_novo_credito = ""
+            self.mensagem_error_novo_credito.append('Credito adicionado com sucesso')
         except Pessoas.DoesNotExist:
-            self.mensagem_error_novo_credito = "Credor ou pagador não encontrado"
+            self.mensagem_error_novo_credito.append("Credor ou pagador não encontrado")
         self.filtrar_creditos()
             
     def aprovar_credito(self, id_credito):
