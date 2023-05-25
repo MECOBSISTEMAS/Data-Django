@@ -17,8 +17,8 @@ class RepassesRetidosView(UnicornView):
     data_fim:str = ""
     
     #? campos para armazenar os resultados dos filtros
-    repasses_retidos_nao_aprovadas:QuerySetType(RepasseRetido) = RepasseRetido.objects.none()
-    repasses_retidos_aprovadas:QuerySetType(RepasseRetido) = RepasseRetido.objects.none()
+    repasses_retidos_nao_aprovadas:QuerySetType = RepasseRetido.objects.none()
+    repasses_retidos_aprovadas:QuerySetType = RepasseRetido.objects.none()
     
     #?campos para construção da primeira tabela agrupando os resultados por dia
     repasses_retidos_dias:list = []
@@ -38,6 +38,7 @@ class RepassesRetidosView(UnicornView):
     def filtrar_repasses_retidos(self):
         self.repasses_retidos_aprovadas = RepasseRetido.objects.filter(aprovada=True, dt_rep_retido__range=[self.data_inicio, self.data_fim])
         self.repasses_retidos_nao_aprovadas = RepasseRetido.objects.filter(aprovada=False, dt_rep_retido__range=[self.data_inicio, self.data_fim])
+        
         
         repasses_retidos_dias = {}
         for i in range((datetime.strptime(self.data_fim, '%Y-%m-%d') - datetime.strptime(self.data_inicio, '%Y-%m-%d')).days + 1):
@@ -85,6 +86,31 @@ class RepassesRetidosView(UnicornView):
         except Exception as e:
             print(e)
         self.filtrar_repasses_retidos()
+        
+        
+    """ def deletar_repasse_retido(self, id_repasse_retido):
+        repasse_retido = RepasseRetido.objects.get(id=id_repasse_retido)
+        repasse_retido.delete()
+        if repasse_retido in self.repasses_retidos_aprovadas:
+            self.repasses_retidos_aprovadas.remove(repasse_retido)
+        if repasse_retido in self.repasses_retidos_nao_aprovadas:
+            self.repasses_retidos_nao_aprovadas.remove(repasse_retido)
+
+    def aprovar_repasse_retido(self, id_repasse_retido):
+        repasse_retido = RepasseRetido.objects.get(id=id_repasse_retido)
+        repasse_retido.aprovada = True
+        repasse_retido.save()
+        if repasse_retido in self.repasses_retidos_nao_aprovadas:
+            self.repasses_retidos_nao_aprovadas.remove(repasse_retido)
+        self.repasses_retidos_aprovadas.append(repasse_retido)
+
+    def desaprovar_repasse_retido(self, id_repasse_retido):
+        repasse_retido = RepasseRetido.objects.get(id=id_repasse_retido)
+        repasse_retido.aprovada = False
+        repasse_retido.save()
+        if repasse_retido in self.repasses_retidos_aprovadas:
+            self.repasses_retidos_aprovadas.remove(repasse_retido)
+        self.repasses_retidos_nao_aprovadas.append(repasse_retido) """
         
         
     def deletar_repasse_retido(self, id_repasse_retido):

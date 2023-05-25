@@ -49,7 +49,7 @@
       </div>
 
       <div class="card-block table-border-style" unicorn:key="table-border-style-table-repasses-retidos-nao-aprovadas">
-        <div class="table-responsive" unicorn:key="table-repasses-retidos-nao-aprovadas">
+        <div class="table-responsive" id="table-responsive-repasses-retidos-nao-aprovadas" unicorn:key="table-repasses-retidos-nao-aprovadas">
           <table class="table table-hover" id="table-repasses-retidos-nao-aprovadas">
             <thead>
               <tr>
@@ -60,7 +60,7 @@
                 <th>Valor Repasse Retido</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="tbody-repasses-retidos-aprovadas" unicorn:key="tbody-repasses-retidos-aprovadas">
               {% if user.is_superuser %}
                 {% for repasse_retido in repasses_retidos_nao_aprovadas %}
                 <tr>
@@ -102,7 +102,7 @@
 
 
       <div class="card-block table-border-style" unicorn:key="table-border-style-table-repasses-retidos-aprovadas">
-        <div class="table-responsive" unicorn:key="table-repasses-retidos-aprovadas">
+        <div class="table-responsive" id="table-responsive-repasses-retidos-nao-aprovadas" unicorn:key="table-repasses-retidos-aprovadas">
           <table class="table table-hover" id="table-repasses-retidos-aprovadas">
             <thead>
               <tr>
@@ -113,7 +113,7 @@
                 <th>Valor Repasse Retido</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="tbody-repasses-retidos-nao-aprovadas" unicorn:key="tbody-repasses-retidos-nao-aprovadas">
               {% if user.is_superuser %}
                 {% for repasse_retido in repasses_retidos_aprovadas %}
                 <tr>
@@ -151,7 +151,7 @@
               {% endif %}
             </tbody>
           </table>
-          {{total_repasses_retidos_aprovadas}}
+          <h6>Total Repasses Retidos aprovados: {{total_repasses_retidos_aprovadas}}</h6>
         </div>
       </div>
 
