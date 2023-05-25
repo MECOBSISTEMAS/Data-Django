@@ -24,6 +24,7 @@ class RepassesRetidosView(UnicornView):
     repasses_retidos_dias:list = []
     repasses_retidos:QuerySetType(RepasseRetido) = RepasseRetido.objects.none()
     tbody:str = ""
+    total_repasses_retidos_aprovadas:float = 0
     
     #? campos para criar um novo RepasseRetido
     id_pessoa:str = ""
@@ -66,6 +67,7 @@ class RepassesRetidosView(UnicornView):
             tbody += f"<td>{repasse_retido['total_repasse_retido']}</td>"
             tbody += "</tr>"
         self.tbody = tbody
+        self.total_repasses_retidos_aprovadas = RepasseRetido.objects.filter(aprovada=True, dt_rep_retido__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('vlr_rep_retido'))['total']
         
     def novo_repasse_retido(self):
         try:
