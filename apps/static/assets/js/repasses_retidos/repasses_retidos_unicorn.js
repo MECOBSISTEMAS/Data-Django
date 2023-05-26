@@ -2,7 +2,7 @@ function reinitializeDataTables() {
   //coloque a linguagem do DataTable portugues brasil
   $.extend( $.fn.dataTable.defaults, {
     "language": {
-      "url": "https://cdn.datatables.net/plug-ins/1.10.21/i18n/Portuguese-Brasil.json"
+      "url": "/static/assets/js/Portuguese-Brasil.json"
     }
   });
   $('#table-repasse-retido').DataTable();
