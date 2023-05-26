@@ -4,8 +4,8 @@
       <div class="card-header">
         <h5>Repasse Retido</h5>
         <form unicorn:submit.prevent.defer="filtrar_repasses_retidos" name="filtrar_repasses_retidos" id="filtrar_repasses_retidos">
-					data inicio: <input required unicorn:model.lazy="data_inicio" type="date" name="data-inicio" id="data-inicio">
-					data fim: <input required unicorn:model.lazy="data_fim" type="date" name="data-fim" id="data-fim">
+					data inicio: <input required unicorn:model.defer="data_inicio" type="date" name="data-inicio" id="data-inicio">
+					data fim: <input required unicorn:model.defer="data_fim" type="date" name="data-fim" id="data-fim">
 					<button unicorn:click="filtrar_repasses_retidos" name="filtrar-repasses-retidos" class="btn btn-primary btn-sm" type="submit">Filtrar</button>
 				</form>
 				<h6>{% if mensagem_error_novo_repasse_retido %}
