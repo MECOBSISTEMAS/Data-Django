@@ -1,4 +1,9 @@
 function reinitializeDataTables() {
+  $.extend( $.fn.dataTable.defaults, {
+    "language": {
+      "url": "/static/assets/js/Portuguese-Brasil.json"
+    }
+  });
   $('#table-credito').DataTable();
   $('#table-credito-aprovadas').DataTable();
   $('#table-credito-nao-aprovadas').DataTable();
