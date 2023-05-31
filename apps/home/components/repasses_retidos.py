@@ -5,7 +5,8 @@ from decimal import Decimal
 from django_unicorn.components import UnicornView, QuerySetType
 from django.contrib import messages
 
-from apps.home.models import RepasseRetido
+
+from apps.home.models import RepasseRetido, Credito, Taxa, Debito, ParcelaTaxa
 from apps.home.existing_models import Pessoas
 
 from django_unicorn.components import UnicornView
@@ -25,6 +26,7 @@ class RepassesRetidosView(UnicornView):
     repasses_retidos:QuerySetType(RepasseRetido) = RepasseRetido.objects.none()
     tbody:str = ""
     total_repasses_retidos_aprovadas:float = 0
+    total_repasses_gerais:float = 0
     
     #? campos para criar um novo RepasseRetido
     id_pessoa:str = ""
@@ -69,7 +71,15 @@ class RepassesRetidosView(UnicornView):
             tbody += "</tr>"
         self.tbody = tbody
         self.total_repasses_retidos_aprovadas = RepasseRetido.objects.filter(aprovada=True, dt_rep_retido__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('vlr_rep_retido'))['total']
-        
+        self.total_repasses_gerais = float(
+            self.total_repasses_retidos_aprovadas
+         +
+            Credito.objects.filter(dt_creditado__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('vl_credito'))['total']
+         - 
+            Debito.objects.filter(dt_debitado__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('vl_debito'))['total']
+         -
+            Taxa.objects.filter(dt_taxa__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('taxas'))['total'] 
+        )
     def novo_repasse_retido(self):
         try:
             pessoa = Pessoas.objects.get(id=self.id_pessoa)
