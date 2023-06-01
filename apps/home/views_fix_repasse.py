@@ -20,6 +20,8 @@ import tempfile
 import os
 import json
 import openpyxl
+import asyncio
+
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
 
@@ -282,7 +284,7 @@ def pages(request):
                                     dt_rep_retido__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values().annotate(total=Sum('vlr_rep_retido')).values('total'),
+                                ).values('cliente__id').annotate(total=Sum('vlr_rep_retido')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
                             0,
@@ -295,7 +297,7 @@ def pages(request):
                                     dt_taxa__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values().annotate(total=Sum('taxas')).values('total'),
+                                ).values('cliente__id').annotate(total=Sum('taxas')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
                             0,
@@ -308,7 +310,7 @@ def pages(request):
                                     dt_debitado__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values().annotate(total=Sum('vl_debito')).values('total'),
+                                ).values('cliente__id').annotate(total=Sum('vl_debito')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2),
                             ),
                             0,
@@ -332,7 +334,6 @@ def pages(request):
                         'total_repasse_retido', 'total_credito',
                         'total_taxas', 'total_debitos', 'total_repasses', *dados_dias.keys()
                         ).order_by('vendedor__nome')
-                    #*ou repasse_retido maior que 0
                     context['dados_dias'] = dados_dias.keys()
                     
                     tbody = "<tr>"
@@ -355,7 +356,13 @@ def pages(request):
                         #tbody += f"<td>Total Repasses</td>"
                         tbody += "</tr>"
                     context['tbody'] = tbody
-                        
+                    
+                    #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
+                    context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+                    context['total_debito'] = Decimal(sum([float(querie['total_debitos']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+                    context['total_repasse_retido'] = Decimal(sum([float(querie['total_repasse_retido']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+                    context['total_taxas'] = Decimal(sum([float(querie['total_taxas']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+                    context['total_repasses'] = Decimal(sum([float(querie['total_repasses']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
                     #return render(request, 'home/tbl_bootstrap.html', context=context)
             
                         
