@@ -210,12 +210,12 @@ def pages(request):
                     context['data_final'] = data_fim
                     dados_dias = {}
                     for i in range((data_fim_dt - data_inicio_dt).days + 1):
-                        dia = data_inicio_dt + timedelta(days=i)
-                        dados_dias[f'{dia.day}/{dia.month}/{dia.year}'] = Coalesce(
+                        data = data_inicio_dt + timedelta(days=i)
+                        dados_dias[f'{data.day}/{data.month}/{data.year}'] = Coalesce(
                             Subquery(
                                 Dado.objects.filter(
                                     id_vendedor=OuterRef('vendedor__id'),
-                                    dt_credito=dia,
+                                    dt_credito=data,
                                     aprovada_para_repasse=False
                                 ).values('id_vendedor').annotate(
                                     repasses_totais=Sum('repasses')
