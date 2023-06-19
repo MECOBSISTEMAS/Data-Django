@@ -224,19 +224,6 @@ def pages(request):
                         0,
                         output_field=DecimalField(max_digits=8, decimal_places=2))
                         
-                        """ todos_os_repasses=Coalesce(
-                            Subquery(
-                                Dado.objects.filter(
-                                    id_vendedor=OuterRef('vendedor__id'),
-                                    dt_credito__range=(data_inicio, data_fim),
-                                    aprovada_para_repasse=False
-                                ).values('id_vendedor').annotate(
-                                    repasses_totais=Sum('repasses')
-                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ) """
                     context['repasses_clientes'] = CadCliente.objects.annotate(
                         **dados_dias,
                         #some todos os repasses dentro da data de inicio e fim
@@ -272,7 +259,7 @@ def pages(request):
                                         data_aprovada__range=(data_inicio, data_fim),
                                         aprovada=True,
                                         aprovada_para_repasse=False
-                                    ).values().annotate(total=Sum('repasse')).values('total')
+                                    ).values('id').annotate(total=Sum('repasse')).values('total')
                                 ),
                                 0,
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
@@ -322,7 +309,7 @@ def pages(request):
                                     data_aprovada__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values().annotate(total=Sum('desconto_total')).values('total'),
+                                ).values('id').annotate(total=Sum('desconto_total')).values('total'),
                                 output_field=DecimalField(max_digits=8, decimal_places=2),
                             ),
                             0,
