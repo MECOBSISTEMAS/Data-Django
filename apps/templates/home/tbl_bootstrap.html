@@ -67,13 +67,14 @@
                               <th>Cliente ID</th>
                               <th>Nome Cliente</th>
                               <th>Valor Repasse Retido</th>
-                              {% for dia in dados_dias %}
+                              {% comment %} {% for dia in dados_dias %}
                                 <th>{{dia}}</th>
-                              {% endfor %}
+                              {% endfor %} {% endcomment %}
+                              <th>Repasses Brutos</th>
                               <th>Creditos</th>
                               <th>Taxas</th>
                               <th>Debitos</th>
-                              <th>Total Repasses</th>
+                              <th>Calculo Repasses</th>
                             </tr>
                           </thead>
                           <tbody id="table-body">
