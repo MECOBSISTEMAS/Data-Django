@@ -21,14 +21,14 @@
 					</ul>
 			{% endif %}</h6>
         <form class="form w-100" unicorn:submit.prevent.defer="nova_taxa">
-          <input required unicorn:model.lazy="cliente_id" type="text" name="cliente" class="form-control" placeholder="ID Cliente">
-          <input required unicorn:model.lazy="valor" type="number" name="valor" step="0.01" class="form-control" placeholder="Valor a ser Taxado">
-          <input required unicorn:model.lazy="data_taxa" type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
-          <input type="text" unicorn:model.lazy="descricao" name="descricao" class="form-control" placeholder="Descrição do taxa">
+          <input required unicorn:model.defer="cliente_id" type="text" name="cliente" class="form-control" placeholder="ID Cliente">
+          <input required unicorn:model.defer="valor" type="number" name="valor" step="0.01" class="form-control" placeholder="Valor a ser Taxado">
+          <input required unicorn:model.defer="data_taxa" type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
+          <input type="text" unicorn:model.defer="descricao" name="descricao" class="form-control" placeholder="Descrição do taxa">
           {% comment %} <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa"> {% endcomment %}
           <div class="form-group">
             <label for="selecionar-tipo-taxa">Tipo</label>
-            <select unicorn:model.lazy="tipo_taxa" class="form-control" name="selecionar-tipo-taxa" id="selecionar-tipo-taxa">
+            <select unicorn:model.defer="tipo_taxa" class="form-control" name="selecionar-tipo-taxa" id="selecionar-tipo-taxa">
               <option value="TBB - Taxa de baixa de boleto">TBB - Taxa de baixa de boleto</option>
               <option value="TEC - Taxa de elaboração de contrato ">TEC - Taxa de elaboração de contrato </option>
               <option value="TAC - Taxa de análise de crédito">TAC - Taxa de análise de crédito</option>
