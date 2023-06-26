@@ -851,13 +851,14 @@ def upload_planilha_dados_brutos(request):
                     comprador=comprador, 
                     vl_pago=valor, 
                     contrato=contrato, 
-                    evento=evento
+                    evento=evento,
+                    dt_vencimento=data_vencimento,
+                    dt_credito=data_credito,
                 )
-                """ altere todos os dados para a atual linha, exceto os id_vendedor=vendedor_id, id_contrato=contrato_id, comprador=comprador, vl_pago=valor """
                 #dado.nu_parcela = parcela_paga
                 dado.parcelas_contrato = parcelas_contrato
-                dado.dt_vencimento = data_vencimento
-                dado.dt_credito = data_credito
+                #dado.dt_vencimento = data_vencimento
+                #dado.dt_credito = data_credito
                 dado.banco = banco
                 #dado.contrato = contrato
                 #dado.evento = evento
@@ -869,6 +870,7 @@ def upload_planilha_dados_brutos(request):
                 dado.op = op
                 dado.repasses = repasses
                 dado.comissao = comissao
+                dado.vendedor = nome_vendedor
                 dado.save()
                 dados_modificados += 1
             except Dado.DoesNotExist:
