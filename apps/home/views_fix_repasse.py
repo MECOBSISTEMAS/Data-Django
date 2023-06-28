@@ -771,8 +771,8 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
         wb = openpyxl.load_workbook(planilha)
         segunda_quinzena = wb.active
         for row in segunda_quinzena.iter_rows(values_only=True):
-            if linhas < 1:
-                linhas += 1
+            if linhas_nulas < 1:
+                linhas_nulas += 1
                 continue
             if row[0] == None or row[0] == '':
                 break
@@ -789,11 +789,29 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             desconto_total = row[10]
             honorarios = row[11]
             repasse = row[12]
-            ParcelaTaxa.objects.create(
-                id_contrato=id_contrato, id_comprador=id_comprador, comprador=nome_comprador,
-                id_vendedor=id_vendedor, vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
-                valor=valor, tcc=tcc, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
-            )
+            try:
+                parcela_taxa = ParcelaTaxa.objects.filter(
+                    dt_vencimento=dt_vencimento
+                    ).get(
+                        id_contrato=id_contrato, id_comprador=id_comprador, 
+                        id_vendedor=id_vendedor, parcela=parcela
+                    )
+                parcela_taxa.valor = valor
+                parcela_taxa.tcc = tcc
+                #parcela_taxa.ted = ted (não há o campo ted no modelo ParcelaTaxa ainda)
+                parcela_taxa.desconto_total = desconto_total
+                parcela_taxa.honorarios = honorarios
+                parcela_taxa.repasse = repasse
+                parcela_taxa.save()
+            except ParcelaTaxa.DoesNotExist:
+                ParcelaTaxa.objects.create(
+                    id_contrato=id_contrato, id_comprador=id_comprador, comprador=nome_comprador,
+                    id_vendedor=id_vendedor, vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
+                    valor=valor, tcc=tcc, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
+                )
+            except Exception as e:
+                erros.append(f"Erro na linha {linhas}, Exception Error:{e}")
+                continue
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
