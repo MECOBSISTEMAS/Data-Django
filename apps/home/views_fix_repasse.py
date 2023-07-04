@@ -815,7 +815,7 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 erros.append(f"Erro na linha {linhas}, Exception Error:{e}")
             linhas += 1
         
-        return HttpResponse("Planilha Recebida com sucesso, <br> linhas lidas: {} , <br> criadas: {}, erros: {}".format(linhas, parcelas_criadas, erros))
+        return HttpResponse("Planilha Recebida com sucesso, <br> linhas lidas: {} , <br> criadas: {}, <br> erros: {}".format(linhas, parcelas_criadas, erros))
 
 def upload_planilha_dados_brutos(request):
     if request.method == "POST":
