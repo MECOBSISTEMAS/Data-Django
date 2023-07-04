@@ -811,10 +811,8 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 parcelas_criadas += 1
             except ParcelaTaxa.MultipleObjectsReturned:
                 erros.append(f"Multiplos objetos retornados na linha: {linhas}, quantidade retornanda: {ParcelaTaxa.objects.filter(id_contrato=id_contrato, id_comprador=id_comprador, id_vendedor=id_vendedor, parcela=parcela,dt_vencimento=dt_vencimento).count()}")
-                continue
             except Exception as e:
                 erros.append(f"Erro na linha {linhas}, Exception Error:{e}")
-                continue
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, <br> linhas lidas: {} , <br> criadas: {}, erros: {}".format(linhas, parcelas_criadas, erros))
