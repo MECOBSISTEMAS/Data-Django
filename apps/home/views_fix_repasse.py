@@ -767,6 +767,7 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             return HttpResponse('Arquivo não é do tipo xlsx')
         linhas_nulas = 0
         linhas = 0
+        parcelas_criadas:int = 0
         erros:list[str] = []
         wb = openpyxl.load_workbook(planilha)
         segunda_quinzena = wb.active
@@ -793,14 +794,13 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 parcela_taxa = ParcelaTaxa.objects.get(
                         id_contrato=id_contrato, id_comprador=id_comprador, 
                         id_vendedor=id_vendedor, parcela=parcela,dt_vencimento=dt_vencimento,
-                        valor=valor, desconto_total=desconto_total, repasse=repasse
                     )
-                #parcela_taxa.valor = valor
+                parcela_taxa.valor = valor
                 parcela_taxa.tcc = tcc
                 #parcela_taxa.ted = ted (não há o campo ted no modelo ParcelaTaxa ainda)
-                #parcela_taxa.desconto_total = desconto_total
+                parcela_taxa.desconto_total = desconto_total
                 parcela_taxa.honorarios = honorarios
-                #parcela_taxa.repasse = repasse
+                parcela_taxa.repasse = repasse
                 parcela_taxa.save()
             except ParcelaTaxa.DoesNotExist:
                 ParcelaTaxa.objects.create(
@@ -808,6 +808,7 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                     id_vendedor=id_vendedor, vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
                     valor=valor, tcc=tcc, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
                 )
+                parcelas_criadas += 1
             except ParcelaTaxa.MultipleObjectsReturned:
                 erros.append(f"Multiplos objetos retornados na linha: {linhas}, quantidade retornanda: {ParcelaTaxa.objects.filter(id_contrato=id_contrato, id_comprador=id_comprador, id_vendedor=id_vendedor, parcela=parcela,dt_vencimento=dt_vencimento).count()}")
                 continue
@@ -816,7 +817,7 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                 continue
             linhas += 1
         
-        return HttpResponse("Planilha Recebida com sucesso, linhas lidas, {}, erros: {}".format(linhas, erros))
+        return HttpResponse("Planilha Recebida com sucesso, <br> linhas lidas: {} , <br> criadas: {}, erros: {}".format(linhas, parcelas_criadas, erros))
 
 def upload_planilha_dados_brutos(request):
     if request.method == "POST":
