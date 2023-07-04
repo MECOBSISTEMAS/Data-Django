@@ -771,8 +771,8 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
         wb = openpyxl.load_workbook(planilha)
         segunda_quinzena = wb.active
         for row in segunda_quinzena.iter_rows(values_only=True):
-            if linhas_nulas < 1:
-                linhas_nulas += 1
+            if linhas < 1:
+                linhas += 1
                 continue
             if row[0] == None or row[0] == '':
                 break
@@ -807,6 +807,8 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
                     id_vendedor=id_vendedor, vendedor=nome_vendedor, parcela=parcela, dt_vencimento=dt_vencimento,
                     valor=valor, tcc=tcc, desconto_total=desconto_total, honorarios=honorarios, repasse=repasse
                 )
+            except ParcelaTaxa.MultipleObjectsReturned:
+                erros.append(f"Multiplos objetos retornados na linha: {linhas}, quantidade retornanda: {ParcelaTaxa.objects.filter(id_contrato=id_contrato, id_comprador=id_comprador, id_vendedor=id_vendedor, parcela=parcela,dt_vencimento=dt_vencimento).count()}")
             except Exception as e:
                 erros.append(f"Erro na linha {linhas}, Exception Error:{e}")
                 continue
