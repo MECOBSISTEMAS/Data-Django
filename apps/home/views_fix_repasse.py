@@ -790,11 +790,9 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             honorarios = row[11]
             repasse = row[12]
             try:
-                parcela_taxa = ParcelaTaxa.objects.filter(
-                    dt_vencimento=dt_vencimento
-                    ).get(
+                parcela_taxa = ParcelaTaxa.objects.get(
                         id_contrato=id_contrato, id_comprador=id_comprador, 
-                        id_vendedor=id_vendedor, parcela=parcela
+                        id_vendedor=id_vendedor, parcela=parcela,dt_vencimento=dt_vencimento
                     )
                 parcela_taxa.valor = valor
                 parcela_taxa.tcc = tcc
