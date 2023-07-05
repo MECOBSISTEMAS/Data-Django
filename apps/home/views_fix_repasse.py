@@ -472,6 +472,8 @@ def pages(request):
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
                     context['parcelas_taxas_aprovadas'] = ParcelaTaxa.objects.filter(data_aprovada__range=(data_inicio, data_fim) , aprovada=True)
+                    context['data_inicio'] = data_inicio
+                    context['data_fim'] = data_fim
         
         elif load_template == 'pessoa_info.html':
             if request.method == 'POST':
