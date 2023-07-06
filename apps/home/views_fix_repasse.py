@@ -256,7 +256,7 @@ def pages(request):
                                     data_aprovada__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).annotate(total=Sum('repasse')).values('total'),
+                                ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
                                 0,
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
@@ -295,7 +295,7 @@ def pages(request):
                                     data_aprovada__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).annotate(total=Sum('desconto_total')).values('total'),
+                                ).values('id_vendedor').annotate(total=Sum('desconto_total')).values('total'),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
