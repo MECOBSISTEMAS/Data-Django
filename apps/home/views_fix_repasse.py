@@ -231,76 +231,93 @@ def pages(request):
                         #**dados_dias,
                         #some todos os repasses dentro da data de inicio e fim
                         todos_os_repasses=Coalesce(
-                            Dado.objects.filter(
-                                id_vendedor=OuterRef('vendedor__id'),
-                                dt_credito__range=(data_inicio, data_fim),
-                                aprovada_para_repasse=False
-                            ).values('id_vendedor').annotate(
-                                repasses_totais=Sum('repasses')
-                            ).values('repasses_totais'),
+                            Subquery(
+                                Dado.objects.filter(
+                                    id_vendedor=OuterRef('vendedor__id'),
+                                    dt_credito__range=(data_inicio, data_fim),
+                                    aprovada_para_repasse=False
+                                ).values('id_vendedor').annotate(
+                                    repasses_totais=Sum('repasses')
+                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
                         total_credito = Coalesce(
-                            Credito.objects.filter(
-                                cliente__id=OuterRef('vendedor__id'),
-                                dt_creditado__range=(data_inicio, data_fim),
-                                aprovada=True,
-                                aprovada_para_repasse=False
-                            ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total'),
+                            Subquery(
+                                Credito.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_creditado__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                    aprovada_para_repasse=False
+                                ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total')
+                                ,output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ) + Coalesce(
-                                ParcelaTaxa.objects.filter(
-                                    id_vendedor=OuterRef('vendedor__id'),
-                                    data_aprovada__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
+                                Subquery(
+                                    ParcelaTaxa.objects.filter(
+                                        id_vendedor=OuterRef('vendedor__id'),
+                                        data_aprovada__range=(data_inicio, data_fim),
+                                        aprovada=True,
+                                        aprovada_para_repasse=False
+                                    ).values('id_vendedor').annotate(total=Sum('repasse')).values('total')
+                                ),
                                 0,
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
                         total_repasse_retido = Coalesce(
-                            RepasseRetido.objects.filter(
-                                cliente__id=OuterRef('vendedor__id'),
-                                dt_rep_retido__range=(data_inicio, data_fim),
-                                aprovada=True,
-                                aprovada_para_repasse=False
-                            ).values('cliente__id').annotate(total=Sum('vlr_rep_retido')).values('total'),
+                            Subquery(
+                                RepasseRetido.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_rep_retido__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                    aprovada_para_repasse=False
+                                ).values('cliente__id').annotate(total=Sum('vlr_rep_retido')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
                         total_taxas = Coalesce(
-                            Taxa.objects.filter(
-                                cliente__id=OuterRef('vendedor__id'),
-                                dt_taxa__range=(data_inicio, data_fim),
-                                aprovada=True,
-                                aprovada_para_repasse=False
-                            ).values('cliente__id').annotate(total=Sum('taxas')).values('total'),
+                            Subquery(
+                                Taxa.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_taxa__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                    aprovada_para_repasse=False
+                                ).values('cliente__id').annotate(total=Sum('taxas')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            ),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
                         total_debitos = Coalesce(
-                            Debito.objects.filter(
-                                cliente__id=OuterRef('vendedor__id'),
-                                dt_debitado__range=(data_inicio, data_fim),
-                                aprovada=True,
-                                aprovada_para_repasse=False
-                            ).values('cliente__id').annotate(total=Sum('vl_debito')).values('total'),
+                            Subquery(
+                                Debito.objects.filter(
+                                    cliente__id=OuterRef('vendedor__id'),
+                                    dt_debitado__range=(data_inicio, data_fim),
+                                    aprovada=True,
+                                    aprovada_para_repasse=False
+                                ).values('cliente__id').annotate(total=Sum('vl_debito')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2),
+                            ),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ) + Coalesce(
+                            Subquery(
                                 ParcelaTaxa.objects.filter(
                                     id_comprador=OuterRef('vendedor__id'),
                                     data_aprovada__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values('id_vendedor').annotate(total=Sum('desconto_total')).values('total'),
+                                ).values('id').annotate(total=Sum('desconto_total')).values('total'),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
                         total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') + F('total_repasse_retido') + F('todos_os_repasses'),
-                    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
+                    )).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
                         'vendedor__id','vendedor__nome',
                         'total_repasse_retido', 'total_credito',
                         'total_taxas', 'total_debitos', 'total_repasses', 'todos_os_repasses',#*dados_dias.keys()
