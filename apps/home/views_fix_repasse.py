@@ -308,7 +308,7 @@ def pages(request):
                     context['dados_dias'] = dados_dias.keys()
                     
                     tbody = "<tr>"
-                    for repasse_cliente in context['repasses_clientes']:
+                    """for repasse_cliente in context['repasses_clientes']:
                         #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_cliente['total_repasse_retido']}/{repasse_cliente['total_credito']}/{repasse_cliente['total_taxas']}/{repasse_cliente['total_debitos']}/{repasse_cliente['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
                         if request.user.is_superuser:
                             tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
@@ -318,15 +318,15 @@ def pages(request):
                         tbody += f"<td>{repasse_cliente['vendedor__id']}</td>"
                         tbody += f"<td>{repasse_cliente['vendedor__nome']}</td>"
                         tbody += f"<td>{repasse_cliente['total_repasse_retido']}</td>"
-                        """ for dia in dados_dias.keys():
-                            tbody += f"<td>{dia}</td>" """
+                         for dia in dados_dias.keys():
+                            tbody += f"<td>{dia}</td>" 
                         tbody += f"<td>{repasse_cliente['todos_os_repasses']}</td>"
                         tbody += f"<td>{repasse_cliente['total_credito']}</td>"
                         tbody += f"<td>{repasse_cliente['total_taxas']}</td>"
                         tbody += f"<td>{repasse_cliente['total_debitos']}</td>"
                         tbody += f"<td>{repasse_cliente['total_repasses']}</td>"
                         #tbody += f"<td>Total Repasses</td>"
-                        tbody += "</tr>"
+                        tbody += "</tr>"""
                     context['tbody'] = tbody
                     
                     #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
