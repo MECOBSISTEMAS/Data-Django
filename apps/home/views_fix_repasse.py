@@ -250,15 +250,6 @@ def pages(request):
                             ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total'),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
-                        ) + Coalesce(
-                                ParcelaTaxa.objects.filter(
-                                    id_vendedor=OuterRef('vendedor__id'),
-                                    data_aprovada__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('id').annotate(total=Sum('repasse')).values('total'),
-                                0,
-                                output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
                         total_repasse_retido = Coalesce(
                             RepasseRetido.objects.filter(
@@ -287,15 +278,6 @@ def pages(request):
                                 aprovada=True,
                                 aprovada_para_repasse=False
                             ).values('cliente__id').annotate(total=Sum('vl_debito')).values('total'),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                        ) + Coalesce(
-                                ParcelaTaxa.objects.filter(
-                                    id_comprador=OuterRef('vendedor__id'),
-                                    data_aprovada__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('id').annotate(total=Sum('desconto_total')).values('total'),
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                         ),
