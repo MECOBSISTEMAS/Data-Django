@@ -313,11 +313,13 @@ def pages(request):
                                     aprovada=True,
                                     aprovada_para_repasse=False
                                 ).values('id').annotate(total=Sum('desconto_total')).values('total'),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
+                                output_field=DecimalField(max_digits=8, decimal_places=2),
                         ),
-                        total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') + F('total_repasse_retido') + F('todos_os_repasses'),
-                    )).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
+                        0,
+                        output_field=DecimalField(max_digits=8, decimal_places=2),
+                    ),
+                    total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') + F('total_repasse_retido') + F('todos_os_repasses'),
+                    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
                         'vendedor__id','vendedor__nome',
                         'total_repasse_retido', 'total_credito',
                         'total_taxas', 'total_debitos', 'total_repasses', 'todos_os_repasses',#*dados_dias.keys()
