@@ -262,7 +262,7 @@ def pages(request):
                                         data_aprovada__range=(data_inicio, data_fim),
                                         aprovada=True,
                                         aprovada_para_repasse=False
-                                    ).values('id_vendedor').annotate(total=Sum('repasse')).values('total')
+                                    ).values('id_vendedor').annotate(total=Sum('repasse')).values('total')[:1]
                                 ),
                                 0,
                                 output_field=DecimalField(max_digits=8, decimal_places=2)
@@ -312,13 +312,13 @@ def pages(request):
                                     data_aprovada__range=(data_inicio, data_fim),
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values('id').annotate(total=Sum('desconto_total')).values('total'),
+                                ).values('id').annotate(total=Sum('desconto_total')).values('total')[:1],
                                 output_field=DecimalField(max_digits=8, decimal_places=2),
                         ),
                         0,
                         output_field=DecimalField(max_digits=8, decimal_places=2),
                     ),
-                    total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') + F('total_repasse_retido') + F('todos_os_repasses'),
+                    total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') - F('total_repasse_retido') + F('todos_os_repasses')
                     ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
                         'vendedor__id','vendedor__nome',
                         'total_repasse_retido', 'total_credito',
