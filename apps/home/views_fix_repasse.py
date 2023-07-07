@@ -243,29 +243,31 @@ def pages(request):
                             0,
                             output_field=DecimalField(max_digits=8, decimal_places=2)
                             ),
-                        total_credito = Coalesce(
+                        total_credito=Coalesce(
+                            Subquery(
+                                ParcelaTaxa.objects.filter(
+                                    id_vendedor=OuterRef('vendedor__id'),
+                                    data_aprovada__range=[data_inicio, data_fim],
+                                    aprovada=True,
+                                    aprovada_para_repasse=False
+                                ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2),
+                            ),
+                            0,
+                            output_field=DecimalField(max_digits=8, decimal_places=2),
+                        )
+                        + Coalesce(
                             Subquery(
                                 Credito.objects.filter(
                                     cliente__id=OuterRef('vendedor__id'),
-                                    dt_creditado__range=(data_inicio, data_fim),
+                                    dt_creditado__range=[data_inicio, data_fim],
                                     aprovada=True,
                                     aprovada_para_repasse=False
-                                ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total')
-                                ,output_field=DecimalField(max_digits=8, decimal_places=2)
+                                ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total'),
+                                output_field=DecimalField(max_digits=8, decimal_places=2),
                             ),
                             0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                        ) + Coalesce(
-                                Subquery(
-                                    ParcelaTaxa.objects.filter(
-                                        id_vendedor=OuterRef('vendedor__id'),
-                                        data_aprovada__range=(data_inicio, data_fim),
-                                        aprovada=True,
-                                        aprovada_para_repasse=False
-                                    ).values('id_vendedor').annotate(total=Sum('repasse')).values('total')[:1]
-                                ),
-                                0,
-                                output_field=DecimalField(max_digits=8, decimal_places=2)
+                            output_field=DecimalField(max_digits=8, decimal_places=2),
                         ),
                         total_repasse_retido = Coalesce(
                             Subquery(
@@ -1083,3 +1085,5 @@ def desaprovar_repasse_retido(request, *args, **kwargs):
     repasse_retido.aprovada = False
     repasse_retido.save()
     return HttpResponseRedirect('/tbl_repasse_retido.html')
+
+
