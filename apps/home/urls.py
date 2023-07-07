@@ -88,6 +88,8 @@ urlpatterns = [
          views_fix_repasse.aprovar_repasse_retido, name='aprovar_repasse_retido'),
     path('desaprovar-repasse-retido/<repasse_retido_id>',
          views_fix_repasse.desaprovar_repasse_retido, name='desaprovar_repasse_retido'),
+    path('download-planilha-repasses-aprovados/<data_inicio>/<data_fim>',
+         views_fix_repasse.download_planilha_repasses_aprovados, name='download_planilha_repasses_aprovados'),
     # Matches any html file
     re_path(r'^.*\.*', views_fix_repasse.pages, name='pages'),
 

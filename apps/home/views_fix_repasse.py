@@ -351,26 +351,23 @@ def pages(request):
                     context['tbody'] = tbody
                     
                     #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
-                    """ context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+                    context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
                     context['total_debito'] = Decimal(sum([float(querie['total_debitos']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
                     context['total_repasse_retido'] = Decimal(sum([float(querie['total_repasse_retido']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
                     context['total_taxas'] = Decimal(sum([float(querie['total_taxas']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_repasses'] = Decimal(sum([float(querie['total_repasses']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01')) """
-                    #return render(request, 'home/tbl_bootstrap.html', context=context)
-                    
-                    #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
-                    """ context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_debito'] = Decimal(sum([float(querie['total_debitos']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_repasse_retido'] = Decimal(sum([float(querie['total_repasse_retido']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_taxas'] = Decimal(sum([float(querie['total_taxas']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_repasses'] = Decimal(sum([float(querie['total_repasses']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01')) """
+                    context['total_repasses'] = Decimal(sum([float(querie['total_repasses']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
                     #return render(request, 'home/tbl_bootstrap.html', context=context)
             
                         
         elif load_template == 'tbl_repasses_aprovados.html':
             if request.method == 'POST':
-                pass
-            context['repasses_aprovados'] = RepasseAprovado.objects.all()
+                if "filtrar-repasses-aprovados" in request.POST:
+                    context['data_inicio'] = request.POST.get('data-inicio')
+                    context['data_fim'] = request.POST.get('data-fim')
+                    context['repasses_aprovados'] = RepasseAprovado.objects.filter(
+                        data_aprovado__range=[context['data_inicio'], context['data_fim']]
+                    )
+            #context['repasses_aprovados'] = RepasseAprovado.objects.all()
                 
 
 
@@ -1087,3 +1084,53 @@ def desaprovar_repasse_retido(request, *args, **kwargs):
     return HttpResponseRedirect('/tbl_repasse_retido.html')
 
 
+def download_planilha_repasses_aprovados(request, *args, **kwargs):
+    data_inicio = kwargs.get('data_inicio')
+    data_fim = kwargs.get('data_fim')
+
+    repasses_aprovados = RepasseAprovado.objects.filter(
+        data_aprovado__range=[data_inicio, data_fim],
+    )
+
+    #exporte essa consulta para download
+    # Crie um objeto Workbook
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    
+
+    # Adicione os cabeçalhos das colunas
+    ws.append([
+        'Vendedor ID',
+        'Nome do Vendedor',
+        'Data Consulta Inicial',
+        'Data Consulta Final',
+        'Total Repasse Retido',
+        'Total Créditos',
+        'Total Débitos',
+        'Total Taxas',
+        'Total Repasses'
+    ])
+
+    # Adicione os dados da consulta à planilha
+    for repasse in repasses_aprovados:
+        ws.append([
+            repasse.cliente.id,
+            repasse.cliente.nome,
+            repasse.data_inicial,
+            repasse.data_final,
+            repasse.total_repasses_retidos(),
+            repasse.total_creditos(),
+            repasse.total_debitos(),
+            repasse.total_taxas(),
+            repasse.total_repasse()
+        ])
+
+    # Crie um objeto de resposta com os cabeçalhos apropriados para download de arquivo
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=repasses_aprovados-{datetime.now().date()}.xlsx'
+
+    # Salve o arquivo Excel no objeto de resposta
+    wb.save(response)
+
+    return response

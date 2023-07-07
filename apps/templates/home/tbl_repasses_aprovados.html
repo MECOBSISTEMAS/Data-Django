@@ -44,11 +44,12 @@
                     <h5>Repasses Aprovados</h5>
                     <form method="POST">
                       {% csrf_token %}
-                      data inicio <input required type="date" id="data-inicio" name="data-inicio" >
-                      data fim <input required type="date" id="data-fim" name="data-fim">
-                      <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                      data inicio <input required type="date" id="data-inicio" name="data-inicio" {% if data_inicio %} value={{data_inicio}} {% endif %} >
+                      data fim <input required type="date" id="data-fim" name="data-fim" {% if data_fim %} value={{data_fim}} {% endif %}>
+                      <button type="submit" name="filtrar-repasses-aprovados" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
+                    <a name="download_planilha_repasses_aprovados" id="download_planilha_repasses_aprovados" class="btn btn-primary" href="/download-planilha-repasses-aprovados/{{data_inicio}}/{{data_fim}}" role="button">Exportar Consulta Excel</a>
                     {% comment %} <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_repasses' %}" role="button">Exportar Consulta .xlsx</a> {% endcomment %}
                     {% comment %} <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">
                       {% csrf_token %}
