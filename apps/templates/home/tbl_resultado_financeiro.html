@@ -50,9 +50,10 @@
                     type="date"
                     name="data-inicio"
                     id="data-inicio"
+                    {% if data_inicio %} value={{data_inicio}} {% endif %}
                   />
                   até
-                  <input type="date" name="data-fim" id="data-fim" />
+                  <input type="date" name="data-fim" id="data-fim" {% if data_fim %} value={{data_fim}} {% endif %} />
                   <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
                   <button
                     type="button"
@@ -75,6 +76,7 @@
                       {% comment %} <th>Contrato ID</th>
                       <th>Comprador </th>
                       <th>Vendedor</th> {% endcomment %}
+                      <th>Vendedor</th>                      
                       {% for financeiro_dia in financeiro_dias %}
                       <th>{{financeiro_dia}}</th>
                       {% endfor %}
@@ -94,6 +96,7 @@
                 <table class="table table-hover" id="table-tcc">
                   <thead>
                     <tr>
+                      <th>Vendedor</th>
                       {% for dia in financeiro_dias %}
                       <th>{{dia}}</th>
                       {% endfor %}
@@ -112,6 +115,7 @@
                 <table class="table table-hover" id="table-desconto-totais">
                   <thead>
                     <tr>
+                      <th>Comprador</th>
                       {% for dia in financeiro_dias %}
                       <th>{{dia}}</th>
                       {% endfor %}
@@ -130,6 +134,7 @@
                 <table class="table table-hover" id="table-honorarios">
                   <thead>
                     <tr>
+                      <th>Vendedor</th>
                       {% for dia in financeiro_dias %}
                       <th>{{dia}}</th>
                       {% endfor %}
