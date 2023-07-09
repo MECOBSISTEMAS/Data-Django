@@ -32,7 +32,7 @@ def gerar_arquivo_pdf(request, context):
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         pdf = canvas.Canvas(tmp.name, initialFontSize=12,
                             initialFontName='Helvetica', pagesize=(595, 842))
-        pdf.drawString(100, 750, "Relatório PDF do Prestação Diaria")
+        pdf.drawString(100, 750, "Relatório PDF do Prestação ia")
         #pdf.drawString(100, 700, "Adicione aqui os dados necessários")
         pdf.drawString(100, 650, request.session.get('comissionistas_do_mes'))
         pdf.drawString(100, 600, request.session.get('repasses_geral'))
@@ -44,14 +44,14 @@ def gerar_arquivo_pdf(request, context):
             'repasses_geral_descontado'))
         pdf.save()
         response = HttpResponse(content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="prestacao_diaria_pdf_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.pdf"'
+        response['Content-Disposition'] = f'attachment; filename="prestacao_ia_pdf_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.pdf"'
         response.write(tmp.read())
         return response
 
 
-def exportar_planilha_prestacao_diaria(request, *args, **kwargs):
+def exportar_planilha_prestacao_ia(request, *args, **kwargs):
     with tempfile.TemporaryDirectory() as tmpdir:
-        filepath = os.path.join(tmpdir, f'planilha_prestacao_diaria_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        filepath = os.path.join(tmpdir, f'planilha_prestacao_ia_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         
