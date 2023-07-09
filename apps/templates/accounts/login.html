@@ -1,7 +1,11 @@
 {% extends "layouts/base-fullscreen.html" %} 
+{% load static %}
 {% block title %} Login {% endblock %} {% block content %}
 
 <div class="auth-wrapper">
+  {% comment %} carregar arquivo css {% endcomment %}
+  <link rel="stylesheet" href="{% static 'assets/css/login.css' %}" />
+
   <div class="auth-content">
     <div class="auth-bg">
       <span class="r"></span>
@@ -11,8 +15,12 @@
     </div>
     <div class="card">
       <div class="card-body text-center">
-        <h3 class="mb-4">Login</h3>
-
+        <h3 class="mb-4">Gestão de Repasses</h3>
+        <img src={% static 'assets/images/logo-mecob.png' %} 
+          alt="logo mecob.png" 
+          name="imagem-logo"
+          class="img-fluid mb-4"
+          />
         <span class="mb-0 text-muted">
           {% if msg %}
           <span class="text-danger">{{ msg | safe }}</span>
@@ -24,9 +32,11 @@
 
         <form role="form" method="post" action="">
           {% csrf_token %}
-
-          <div class="input-group mb-3">{{ form.username }}</div>
-
+          {% comment %} colocar o login no maximo canto esquerdo por bootstrap{% endcomment %}
+          <h6 class="login-label-form">Entre com suas credenciais<h6>
+            <div class="input-group mb-3">{{ form.username }}</div>
+            
+          
           <div class="input-group mb-4">{{ form.password }}</div>
 
           <button
