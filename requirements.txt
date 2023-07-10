@@ -108,6 +108,7 @@ tinycss2
 toml
 tornado
 traitlets
+tzdata
 uri-template
 urllib3
 wcwidth
