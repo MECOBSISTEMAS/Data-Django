@@ -18,8 +18,8 @@ class RepassesRetidosView(UnicornView):
     data_fim:str = ""
     
     #? campos para armazenar os resultados dos filtros
-    repasses_retidos_nao_aprovadas:QuerySetType = RepasseRetido.objects.none()
-    repasses_retidos_aprovadas:QuerySetType = RepasseRetido.objects.none()
+    repasses_retidos_nao_aprovadas:QuerySetType(RepasseRetido) = RepasseRetido.objects.none()
+    repasses_retidos_aprovadas:QuerySetType(RepasseRetido) = RepasseRetido.objects.none()
     
     #?campos para construção da primeira tabela agrupando os resultados por dia
     repasses_retidos_dias:list = []
@@ -71,6 +71,7 @@ class RepassesRetidosView(UnicornView):
             tbody += "</tr>"
         self.tbody = tbody
         self.total_repasses_retidos_aprovadas = RepasseRetido.objects.filter(aprovada=True, dt_rep_retido__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('vlr_rep_retido'))['total']
+    
     def novo_repasse_retido(self):
         try:
             pessoa = Pessoas.objects.get(id=self.id_pessoa)
