@@ -168,7 +168,7 @@ def pages(request):
                     context['taxas'] = float(Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(taxas=Sum('taxas'))['taxas'] or 0)
                     repasses_geral = float(context['repasses_geral']['repasses'] or 0)
                     repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
-                    repasses_geral_descontado = repasses_geral - repasses_semanais_vendedores_totais
+                    repasses_geral_descontado =  repasses_semanais_vendedores_totais - repasses_geral
                     
                     context['repasses_geral_descontado'] = float("{:.2f}".format(repasses_geral_descontado))
                     
