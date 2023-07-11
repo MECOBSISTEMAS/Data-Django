@@ -49,7 +49,7 @@ def gerar_arquivo_pdf(request, context):
         return response
 
 
-def exportar_planilha_prestacao_ia(request, *args, **kwargs):
+def exportar_planilha_prestacao_diaria(request, *args, **kwargs):
     with tempfile.TemporaryDirectory() as tmpdir:
         filepath = os.path.join(tmpdir, f'planilha_prestacao_ia_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
         workbook = openpyxl.Workbook()
