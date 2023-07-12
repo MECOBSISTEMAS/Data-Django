@@ -176,7 +176,7 @@ def pages(request):
                         'repasses_semanais': json.dumps(list(context['repasses_semanais']), cls=CustomJSONEncoder),
                         'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes']), cls=CustomJSONEncoder),
                         'valores_pagos_honorarios': json.dumps(list(context['valores_pagos_honorarios'].values()), cls=CustomJSONEncoder),
-                        'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder),
+                        #'comissionistas_do_mes': json.dumps(list(context['comissionistas_do_mes'].values()), cls=CustomJSONEncoder),
                         'repasses_geral_descontado': json.dumps(context['repasses_geral_descontado'], cls=CustomJSONEncoder),
                         'taxas': json.dumps(context['taxas'], cls=CustomJSONEncoder),
                     }
