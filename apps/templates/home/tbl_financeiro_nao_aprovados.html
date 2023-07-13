@@ -1,0 +1,199 @@
+{% extends "layouts/base.html" %} 
+{% block title %} UI Forms {% endblock %}
+{% load widget_tweaks %}
+{% load utils %}
+{% load humanize %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Resultado Financeiro</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Tabelas & Formulários</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Resultado Financeiro</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Resultado Financeiro</h5>
+              <form action="" method="post">
+                {% csrf_token %}
+                <p>
+                  filtrar de
+                  <input
+                    type="date"
+                    name="data-inicio"
+                    id="data-inicio"
+                    {% if data_inicio %} value={{data_inicio}} {% endif %}
+                  />
+                  até
+                  <input type="date" name="data-fim" id="data-fim" {% if data_fim %} value={{data_fim}} {% endif %} />
+                  <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
+                  <button
+                    type="button"
+                    name=""
+                    id=""
+                    class="btn btn-danger"
+                  >
+                    Limpar Filtro
+                  </button>
+                </p>
+              </form>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>Repasses</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-repasses">
+                  <thead>
+                    <tr>
+                      {% comment %} <th>Contrato ID</th>
+                      <th>Comprador </th>
+                      <th>Vendedor</th> {% endcomment %}
+                      <th>Vendedor</th>                      
+                      {% for financeiro_dia in financeiro_dias %}
+                      <th>{{financeiro_dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_repasses|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TCC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                      <th>Vendedor</th>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_tcc|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>Desconto Totais</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-desconto-totais">
+                  <thead>
+                    <tr>
+                      <th>Comprador</th>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_desconto_total|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>Honorários</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-honorarios">
+                  <thead>
+                    <tr>
+                      <th>Vendedor</th>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_honorarios|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            {% comment %} <div class="card-block table-border-style">
+              <h4>Valores</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-valor">
+                  <thead>
+                    <tr>
+                      <th>Contrato ID</th>
+                      <th>Comprador </th>
+                      <th>Vendedor</th>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div> {% endcomment %}
+
+            <div class="card-block table-border-style">
+              <h5>Valores: R$ {{soma_valores_financeiro.total_valor|intcomma}}</h5>
+              <h5>TCC's: R$ {{soma_valores_financeiro.total_tcc|intcomma}}</h5>
+              <h5>Desconto Totais: R$ {{soma_valores_financeiro.total_desconto|intcomma}}</h5>
+              <h5>Honorários: R$ {{soma_valores_financeiro.total_honorarios|intcomma}}</h5>
+              <h5>Repasses: R$ {{soma_valores_financeiro.total_repasse|intcomma}}</h5>
+            </div>
+          </div>
+        </div>    
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-repasses').DataTable();
+    $('#table-tcc').DataTable();
+    $('#table-desconto-totais').DataTable();
+    $('#table-honorarios').DataTable();
+    $('#table-valor').DataTable();
+  })
+</script>
+{% endblock javascripts %}
