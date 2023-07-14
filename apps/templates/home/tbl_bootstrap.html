@@ -50,6 +50,17 @@
                       data fim <input required type="date" id="data-fim" name="data-fim" {% if data_final %} value={{data_final}} {% endif %}>
                       <button type="submit" name="filtrar-tabela-repasse-cliente" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
+                      <button 
+                        type="submit" 
+                        name="filtrar-primeira-Quinzena" 
+                        id="filtrar-primeira-Quinzena" 
+                        class="btn btn-primary">1° Quinzena</button>
+                      <button 
+                        type="submit" 
+                        name="filtrar-segunda-Quinzena" 
+                        id="filtrar-segunda-Quinzena" 
+                        class="btn btn-primary">2° Quinzena</button>
+                        
                     </form>
                     <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info disabled" href="{% url 'home:download_planilha_repasses' %}" role="button">Exportar Consulta .xlsx</a>
                     {% comment %} <form action="{% url 'home:upload_planilha_quinzenal' %}" method="post" enctype="multipart/form-data">

@@ -195,6 +195,7 @@ def pages(request):
                 tbody = ""
                 for honorarios in context['honorarios_filtro']:
                     tbody += "<tr>"
+                    tbody += f"<td>{honorarios['vendedor']}</td>"
                     for dia in financeiro_dias:
                         honorarios_dia = honorarios[f'{dia}']
                         tbody += f"<td>{honorarios_dia}</td>"
@@ -293,6 +294,10 @@ def pages(request):
         
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
+                if 'filtrar-primeira-quinzena' in request.POST:
+                    return HttpResponse("Filtrar primeira quinzena")
+                if 'filtrar-segunda-quinzena' in request.POST:
+                    return HttpResponse("Filtrar a segunda quinzena")
                 if 'filtrar-tabela-repasse-cliente' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
@@ -548,6 +553,7 @@ def pages(request):
                 tbody = ""
                 for honorarios in context['honorarios_filtro']:
                     tbody += "<tr>"
+                    tbody += f"<td>{honorarios['vendedor']}</td>"
                     for dia in financeiro_dias:
                         honorarios_dia = honorarios[f'{dia}']
                         tbody += f"<td>{honorarios_dia}</td>"
