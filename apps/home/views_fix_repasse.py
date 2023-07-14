@@ -24,12 +24,165 @@ import asyncio
 
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
+from requests import Request
 
 from . import funcoes
 
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado, RepasseAprovado, ParcelaTaxa
+
+def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
+    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
+    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+    context:dict = {}
+    dados_dias = {}
+    for i in range((data_fim_dt - data_inicio_dt).days + 1):
+        data = data_inicio_dt + timedelta(days=i)
+        dados_dias[f'{data.day}/{data.month}/{data.year}'] = None 
+        """ Coalesce(
+            Subquery(
+                Dado.objects.filter(
+                    id_vendedor=OuterRef('vendedor__id'),
+                    dt_credito=data,
+                    aprovada_para_repasse=False
+                ).values('id_vendedor').annotate(
+                    repasses_totais=Sum('repasses')
+                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+        0,
+        output_field=DecimalField(max_digits=8, decimal_places=2)) """
+        
+    context['repasses_clientes'] = CadCliente.objects.annotate(
+        #**dados_dias,
+        #some todos os repasses dentro da data de inicio e fim
+        todos_os_repasses=Coalesce(
+            Subquery(
+                Dado.objects.filter(
+                    id_vendedor=OuterRef('vendedor__id'),
+                    dt_credito__range=(data_inicio, data_fim),
+                    aprovada_para_repasse=False
+                ).values('id_vendedor').annotate(
+                    repasses_totais=Sum('repasses')
+                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            0,
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+        total_credito=Coalesce(
+            Subquery(
+                ParcelaTaxa.objects.filter(
+                    id_vendedor=OuterRef('vendedor__id'),
+                    data_aprovada__range=[data_inicio, data_fim],
+                    aprovada=True,
+                    aprovada_para_repasse=False
+                ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2),
+            ),
+            0,
+            output_field=DecimalField(max_digits=8, decimal_places=2),
+        )
+        + Coalesce(
+            Subquery(
+                Credito.objects.filter(
+                    cliente__id=OuterRef('vendedor__id'),
+                    dt_creditado__range=[data_inicio, data_fim],
+                    aprovada=True,
+                    aprovada_para_repasse=False
+                ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2),
+            ),
+            0,
+            output_field=DecimalField(max_digits=8, decimal_places=2),
+        ),
+        total_repasse_retido = Coalesce(
+            Subquery(
+                RepasseRetido.objects.filter(
+                    cliente__id=OuterRef('vendedor__id'),
+                    dt_rep_retido__range=(data_inicio, data_fim),
+                    aprovada=True,
+                    aprovada_para_repasse=False
+                ).values('cliente__id').annotate(total=Sum('vlr_rep_retido')).values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            0,
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ),
+        total_taxas = Coalesce(
+            Subquery(
+                Taxa.objects.filter(
+                    cliente__id=OuterRef('vendedor__id'),
+                    dt_taxa__range=(data_inicio, data_fim),
+                    aprovada=True,
+                    aprovada_para_repasse=False
+                ).values('cliente__id').annotate(total=Sum('taxas')).values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
+            ),
+            0,
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ),
+        total_debitos = Coalesce(
+            Subquery(
+                Debito.objects.filter(
+                    cliente__id=OuterRef('vendedor__id'),
+                    dt_debitado__range=(data_inicio, data_fim),
+                    aprovada=True,
+                    aprovada_para_repasse=False
+                ).values('cliente__id').annotate(total=Sum('vl_debito')).values('total'),
+                output_field=DecimalField(max_digits=8, decimal_places=2),
+            ),
+            0,
+            output_field=DecimalField(max_digits=8, decimal_places=2)
+        ) + Coalesce(
+            Subquery(
+                ParcelaTaxa.objects.filter(
+                    id_comprador=OuterRef('vendedor__id'),
+                    data_aprovada__range=(data_inicio, data_fim),
+                    aprovada=True,
+                    aprovada_para_repasse=False
+                ).values('id').annotate(total=Sum('desconto_total')).values('total')[:1],
+                output_field=DecimalField(max_digits=8, decimal_places=2),
+        ),
+        0,
+        output_field=DecimalField(max_digits=8, decimal_places=2),
+    ),
+    total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') - F('total_repasse_retido') + F('todos_os_repasses')
+    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
+        'vendedor__id','vendedor__nome',
+        'total_repasse_retido', 'total_credito',
+        'total_taxas', 'total_debitos', 'total_repasses', 'todos_os_repasses',#*dados_dias.keys()
+        ).order_by('vendedor__nome')
+    context['dados_dias'] = dados_dias.keys()
+    
+    tbody = "<tr>"
+    for repasse_cliente in context['repasses_clientes']:
+        #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_cliente['total_repasse_retido']}/{repasse_cliente['total_credito']}/{repasse_cliente['total_taxas']}/{repasse_cliente['total_debitos']}/{repasse_cliente['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
+        if request.user.is_superuser:
+            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
+        else:
+            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success disabled' href='#sem-autorizacao'>Aprovar Repasses</a></td>"
+            
+        tbody += f"<td>{repasse_cliente['vendedor__id']}</td>"
+        tbody += f"<td>{repasse_cliente['vendedor__nome']}</td>"
+        tbody += f"<td>{repasse_cliente['total_repasse_retido']}</td>"
+        """for dia in dados_dias.keys():
+            tbody += f"<td>{dia}</td>" """
+        tbody += f"<td>{repasse_cliente['todos_os_repasses']}</td>"
+        tbody += f"<td>{repasse_cliente['total_credito']}</td>"
+        tbody += f"<td>{repasse_cliente['total_taxas']}</td>"
+        tbody += f"<td>{repasse_cliente['total_debitos']}</td>"
+        tbody += f"<td>{repasse_cliente['total_repasses']}</td>"
+        #tbody += f"<td>Total Repasses</td>"
+        tbody += "</tr>"
+    context['tbody'] = tbody
+    
+    #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
+    context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+    context['total_debito'] = Decimal(sum([float(querie['total_debitos']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+    context['total_repasse_retido'] = Decimal(sum([float(querie['total_repasse_retido']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+    context['total_taxas'] = Decimal(sum([float(querie['total_taxas']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+    context['total_repasses'] = Decimal(sum([float(querie['total_repasses']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
+    return context
 
 class CustomJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -295,165 +448,16 @@ def pages(request):
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
                 if 'filtrar-primeira-quinzena' in request.POST:
-                    return HttpResponse("Filtrar primeira quinzena")
-                if 'filtrar-segunda-quinzena' in request.POST:
-                    return HttpResponse("Filtrar a segunda quinzena")
-                if 'filtrar-tabela-repasse-cliente' in request.POST:
+                    return HttpResponse(f"data de hoje: {datetime.now()} PRIMEIRA QUINZENA")
+                elif 'filtrar-segunda-quinzena' in request.POST:
+                    return HttpResponse(f"data de hoje: {datetime.now()} SEGUNDA QUINZENA")
+                elif 'filtrar-tabela-repasse-cliente' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
-                    data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
-                    data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
+                    context = filtrar_repasses(request, data_inicio, data_fim)
                     context['data_inicio'] = data_inicio
                     context['data_final'] = data_fim
                     
-
-                    dados_dias = {}
-                    for i in range((data_fim_dt - data_inicio_dt).days + 1):
-                        data = data_inicio_dt + timedelta(days=i)
-                        dados_dias[f'{data.day}/{data.month}/{data.year}'] = None 
-                        """ Coalesce(
-                            Subquery(
-                                Dado.objects.filter(
-                                    id_vendedor=OuterRef('vendedor__id'),
-                                    dt_credito=data,
-                                    aprovada_para_repasse=False
-                                ).values('id_vendedor').annotate(
-                                    repasses_totais=Sum('repasses')
-                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                        0,
-                        output_field=DecimalField(max_digits=8, decimal_places=2)) """
-                        
-                    context['repasses_clientes'] = CadCliente.objects.annotate(
-                        #**dados_dias,
-                        #some todos os repasses dentro da data de inicio e fim
-                        todos_os_repasses=Coalesce(
-                            Subquery(
-                                Dado.objects.filter(
-                                    id_vendedor=OuterRef('vendedor__id'),
-                                    dt_credito__range=(data_inicio, data_fim),
-                                    aprovada_para_repasse=False
-                                ).values('id_vendedor').annotate(
-                                    repasses_totais=Sum('repasses')
-                                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                        total_credito=Coalesce(
-                            Subquery(
-                                ParcelaTaxa.objects.filter(
-                                    id_vendedor=OuterRef('vendedor__id'),
-                                    data_aprovada__range=[data_inicio, data_fim],
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
-                                output_field=DecimalField(max_digits=8, decimal_places=2),
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2),
-                        )
-                        + Coalesce(
-                            Subquery(
-                                Credito.objects.filter(
-                                    cliente__id=OuterRef('vendedor__id'),
-                                    dt_creditado__range=[data_inicio, data_fim],
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('cliente__id').annotate(total=Sum('vl_credito')).values('total'),
-                                output_field=DecimalField(max_digits=8, decimal_places=2),
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2),
-                        ),
-                        total_repasse_retido = Coalesce(
-                            Subquery(
-                                RepasseRetido.objects.filter(
-                                    cliente__id=OuterRef('vendedor__id'),
-                                    dt_rep_retido__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('cliente__id').annotate(total=Sum('vlr_rep_retido')).values('total'),
-                                output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                        ),
-                        total_taxas = Coalesce(
-                            Subquery(
-                                Taxa.objects.filter(
-                                    cliente__id=OuterRef('vendedor__id'),
-                                    dt_taxa__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('cliente__id').annotate(total=Sum('taxas')).values('total'),
-                                output_field=DecimalField(max_digits=8, decimal_places=2)
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                        ),
-                        total_debitos = Coalesce(
-                            Subquery(
-                                Debito.objects.filter(
-                                    cliente__id=OuterRef('vendedor__id'),
-                                    dt_debitado__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('cliente__id').annotate(total=Sum('vl_debito')).values('total'),
-                                output_field=DecimalField(max_digits=8, decimal_places=2),
-                            ),
-                            0,
-                            output_field=DecimalField(max_digits=8, decimal_places=2)
-                        ) + Coalesce(
-                            Subquery(
-                                ParcelaTaxa.objects.filter(
-                                    id_comprador=OuterRef('vendedor__id'),
-                                    data_aprovada__range=(data_inicio, data_fim),
-                                    aprovada=True,
-                                    aprovada_para_repasse=False
-                                ).values('id').annotate(total=Sum('desconto_total')).values('total')[:1],
-                                output_field=DecimalField(max_digits=8, decimal_places=2),
-                        ),
-                        0,
-                        output_field=DecimalField(max_digits=8, decimal_places=2),
-                    ),
-                    total_repasses = F('total_credito') - F('total_taxas') - F('total_debitos') - F('total_repasse_retido') + F('todos_os_repasses')
-                    ).filter(Q(total_credito__gt=0) | Q(total_repasse_retido__gt=0) | Q(todos_os_repasses__gt=0)).values(
-                        'vendedor__id','vendedor__nome',
-                        'total_repasse_retido', 'total_credito',
-                        'total_taxas', 'total_debitos', 'total_repasses', 'todos_os_repasses',#*dados_dias.keys()
-                        ).order_by('vendedor__nome')
-                    context['dados_dias'] = dados_dias.keys()
-                    
-                    tbody = "<tr>"
-                    for repasse_cliente in context['repasses_clientes']:
-                        #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_cliente['total_repasse_retido']}/{repasse_cliente['total_credito']}/{repasse_cliente['total_taxas']}/{repasse_cliente['total_debitos']}/{repasse_cliente['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
-                        if request.user.is_superuser:
-                            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}'>Aprovar Repasses</a></td>"
-                        else:
-                            tbody += f"<td><a name='aprovar-repasse' id='aprovar-repasse' class='btn btn-success disabled' href='#sem-autorizacao'>Aprovar Repasses</a></td>"
-                            
-                        tbody += f"<td>{repasse_cliente['vendedor__id']}</td>"
-                        tbody += f"<td>{repasse_cliente['vendedor__nome']}</td>"
-                        tbody += f"<td>{repasse_cliente['total_repasse_retido']}</td>"
-                        """for dia in dados_dias.keys():
-                            tbody += f"<td>{dia}</td>" """
-                        tbody += f"<td>{repasse_cliente['todos_os_repasses']}</td>"
-                        tbody += f"<td>{repasse_cliente['total_credito']}</td>"
-                        tbody += f"<td>{repasse_cliente['total_taxas']}</td>"
-                        tbody += f"<td>{repasse_cliente['total_debitos']}</td>"
-                        tbody += f"<td>{repasse_cliente['total_repasses']}</td>"
-                        #tbody += f"<td>Total Repasses</td>"
-                        tbody += "</tr>"
-                    context['tbody'] = tbody
-                    
-                    #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
-                    context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_debito'] = Decimal(sum([float(querie['total_debitos']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_repasse_retido'] = Decimal(sum([float(querie['total_repasse_retido']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_taxas'] = Decimal(sum([float(querie['total_taxas']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    context['total_repasses'] = Decimal(sum([float(querie['total_repasses']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
-                    #return render(request, 'home/tbl_bootstrap.html', context=context)
             
                         
         elif load_template == 'tbl_repasses_aprovados.html':
