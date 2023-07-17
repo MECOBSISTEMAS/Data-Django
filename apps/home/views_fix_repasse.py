@@ -445,6 +445,7 @@ def pages(request):
                             'repasses', 'comissao', 'total_repasse', 'id'))
                 request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
         
+
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
                 if 'filtrar-primeira-quinzena' in request.POST:
@@ -453,8 +454,8 @@ def pages(request):
                     first_day_of_month = today.replace(day=1)
                     fifteenth_day_of_month = today.replace(day=15)
 
-                    data_inicio = first_day_of_month
-                    data_fim = fifteenth_day_of_month
+                    data_inicio = first_day_of_month.strftime('%Y-%m-%d')
+                    data_fim = fifteenth_day_of_month.strftime('%Y-%m-%d')
 
                     context = filtrar_repasses(request, data_inicio, data_fim)
 
@@ -465,8 +466,8 @@ def pages(request):
                     last_day_of_month = today.replace(day=1) + timedelta(days=32)
                     last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
 
-                    data_inicio = sixteenth_day_of_month
-                    data_fim = last_day_of_month
+                    data_inicio = sixteenth_day_of_month.strftime('%Y-%m-%d')
+                    data_fim = last_day_of_month.strftime('%Y-%m-%d')
 
                     context = filtrar_repasses(request, data_inicio, data_fim)
 
@@ -477,7 +478,7 @@ def pages(request):
 
                 context['data_inicio'] = request.POST.get('data-inicio')
                 context['data_fim'] = request.POST.get('data-fim')
-                    
+
             
                         
         elif load_template == 'tbl_repasses_aprovados.html':
