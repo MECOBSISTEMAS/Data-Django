@@ -456,8 +456,8 @@ def pages(request):
 
                     data_inicio = first_day_of_month.strftime('%Y-%m-%d')
                     data_fim = fifteenth_day_of_month.strftime('%Y-%m-%d')
-
-                    context = filtrar_repasses(request, data_inicio, data_fim)
+                    context.update(filtrar_repasses(request, data_inicio, data_fim))
+                    #context = filtrar_repasses(request, data_inicio, data_fim)
 
                 elif 'filtrar-segunda-quinzena' in request.POST:
                     # Filtrar segunda quinzena
@@ -468,13 +468,13 @@ def pages(request):
 
                     data_inicio = sixteenth_day_of_month.strftime('%Y-%m-%d')
                     data_fim = last_day_of_month.strftime('%Y-%m-%d')
-
-                    context = filtrar_repasses(request, data_inicio, data_fim)
+                    context.update(filtrar_repasses(request, data_inicio, data_fim))
 
                 elif 'filtrar-tabela-repasse-cliente' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
-                    context = filtrar_repasses(request, data_inicio, data_fim)
+                    #context = filtrar_repasses(request, data_inicio, data_fim)
+                    context.update(filtrar_repasses(request, data_inicio, data_fim))
 
                 context['data_inicio'] = request.POST.get('data-inicio')
                 context['data_fim'] = request.POST.get('data-fim')

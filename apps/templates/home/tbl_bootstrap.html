@@ -47,7 +47,7 @@
                     <form method="post">
                       {% csrf_token %}
                       data inicio <input required type="date" id="data-inicio" name="data-inicio" {% if data_inicio %} value={{data_inicio}} {% endif %}>
-                      data fim <input required type="date" id="data-fim" name="data-fim" {% if data_final %} value={{data_final}} {% endif %}>
+                      data fim <input required type="date" id="data-fim" name="data-fim" {% if data_fim %} value={{data_fim}} {% endif %}>
                       <button type="submit" name="filtrar-tabela-repasse-cliente" id="btn-submit" class="btn btn-primary">Filtrar</button>
                       <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
                     </form>
