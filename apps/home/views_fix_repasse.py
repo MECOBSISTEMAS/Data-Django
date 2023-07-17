@@ -447,16 +447,21 @@ def pages(request):
         
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
+                
                 if 'filtrar-primeira-quinzena' in request.POST:
-                    return HttpResponse(f"data de hoje: {datetime.now()} PRIMEIRA QUINZENA")
+                    data_primeiro_dia_do_mes_atual = date.today().replace(day=1)
+                    data_15_dias = data_primeiro_dia_do_mes_atual + timedelta(days=14)
+                    context = filtrar_repasses(request, data_primeiro_dia_do_mes_atual, data_15_dias)
                 elif 'filtrar-segunda-quinzena' in request.POST:
-                    return HttpResponse(f"data de hoje: {datetime.now()} SEGUNDA QUINZENA")
+                    data_15_dias = date.today().replace(day=15)
+                    data_ultimo_dia_do_mes = date.today().replace(day=1) - timedelta(days=1)
+                    context = filtrar_repasses(request, data_15_dias, data_ultimo_dia_do_mes)
                 elif 'filtrar-tabela-repasse-cliente' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
                     context = filtrar_repasses(request, data_inicio, data_fim)
-                    context['data_inicio'] = data_inicio
-                    context['data_final'] = data_fim
+                context['data_inicio'] = request.POST.get('data-inicio')
+                context['data_fim'] = request.POST.get('data-fim')
                     
             
                         
