@@ -447,19 +447,34 @@ def pages(request):
         
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':
-                
                 if 'filtrar-primeira-quinzena' in request.POST:
-                    data_primeiro_dia_do_mes_atual = date.today().replace(day=1)
-                    data_15_dias = data_primeiro_dia_do_mes_atual + timedelta(days=14)
-                    context = filtrar_repasses(request, data_primeiro_dia_do_mes_atual, data_15_dias)
+                    # Filtrar primeira quinzena
+                    today = datetime.now().date()
+                    first_day_of_month = today.replace(day=1)
+                    fifteenth_day_of_month = today.replace(day=15)
+
+                    data_inicio = first_day_of_month
+                    data_fim = fifteenth_day_of_month
+
+                    context = filtrar_repasses(request, data_inicio, data_fim)
+
                 elif 'filtrar-segunda-quinzena' in request.POST:
-                    data_15_dias = date.today().replace(day=15)
-                    data_ultimo_dia_do_mes = date.today().replace(day=1) - timedelta(days=1)
-                    context = filtrar_repasses(request, data_15_dias, data_ultimo_dia_do_mes)
+                    # Filtrar segunda quinzena
+                    today = datetime.now().date()
+                    sixteenth_day_of_month = today.replace(day=16)
+                    last_day_of_month = today.replace(day=1) + timedelta(days=32)
+                    last_day_of_month = last_day_of_month.replace(day=1) - timedelta(days=1)
+
+                    data_inicio = sixteenth_day_of_month
+                    data_fim = last_day_of_month
+
+                    context = filtrar_repasses(request, data_inicio, data_fim)
+
                 elif 'filtrar-tabela-repasse-cliente' in request.POST:
                     data_inicio = request.POST.get('data-inicio')
                     data_fim = request.POST.get('data-fim')
                     context = filtrar_repasses(request, data_inicio, data_fim)
+
                 context['data_inicio'] = request.POST.get('data-inicio')
                 context['data_fim'] = request.POST.get('data-fim')
                     
