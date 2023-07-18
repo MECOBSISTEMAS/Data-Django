@@ -90,7 +90,7 @@
 									</th>
                   <th>{{credito.cliente.id}}</th>
                   <th>{{credito.cliente.nome}}</th>
-                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.vl_credito|intcomma}}</th>
                   <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
                   <th>{{credito.descricao}}</th>
                 </tr>
@@ -101,7 +101,7 @@
                   <th><a name="aprovar-credito" id="aprovar-credito" class="btn btn-success disabled" href="#sem-autorizacao" role="button">Aprovar</a></th>
                   <th>{{credito.cliente.id}}</th>
                   <th>{{credito.cliente.nome}}</th>
-                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.vl_credito|intcomma}}</th>
                   <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
 									<th>{{credito.descricao}}</th>
                 </tr>
@@ -147,7 +147,7 @@
 									</th>
                   <th>{{credito.cliente.id}}</th>
                   <th>{{credito.cliente.nome}}</th>
-                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.vl_credito|intcomma}}</th>
                   <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
                   <th>{{credito.descricao}}</th>
                 </tr>
@@ -158,7 +158,7 @@
                   <th><a name="desaprovar-credito" id="desaprovar-credito" class="btn btn-danger disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
                   <th>{{credito.cliente.id}}</th>
                   <th>{{credito.cliente.nome}}</th>
-                  <th>{{credito.vl_credito}}</th>
+                  <th>{{credito.vl_credito|intcomma}}</th>
                   <th>{{credito.dt_creditado|date:'d/m/y'}}</th>
 									<th>{{credito.descricao}}</th>
                 </tr>
