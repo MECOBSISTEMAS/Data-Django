@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <div class="col-xl-12">
     <div class="card">
       <div class="card-header">
@@ -58,6 +59,7 @@
                 <th>Nome</th>
                 <th>Data</th>
                 <th>Valor Repasse Retido</th>
+                <th>Tipo</th>
               </tr>
             </thead>
             <tbody id="tbody-repasses-retidos-aprovadas" unicorn:key="tbody-repasses-retidos-aprovadas">
@@ -80,18 +82,21 @@
 									</td>
                   <td>{{repasse_retido.cliente.id}}</td>
                   <td>{{repasse_retido.cliente.nome}}</td>
-                  <td>{{repasse_retido.dt_rep_retido}}</td>
-                  <td>{{repasse_retido.vlr_rep_retido}}</td>
+                  <td>{{repasse_retido.dt_rep_retido|date:"d/m/Y"}}</td>
+                  <td>{{repasse_retido.vlr_rep_retido|intcomma}}</td>
+                  <td>{{repasse_retido.tipo}}</td>
                 </tr>
                 {% endfor %}
               {% else %}
                 {% for repasse_retido in repasses_retidos_nao_aprovadas %}
                 <tr>
                   <td><a href="#sem-permissao" class="btn btn-success disabled">Aprovar</a></td>
+                  <td><a href="#sem-permissao" class="btn btn-warning disabled">DEL</a></td>
                   <td>{{repasse_retido.cliente.id}}</td>
                   <td>{{repasse_retido.cliente.nome}}</td>
-                  <td>{{repasse_retido.dt_rep_retido}}</td>
-                  <td>{{repasse_retido.vlr_rep_retido}}</td>
+                  <td>{{repasse_retido.dt_rep_retido|date:"d/m/Y"}}</td>
+                  <td>{{repasse_retido.vlr_rep_retido|intcomma}}</td>
+                  <td>{{repasse_retido.tipo}}</td>
                 </tr>
                 {% endfor %}
               {% endif %}
@@ -111,6 +116,7 @@
                 <th>Nome</th>
                 <th>Data</th>
                 <th>Valor Repasse Retido</th>
+                <th>Tipo</th>
               </tr>
             </thead>
             <tbody id="tbody-repasses-retidos-nao-aprovadas" unicorn:key="tbody-repasses-retidos-nao-aprovadas">
@@ -134,18 +140,21 @@
 									</td>
                   <td>{{repasse_retido.cliente.id}}</td>
                   <td>{{repasse_retido.cliente.nome}}</td>
-                  <td>{{repasse_retido.dt_rep_retido}}</td>
-                  <td>{{repasse_retido.vlr_rep_retido}}</td>
+                  <td>{{repasse_retido.dt_rep_retido|date:"d/m/Y"}}</td>
+                  <td>{{repasse_retido.vlr_rep_retido|intcomma}}</td>
+                  <td>{{repasse_retido.tipo}}</td>
                 </tr>
                 {% endfor %}
               {% else %}
                 {% for repasse_retido in repasses_retidos_aprovadas %}
                 <tr>
                   <td><a href="#sem-acesso" class="btn btn-danger disabled">Desaprovar</a></td>
+                  <td><a href="#sem-acesso" class="btn btn-warning disabled">DEL</a></td>
                   <td>{{repasse_retido.cliente.id}}</td>
                   <td>{{repasse_retido.cliente.nome}}</td>
-                  <td>{{repasse_retido.dt_rep_retido}}</td>
-                  <td>{{repasse_retido.vlr_rep_retido}}</td>
+                  <td>{{repasse_retido.dt_rep_retido|date:"d/m/Y"}}</td>
+                  <td>{{repasse_retido.vlr_rep_retido|intcomma}}</td>
+                  <td>{{repasse_retido.tipo}}</td>
                 </tr>
                 {% endfor %}
               {% endif %}
