@@ -1,4 +1,5 @@
 {% load static %}
+{% load humanize %}
 <div class="col-xl-12">
     <div class="card">
       <div class="card-header">
@@ -85,8 +86,8 @@
 									</th>
                   <th>{{debito.cliente.id}}</th>
                   <th>{{debito.cliente.nome}}</th>
-                  <th>{{debito.vl_debito}}</th>
-                  <th>{{debito.dt_debitado}}</th>
+                  <th>{{debito.vl_debito|intcomma}}</th>
+                  <th>{{debito.dt_debitado|date:'d/m/y'}}</th>
                   <th>{{debito.descricao}}</th>
                 </tr>
                 {% endfor %}
@@ -96,8 +97,8 @@
                   <th><a name="aprovar-debito" id="aprovar-debito" class="btn btn-success disabled" href="#sem-autorizacao" role="button">Aprovar</a></th>
                   <th>{{debito.cliente.id}}</th>
                   <th>{{debito.cliente.nome}}</th>
-                  <th>{{debito.vl_debito}}</th>
-                  <th>{{debito.dt_debitado}}</th>
+                  <th>{{debito.vl_debito|intcomma}}</th>
+                  <th>{{debito.dt_debitado|date:'d/m/y'}}</th>
 									<th>{{debito.descricao}}</th>
                 </tr>
                 {% endfor %}
@@ -144,8 +145,8 @@
 									</th>
                   <th>{{debito.cliente.id}}</th>
                   <th>{{debito.cliente.nome}}</th>
-                  <th>{{debito.vl_debito}}</th>
-                  <th>{{debito.dt_debitado}}</th>
+                  <th>{{debito.vl_debito|intcomma}}</th>
+                  <th>{{debito.dt_debitado|date:"d/m/y"}}</th>
 									<th>{{debito.descricao}}</th>
                 </tr>
                 {% endfor %}
@@ -155,8 +156,8 @@
                   <th><a name="desaprovar-debito" id="desaprovar-debito" class="btn btn-danger disabled" href="#sem-autorizacao" role="button">Desaprovar</a></th>
                   <th>{{debito.cliente.id}}</th>
                   <th>{{debito.cliente.nome}}</th>
-                  <th>{{debito.vl_debito}}</th>
-                  <th>{{debito.dt_debitado}}</th>
+                  <th>{{debito.vl_debito|intcomma}}</th>
+                  <th>{{debito.dt_debitado|date:"d/m/y"}}</th>
 									<th>{{debito.descricao}}</th>
                 </tr>
                 {% endfor %}
