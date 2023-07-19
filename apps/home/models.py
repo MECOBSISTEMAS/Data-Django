@@ -8,6 +8,7 @@ from django.db.models import Sum
 import decimal
 import math
 from . import existing_models
+from auditlog.registry import auditlog
 #from .existing_models import Pessoas
 
 """
@@ -315,3 +316,13 @@ class ParcelaTaxa(models.Model):
         verbose_name = 'ParcelaTaxa'
         verbose_name_plural = 'ParcelaTaxas'
         
+auditlog.register(CadCliente)
+auditlog.register(RepasseRetido)
+auditlog.register(Debito)
+auditlog.register(Credito)
+auditlog.register(Taxa)
+auditlog.register(RepasseAprovado)
+
+#? Remover caso a quantidade seja absurda de grande quantidade de dados de entrada para os modelos Dado e ParcelaTaxa
+auditlog.register(Dado)
+auditlog.register(ParcelaTaxa)

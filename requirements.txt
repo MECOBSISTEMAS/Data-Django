@@ -22,6 +22,7 @@ defusedxml
 dj-database-url
 Django
 django-allauth
+django-auditlog
 django-debug-toolbar
 django-environ
 django-extensions

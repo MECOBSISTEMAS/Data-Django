@@ -10,7 +10,8 @@ from apps.home import views, views_fix_repasse
 app_name = 'home'
 """ urlpatterns = [
     # The home page
-    path('', views.index, name='home'),
+    path('', views.IndexView.as_view(), name='home'),
+    #path('', views.index, name='home'),
 
     path("upload_planilha_quinzenal", views.upload_planilha_quinzenal,
          name="upload_planilha_quinzenal"),

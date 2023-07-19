@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'apps.access',
     'django_extensions',
     'django_unicorn',
+    'auditlog',
     #'debug_toolbar',
     'widget_tweaks',
     'allauth',                                      # OAuth new

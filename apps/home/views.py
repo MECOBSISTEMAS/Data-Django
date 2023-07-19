@@ -6,9 +6,12 @@ from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
+#importe o method_decorator: 
+from django.utils.decorators import method_decorator
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max
 from django.db.models.functions import Coalesce, Cast
+from django.views.generic import View
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
@@ -51,6 +54,14 @@ def index(request):
 
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
+
+@method_decorator(login_required(login_url="/login/"), name='dispatch')
+class IndexView(View):
+    TEMPLATE_NAME:str = 'home/index.html'
+    def get(self, request):
+        context = {'segment': 'index'}
+
+        return HttpResponse(context=context, template_name=self.TEMPLATE_NAME,request=request)
 
 
 @login_required(login_url="/login/")
