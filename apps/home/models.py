@@ -323,6 +323,6 @@ auditlog.register(Credito)
 auditlog.register(Taxa)
 auditlog.register(RepasseAprovado)
 
-#? Remover caso a quantidade seja absurda de grande quantidade de dados de entrada para os modelos Dado e ParcelaTaxa
+#? Remover caso a quantidade seja absurda de grande a quantidade de dados de entrada para os modelos Dado e ParcelaTaxa
 auditlog.register(Dado)
 auditlog.register(ParcelaTaxa)
