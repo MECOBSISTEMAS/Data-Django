@@ -21,6 +21,7 @@ import os
 import json
 import openpyxl
 import asyncio
+import calendar
 
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
@@ -205,9 +206,45 @@ def pegar_pessoa(pessoa_id):
 @login_required(login_url="/login/")
 def index(request):
     context = {'segment': 'index'}
+    
+    primeiro_dia_do_mes_atual = datetime.now().replace(day=1)
+    decimo_quinto_dia_do_mes_atual = primeiro_dia_do_mes_atual + timedelta(days=14)
+    ultimo_dia_do_mes_atual = primeiro_dia_do_mes_atual.replace(day=calendar.monthrange(primeiro_dia_do_mes_atual.year, primeiro_dia_do_mes_atual.month)[1])
+
+    context['total_repasses_diario'] = Dado.objects.filter(
+        dt_credito=date.today()
+    ).aggregate(
+        total_repasses=Sum('repasses')
+    )['total_repasses'] or 0
+
+    context['total_repasses_quinzenal'] = Dado.objects.filter(
+        dt_credito__range=[primeiro_dia_do_mes_atual, decimo_quinto_dia_do_mes_atual]
+    ).aggregate(
+        total_repasses=Sum('repasses')
+    )['total_repasses'] or 0
+
+    # Encontrar o primeiro e o último dia da semana atual
+    data_atual = date.today()
+    primeiro_dia_da_semana = data_atual - timedelta(days=data_atual.weekday())
+    ultimo_dia_da_semana = primeiro_dia_da_semana + timedelta(days=6)
+
+    """ context['total_repasses_semanais'] = Dado.objects.filter(
+        dt_credito__range=[primeiro_dia_da_semana, ultimo_dia_da_semana]
+    ).aggregate(
+        total_repasses=Sum('repasses')
+    )['total_repasses'] or 0 """
+    
+    context['total_repasses_mensais'] = Dado.objects.filter(
+        dt_credito__range=[primeiro_dia_do_mes_atual, ultimo_dia_do_mes_atual]
+    ).aggregate(
+        total_repasses=Sum('repasses')
+    )['total_repasses'] or 0
+    
+    
 
     html_template = loader.get_template('home/index.html')
     return HttpResponse(html_template.render(context, request))
+
 
 
 @login_required(login_url="/login/")

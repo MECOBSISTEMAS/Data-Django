@@ -23,32 +23,31 @@
                     <div class="row d-flex align-items-center">
                       <div class="col-9">
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
-                          <i
+                          {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i
-                          >R$ 589.95
+                          ></i> {% endcomment %}R$ {{total_repasses_diario}}
                         </h3>
                       </div>
 
-                      <div class="col-3 text-right">
-                        <p class="m-b-0">67%</p>
-                      </div>
+                      {% comment %} <div class="col-3 text-right">
+                        <p class="m-b-0">{{porcentual_de_crescimento_comparado_com_o_dia_anterior}}%</p>
+                      </div> {% endcomment %}
                     </div>
-                    <div class="progress m-t-30" style="height: 7px">
+                    {% comment %} <div class="progress m-t-30" style="height: 7px">
                       <div
                         class="progress-bar progress-c-theme"
                         role="progressbar"
-                        style="width: 50%"
-                        aria-valuenow="50"
+                        style="width: {{porcentual_de_crescimento_comparado_com_o_dia_anterior}}%"
+                        aria-valuenow="{{porcentual_de_crescimento_comparado_com_o_dia_anterior}}"
                         aria-valuemin="0"
                         aria-valuemax="100"
                       ></div>
-                    </div>
+                    </div> {% endcomment %}
                   </div>
                 </div>
               </div>
-              <!--[ daily sales section ] end-->
-              <!--[ Monthly  sales section ] starts-->
+
+
               <div class="col-md-6 col-xl-4">
                 <div class="card Monthly-sales">
                   <div class="card-block">
@@ -56,17 +55,16 @@
                     <div class="row d-flex align-items-center">
                       <div class="col-9">
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
-                          <i
+                          {% comment %} <i
                             class="feather icon-arrow-down text-c-red f-30 m-r-10"
-                          ></i
-                          >R$ 2.942.32
+                          ></i> {% endcomment %}R$ {% if total_repasses_semanais %} total_repasses_semanais {% else %} 999.99 {% endif %}
                         </h3>
                       </div>
-                      <div class="col-3 text-right">
+                      {% comment %} <div class="col-3 text-right">
                         <p class="m-b-0">36%</p>
-                      </div>
+                      </div> {% endcomment %}
                     </div>
-                    <div class="progress m-t-30" style="height: 7px">
+                    {% comment %} <div class="progress m-t-30" style="height: 7px">
                       <div
                         class="progress-bar progress-c-theme2"
                         role="progressbar"
@@ -75,10 +73,44 @@
                         aria-valuemin="0"
                         aria-valuemax="100"
                       ></div>
-                    </div>
+                    </div> {% endcomment %}
                   </div>
                 </div>
               </div>
+
+              <div class="col-md-6 col-xl-4">
+                <div class="card daily-sales">
+                  <div class="card-block">
+                    <h6 class="mb-4">Repasse Quinzenal</h6>
+                    <div class="row d-flex align-items-center">
+                      <div class="col-9">
+                        <h3 class="f-w-300 d-flex align-items-center m-b-0">
+                          {% comment %} <i
+                            class="feather icon-arrow-up text-c-green f-30 m-r-10"
+                          ></i> {% endcomment %} R$ {{total_repasses_quinzenal}}
+                        </h3>
+                      </div>
+
+                     {% comment %}  <div class="col-3 text-right">
+                        <p class="m-b-0">{{porcentual_de_crescimento_comparado_com_o_dia_anterior}}%</p>
+                      </div> {% endcomment %}
+                    </div>
+                   {% comment %}  <div class="progress m-t-30" style="height: 7px">
+                      <div
+                        class="progress-bar progress-c-theme"
+                        role="progressbar"
+                        style="width: {{porcentual_de_crescimento_comparado_com_o_dia_anterior}}%"
+                        aria-valuenow="{{porcentual_de_crescimento_comparado_com_o_dia_anterior}}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div> {% endcomment %}
+                  </div>
+                </div>
+              </div>
+              <!--[ daily sales section ] end-->
+              <!--[ Monthly  sales section ] starts-->
+              
               <!--[ Monthly  sales section ] end-->
               <!--[ year  sales section ] starts-->
               <div class="col-md-12 col-xl-4">
@@ -88,17 +120,16 @@
                     <div class="row d-flex align-items-center">
                       <div class="col-9">
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
-                          <i
+                          {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i
-                          >R$ 15.638.32
+                          ></i> {% endcomment %}R$ {{total_repasses_mensais}}
                         </h3>
                       </div>
-                      <div class="col-3 text-right">
+                      {% comment %} <div class="col-3 text-right">
                         <p class="m-b-0">80%</p>
-                      </div>
+                      </div> {% endcomment %}
                     </div>
-                    <div class="progress m-t-30" style="height: 7px">
+                    {% comment %} <div class="progress m-t-30" style="height: 7px">
                       <div
                         class="progress-bar progress-c-theme"
                         role="progressbar"
@@ -107,14 +138,186 @@
                         aria-valuemin="0"
                         aria-valuemax="100"
                       ></div>
-                    </div>
+                    </div> {% endcomment %}
                   </div>
                 </div>
               </div>
               <!--[ year  sales section ] end-->
               <!--[ Recent Users ] start-->
-          <!--    <div class="col-xl-8 col-md-6">
-                <div class="card Recent-Users">
+              <div class="col-xl-8 col-md-6">
+                 <div class="card Recent-Users">
+                  <div class="card-header">
+                    <h5>Status do mes de Credito, Debito, Taxas e Repasses Retidos</h5>
+                  </div>
+                  <div class="card-block px-0 py-3">
+                    <div class="table-responsive">
+                      <table class="table table-hover">
+                        <tbody>
+                          <tr class="unrendered">
+                            <td>
+                              <h6>Metas a ser alcançadas</h6>
+                              <div class="progress h-100">
+                                <div class="progress-bar progress-c-success" role="progressbar" style="width:40%; height: 30px;">
+                                  Repasses Alcançadas
+                                </div>
+                                <div class="progress-bar progress-c-red" role="progressbar" style="width:20%">
+                                  Faltantes
+                                </div>
+                                <div class="progress-bar progress-c-yellow" role="progressbar" style="width:10%">
+                                  Mes anterior
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                          <tr class="unread">
+                            <tr class="unrendered">
+                              <td><h6>Creditos</h6>
+                                <div class="progress m-t-30" style="height: 7px">
+                                  <div
+                                    class="progress-bar progress-c-theme"
+                                    role="progressbar"
+                                    style="width: 70%"
+                                    aria-valuenow="70"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr class="unrendered">
+                              <td><h6>Debitos</h6>
+                                <div class="progress m-t-30" style="height: 7px">
+                                  <div
+                                    class="progress-bar progress-c-theme2"
+                                    role="progressbar"
+                                    style="width: 70%"
+                                    aria-valuenow="70"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr class="unrendered">
+                              <td class="w-100"><h6>Taxas</h6>
+                                <h4 class="center">R$512412 <span class="font-weight-bold">54%</span></h4>
+                                <div class="progress m-t-30" style="height: 7px">
+                                  <div
+                                    class="progress-bar progress-c-theme3"
+                                    role="progressbar"
+                                    style="width: 70%"
+                                    aria-valuenow="70"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr class="unrendered">
+                              <td><h6>Repasses Retidos</h6>
+                                <div class="progress m-t-30" style="height: 7px">
+                                  <div
+                                    class="progress-bar progress-c-purple"
+                                    
+                                    role="progressbar"
+                                    style="width: 70%"
+                                    aria-valuenow="70"
+                                    aria-valuemin="0"
+                                    aria-valuemax="100"
+                                  ></div>
+                                </div>
+                              </td>
+                            </tr>
+
+                            
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div> 
+              </div>
+
+
+              <div class="col-xl-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5>Resumo de valores</h5>
+                  </div>
+                  <div class="card-block table-border-style" id="table-border-style-table-credito-nao-aprovadas" unicorn:key="table-border-style-table-credito-nao-aprovadas">
+                    <div class="table-responsive" unicorn:key="table-credito-nao-aprovadas">
+                      <table class="table table-hover" id="table-credito-nao-aprovadas">
+                        <thead>
+                          <tr>
+                            <th>Tabela</th>
+                            <th>Janeiro</th>
+                            <th>Fervereiro</th>
+                            <th>Março</th>
+                            <th>Abril</th>
+                            <th>Maio</th>
+                            <th>Junho</th>
+                            <th>Julho</th>
+                            <th>Agosto</th>
+                            <th>Setembro</th>
+                            <th>Outubro</th>
+                            <th>Novembro</th>
+                            <th>Dezembro</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <th>Repasses Aprovados</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                          </tr>
+                          <tr>
+                            <th>Repasses Não Aprovados</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                          </tr>
+                          <tr>
+                            <th>Repasses Retidos</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                            <th>0</th>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {% comment %} 
+              <div class="col-xl-8 col-md-6">
+                 <div class="card Recent-Users">
                   <div class="card-header">
                     <h5>Status dos usuários</h5>
                   </div>
@@ -291,9 +494,9 @@
                       </table>
                     </div>
                   </div>
-                </div>
-              </div>
-              <!--[ Recent Users ] end-->
+                </div> 
+              </div> {% endcomment %}
+              <!-- [ Recent Users ] end-->
 
               <!-- [ statistics year chart ] start
               <div class="col-xl-4 col-md-6">
