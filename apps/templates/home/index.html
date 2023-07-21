@@ -81,13 +81,45 @@
               <div class="col-md-6 col-xl-4">
                 <div class="card daily-sales">
                   <div class="card-block">
-                    <h6 class="mb-4">Repasse Quinzenal</h6>
+                    <h6 class="mb-4">Repasse 1° Quinzena</h6>
                     <div class="row d-flex align-items-center">
                       <div class="col-9">
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %} R$ {{total_repasses_quinzenal}}
+                          ></i> {% endcomment %} R$ {{total_repasses_primeira_quinzena}}
+                        </h3>
+                      </div>
+
+                     {% comment %}  <div class="col-3 text-right">
+                        <p class="m-b-0">{{porcentual_de_crescimento_comparado_com_o_dia_anterior}}%</p>
+                      </div> {% endcomment %}
+                    </div>
+                   {% comment %}  <div class="progress m-t-30" style="height: 7px">
+                      <div
+                        class="progress-bar progress-c-theme"
+                        role="progressbar"
+                        style="width: {{porcentual_de_crescimento_comparado_com_o_dia_anterior}}%"
+                        aria-valuenow="{{porcentual_de_crescimento_comparado_com_o_dia_anterior}}"
+                        aria-valuemin="0"
+                        aria-valuemax="100"
+                      ></div>
+                    </div> {% endcomment %}
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="col-md-6 col-xl-4">
+                <div class="card daily-sales">
+                  <div class="card-block">
+                    <h6 class="mb-4">Repasse 2° Quinzena</h6>
+                    <div class="row d-flex align-items-center">
+                      <div class="col-9">
+                        <h3 class="f-w-300 d-flex align-items-center m-b-0">
+                          {% comment %} <i
+                            class="feather icon-arrow-up text-c-green f-30 m-r-10"
+                          ></i> {% endcomment %} R$ {{total_repasses_segunda_quinzena}}
                         </h3>
                       </div>
 

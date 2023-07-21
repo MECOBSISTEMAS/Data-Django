@@ -217,8 +217,14 @@ def index(request):
         total_repasses=Sum('repasses')
     )['total_repasses'] or 0
 
-    context['total_repasses_quinzenal'] = Dado.objects.filter(
+    context['total_repasses_primeira_quinzena'] = Dado.objects.filter(
         dt_credito__range=[primeiro_dia_do_mes_atual, decimo_quinto_dia_do_mes_atual]
+    ).aggregate(
+        total_repasses=Sum('repasses')
+    )['total_repasses'] or 0
+    
+    context['total_repasses_segunda_quinzena'] = Dado.objects.filter(
+        dt_credito__range=[decimo_quinto_dia_do_mes_atual, ultimo_dia_do_mes_atual]
     ).aggregate(
         total_repasses=Sum('repasses')
     )['total_repasses'] or 0
