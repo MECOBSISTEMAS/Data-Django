@@ -218,7 +218,7 @@ def index(request):
     )['total_repasses'] or 0
 
     context['total_repasses_primeira_quinzena'] = Dado.objects.filter(
-        dt_credito__range=[primeiro_dia_do_mes_atual, decimo_quinto_dia_do_mes_atual]
+        dt_credito__range=[primeiro_dia_do_mes_atual - timedelta(days=1), decimo_quinto_dia_do_mes_atual]
     ).aggregate(
         total_repasses=Sum('repasses')
     )['total_repasses'] or 0
@@ -234,11 +234,11 @@ def index(request):
     primeiro_dia_da_semana = data_atual - timedelta(days=data_atual.weekday())
     ultimo_dia_da_semana = primeiro_dia_da_semana + timedelta(days=6)
 
-    """ context['total_repasses_semanais'] = Dado.objects.filter(
+    context['total_repasses_semanais'] = Dado.objects.filter(
         dt_credito__range=[primeiro_dia_da_semana, ultimo_dia_da_semana]
     ).aggregate(
         total_repasses=Sum('repasses')
-    )['total_repasses'] or 0 """
+    )['total_repasses'] or 0
     
     context['total_repasses_mensais'] = Dado.objects.filter(
         dt_credito__range=[primeiro_dia_do_mes_atual, ultimo_dia_do_mes_atual]

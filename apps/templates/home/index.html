@@ -1,5 +1,7 @@
 {% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock %}
 
+{% load static %}
+
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} {% block content %}
 
@@ -176,7 +178,7 @@
               </div>
               <!--[ year  sales section ] end-->
               <!--[ Recent Users ] start-->
-              <div class="col-xl-8 col-md-6">
+              <div class="col-xl-12 col-md-12">
                  <div class="card Recent-Users">
                   <div class="card-header">
                     <h5>Status do mes de Credito, Debito, Taxas e Repasses Retidos</h5>
@@ -265,17 +267,35 @@
                         </tbody>
                       </table>
                     </div>
+                    
                   </div>
                 </div> 
               </div>
 
 
               <div class="col-xl-12">
+                
                 <div class="card">
                   <div class="card-header">
                     <h5>Resumo de valores</h5>
                   </div>
                   <div class="card-block table-border-style" id="table-border-style-table-credito-nao-aprovadas" unicorn:key="table-border-style-table-credito-nao-aprovadas">
+                    <h4>Quantidade de vendas</h4>
+                    <canvas id="firstChart" width="400" height="100"></canvas>
+                    <h4>Numero de vendas</h4>
+                    <canvas id="secondChart" width="400" height="100"></canvas>
+                    <div class="d-flex p-4">
+                      <div class="first-chart flex-row">
+                        <h4>Categorias e vendas</h4>
+                        <canvas id="thirdChart" width="400" height="100"></canvas>
+                      </div>
+                      <div class="second-chart flex-row">
+                        <h4>Categorias e vendas absolutas</h4>
+                        <canvas id="fourthChart" width="400" height="100"></canvas>
+                      </div>
+                    </div>
+                    <h4>Vendas Polares</h4>
+                    <canvas id="fifthChart" width="400" height="200"></canvas>
                     <div class="table-responsive" unicorn:key="table-credito-nao-aprovadas">
                       <table class="table table-hover" id="table-credito-nao-aprovadas">
                         <thead>
@@ -1257,8 +1277,11 @@
   </div>
 </div>
 <!-- [ Main Content ] end -->
-
 {% endblock content %}
 
 <!-- Specific Page JS goes HERE  -->
-{% block javascripts %}{% endblock javascripts %}
+{% block javascripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.3.0/chart.js" integrity="sha512-L6yov5P1r9QnZX2ZRiq+XBLsm1GQ38zfSDJ6gy3pKmPCqkWvK2nz8Ojlju9q36+zOsMmMB+hYgGrJtJWo4Gy/w==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'assets/js/index.js' %}"></script>
+{% endblock javascripts %}
