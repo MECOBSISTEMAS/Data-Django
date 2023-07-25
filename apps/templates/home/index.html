@@ -295,7 +295,13 @@
                       </div>
                     </div>
                     <h4>Vendas Polares</h4>
-                    <canvas id="fifthChart" width="400" height="200"></canvas>
+                    <canvas id="fifthChart" width="500" height="500"></canvas>
+                    <br>
+                    <form method="post">
+                      data inicial: <input type="date" name="data-inicial" id="data-inicial">
+                      data final: <input type="date" name="data-final" id="data-final">
+                      <button class="btn btn-primary" type="submit">filtrar</button>
+                    </form>
                     <div class="table-responsive" unicorn:key="table-credito-nao-aprovadas">
                       <table class="table table-hover" id="table-credito-nao-aprovadas">
                         <thead>

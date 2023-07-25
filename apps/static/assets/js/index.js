@@ -106,11 +106,12 @@ new Chart(ctx5, {
     labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
     datasets: [{
       label: 'Numero de vendas',
-      data: [12, 19, 3, 5, 2, 3],
-      borderWidth: 1
+      data: [12, 10, 3, 5, 2, 3],
+      borderWidth: 2
     }]
   },
   options: {
+    responsive: false, // Desativa a responsividade para diminuir o tamanho do gráfico
     scales: {
       y: {
         beginAtZero: true
