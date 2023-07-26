@@ -1,30 +1,25 @@
 const ctx = window.document.querySelector('#firstChart').getContext('2d');
 
-const data = {
-  labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio'],
-  datasets: [{
+const firstChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    labels: ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio'],
+    datasets: [{
     label: 'Vendas',
     data: [12, 19, 3, 5, 2],
     backgroundColor: 'rgba(255, 99, 132, 0.2)',
     borderColor: 'rgba(255, 99, 132, 1)',
     borderWidth: 1
   }]
-};
-
-const options = {
-  scales: {
-    y: {
-      beginAtZero: true
+  },
+  options: {
+    scales: {
+      y: {
+        beginAtZero: true
+      }
     }
   }
-};
-
-const firstChart = new Chart(ctx, {
-  type: 'line',
-  data: data,
-  options: options
 });
-
 
 const ctx2 = window.document.querySelector('#secondChart').getContext('2d');
 
@@ -97,7 +92,6 @@ new Chart(ctx4, {
   }
 });
 
-
 const ctx5 = window.document.querySelector('#fifthChart').getContext('2d');
 
 new Chart(ctx5, {
@@ -119,3 +113,5 @@ new Chart(ctx5, {
     }
   }
 });
+
+const tabelas_valores = window.document.querySelector('#tabelas-valores');

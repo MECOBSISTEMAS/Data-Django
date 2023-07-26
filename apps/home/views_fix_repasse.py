@@ -9,8 +9,8 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch
-from django.db.models.functions import Coalesce, Cast
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch, DateField
+from django.db.models.functions import Coalesce, Cast, TruncMonth
 from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
@@ -245,6 +245,77 @@ def index(request):
     ).aggregate(
         total_repasses=Sum('repasses')
     )['total_repasses'] or 0
+    
+    #?acima esta o codigo da construção das primeiras 5 cards
+    
+    # Obtenha o somatório dos "repasses" agrupados por mês do ano
+    somatorio_por_mes_repasses_aprovados = RepasseAprovado.objects.annotate(
+        mes=TruncMonth('data_aprovado', output_field=DateField())
+    ).values('mes').annotate(
+        total_repasses=Sum('repasses')
+    )
+    somatorio_por_mes_creditos = Credito.objects.filter(aprovada_para_repasse=True, aprovada=True).annotate(
+        mes=TruncMonth('dt_creditado', output_field=DateField())
+    ).values('mes').annotate(
+        total_credito=Sum('vl_credito')
+    )
+    
+    
+    def somatorio_por_mes(queryset, nome_do_campo_total, nome_da_consulta):
+        tabela_valores:dict = {
+            nome_da_consulta: {}
+        }
+        for item in queryset:
+        # Verifique se a chave 'mes' existe e tem valor antes de continuar
+            if 'mes' in item and item['mes']:
+                mes_do_ano = item['mes'].strftime('%B')  # Obtém o nome do mês (por extenso)
+                total_repasses = item[f'{nome_do_campo_total}']
+
+                # Se ainda não existe a entrada para esse mês, crie-a
+                if mes_do_ano not in tabela_valores[nome_da_consulta]:
+                    tabela_valores[nome_da_consulta] = {mes_do_ano:total_repasses}
+                else:
+                    # Se já existe, some o valor ao total existente
+                    tabela_valores[nome_da_consulta][mes_do_ano] += total_repasses
+
+        # Adicione outros meses com valor zero caso não existam dados para esses meses
+        for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']:
+            if month not in tabela_valores[f'{nome_da_consulta}']:
+                tabela_valores[nome_da_consulta][month] = 0
+        return tabela_valores
+    
+
+    # Crie um dicionário vazio para tabelas_valores e inicialize a chave 'repasses_aprovados'
+    tabelas_valores:dict = {}
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_repasses_aprovados, 'total_repasses', 'Repasses Aprovados'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_creditos, 'total_credito', 'Creditos'))
+
+    # Preencha o dicionário com os valores de repasses aprovados para cada mês do ano
+    """ for item in somatorio_por_mes_repasses_aprovados:
+        # Verifique se a chave 'mes' existe e tem valor antes de continuar
+        if 'mes' in item and item['mes']:
+            mes_do_ano = item['mes'].strftime('%B')  # Obtém o nome do mês (por extenso)
+            total_repasses = item['total_repasses']
+
+            # Se ainda não existe a entrada para esse mês, crie-a
+            if mes_do_ano not in tabelas_valores['repasses_aprovados']:
+                tabelas_valores['repasses_aprovados'][mes_do_ano] = total_repasses
+            else:
+                # Se já existe, some o valor ao total existente
+                tabelas_valores['repasses_aprovados'][mes_do_ano] += total_repasses
+
+    # Adicione outros meses com valor zero caso não existam dados para esses meses
+    for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']:
+        if month not in tabelas_valores['repasses_aprovados']:
+            tabelas_valores['repasses_aprovados'][month] = 0 """
+
+    # Adicione o dicionário tabelas_valores ao contexto
+    context = {
+        'tabelas_valores': tabelas_valores
+    }
+    if request.method == 'POST':
+        if 'filtrar-valores' in request.POST:
+            return HttpResponse('Filtrar valores')
     
     
 

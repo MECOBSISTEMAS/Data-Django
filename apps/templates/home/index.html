@@ -1,6 +1,7 @@
 {% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock %}
 
 {% load static %}
+{% load humanize %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} {% block content %}
@@ -27,7 +28,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %}R$ {{total_repasses_diario}}
+                          ></i> {% endcomment %}R$ {{total_repasses_diario|intcomma}}
                         </h3>
                       </div>
 
@@ -59,7 +60,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-down text-c-red f-30 m-r-10"
-                          ></i> {% endcomment %}R$ {{total_repasses_semanais}}
+                          ></i> {% endcomment %}R$ {{total_repasses_semanais|intcomma}}
                         </h3>
                       </div>
                       {% comment %} <div class="col-3 text-right">
@@ -89,7 +90,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %} R$ {{total_repasses_primeira_quinzena}}
+                          ></i> {% endcomment %} R$ {{total_repasses_primeira_quinzena|intcomma}}
                         </h3>
                       </div>
 
@@ -121,7 +122,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %} R$ {{total_repasses_segunda_quinzena}}
+                          ></i> {% endcomment %} R$ {{total_repasses_segunda_quinzena|intcomma}}
                         </h3>
                       </div>
 
@@ -156,7 +157,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %}R$ {{total_repasses_mensais}}
+                          ></i> {% endcomment %}R$ {{total_repasses_mensais|intcomma}}
                         </h3>
                       </div>
                       {% comment %} <div class="col-3 text-right">
@@ -279,7 +280,13 @@
                   <div class="card-header">
                     <h5>Resumo de valores</h5>
                   </div>
-                  <div class="card-block table-border-style" id="table-border-style-table-credito-nao-aprovadas" unicorn:key="table-border-style-table-credito-nao-aprovadas">
+                  <div class="card-block table-border-style" id="table-border-style-table-credito-nao-aprovadas">
+                    <form method="post" id="form-filtrar-valores">
+                      {% csrf_token %}
+                      Ano para filtrar: <input type="date" name="data" id="data">
+                      <button class="btn btn-primary" type="submit" name="filtrar-valores">filtrar</button>
+                    </form>
+                    {% include "home/components/_tabelas_valores.html" %}
                     <h4>Quantidade de vendas</h4>
                     <canvas id="firstChart" width="400" height="100"></canvas>
                     <h4>Numero de vendas</h4>
@@ -297,79 +304,7 @@
                     <h4>Vendas Polares</h4>
                     <canvas id="fifthChart" width="500" height="500"></canvas>
                     <br>
-                    <form method="post">
-                      data inicial: <input type="date" name="data-inicial" id="data-inicial">
-                      data final: <input type="date" name="data-final" id="data-final">
-                      <button class="btn btn-primary" type="submit">filtrar</button>
-                    </form>
-                    <div class="table-responsive" unicorn:key="table-credito-nao-aprovadas">
-                      <table class="table table-hover" id="table-credito-nao-aprovadas">
-                        <thead>
-                          <tr>
-                            <th>Tabela</th>
-                            <th>Janeiro</th>
-                            <th>Fervereiro</th>
-                            <th>Março</th>
-                            <th>Abril</th>
-                            <th>Maio</th>
-                            <th>Junho</th>
-                            <th>Julho</th>
-                            <th>Agosto</th>
-                            <th>Setembro</th>
-                            <th>Outubro</th>
-                            <th>Novembro</th>
-                            <th>Dezembro</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <th>Repasses Aprovados</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                          </tr>
-                          <tr>
-                            <th>Repasses Não Aprovados</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                          </tr>
-                          <tr>
-                            <th>Repasses Retidos</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                            <th>0</th>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
+                    
                   </div>
                 </div>
               </div>

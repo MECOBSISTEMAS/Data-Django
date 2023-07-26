@@ -1,0 +1,31 @@
+<div class="table-responsive" id="tabelas-valores">
+  <table class="table table-hover" id="table-credito-nao-aprovadas">
+    <thead>
+      <tr>
+        <th>Tabela</th>
+        <th>Janeiro</th>
+        <th>Fervereiro</th>
+        <th>Março</th>
+        <th>Abril</th>
+        <th>Maio</th>
+        <th>Junho</th>
+        <th>Julho</th>
+        <th>Agosto</th>
+        <th>Setembro</th>
+        <th>Outubro</th>
+        <th>Novembro</th>
+        <th>Dezembro</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for chave, valor in tabelas_valores.items %}
+        <tr>
+          <th>{{chave}}</th>
+          {% for chave, valor in valor.items %}
+            <th>{{valor}}</th>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
