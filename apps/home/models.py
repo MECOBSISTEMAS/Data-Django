@@ -276,6 +276,10 @@ class RepasseAprovado(models.Model):
     def todos_os_repasses(self):
         return self.repasses.aggregate(Sum('repasses'))['repasses__sum'] or 0
     
+    @property
+    def todos_os_repasses_property(self):
+        return self.repasses.aggregate(Sum('repasses'))['repasses__sum'] or 0
+    
     def total_repasse(self) -> decimal.Decimal:
         return self.total_creditos() - self.total_taxas() + self.todos_os_repasses() - self.total_debitos() + self.total_repasses_retidos()
     def __str__(self):

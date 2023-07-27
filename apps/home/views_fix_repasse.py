@@ -260,8 +260,26 @@ def index(request):
         total_credito=Sum('vl_credito')
     )
     
+    somotario_por_mes_debitos = Debito.objects.filter(aprovada_para_repasse=True, aprovada=True).annotate(
+        mes=TruncMonth('dt_debitado', output_field=DateField())
+    ).values('mes').annotate(
+        total_debito=Sum('vl_debito')
+    )
     
-    def somatorio_por_mes(queryset, nome_do_campo_total, nome_da_consulta):
+    somotario_por_mes_repasses_retidos = RepasseRetido.objects.filter(aprovada_para_repasse=True, aprovada=True).annotate(
+        mes=TruncMonth('dt_rep_retido', output_field=DateField())
+    ).values('mes').annotate(
+        total_repasse_retido=Sum('vlr_rep_retido')
+    )
+    
+    somatorio_por_mes_taxas_totais = Taxa.objects.filter(aprovada_para_repasse=True, aprovada=True).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    
+    def somatorio_por_mes(queryset, nome_do_campo_total:str, nome_da_consulta:str):
         tabela_valores:dict = {
             nome_da_consulta: {}
         }
@@ -289,6 +307,10 @@ def index(request):
     tabelas_valores:dict = {}
     tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_repasses_aprovados, 'total_repasses', 'Repasses Aprovados'))
     tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_creditos, 'total_credito', 'Creditos'))
+    tabelas_valores.update(somatorio_por_mes(somotario_por_mes_debitos, 'total_debito', 'Debitos'))
+    tabelas_valores.update(somatorio_por_mes(somotario_por_mes_repasses_retidos, 'total_repasse_retido', 'Repasse Retido'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_totais, 'total_taxas', 'Taxas Totais'))
+    
 
     # Preencha o dicionário com os valores de repasses aprovados para cada mês do ano
     """ for item in somatorio_por_mes_repasses_aprovados:
