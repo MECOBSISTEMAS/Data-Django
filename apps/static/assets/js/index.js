@@ -115,3 +115,7 @@ new Chart(ctx5, {
 });
 
 const tabelas_valores = window.document.querySelector('#tabelas-valores');
+
+function listnerFilterTables() {
+  const tabel = window.document.querySelector('#tabelas-valores');
+}

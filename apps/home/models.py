@@ -325,6 +325,7 @@ auditlog.register(RepasseRetido)
 auditlog.register(Debito)
 auditlog.register(Credito)
 auditlog.register(Taxa)
+#savar o nome do usuario ao inves de 'system'
 auditlog.register(RepasseAprovado)
 
 #? Remover caso a quantidade seja absurda de grande a quantidade de dados de entrada para os modelos Dado e ParcelaTaxa

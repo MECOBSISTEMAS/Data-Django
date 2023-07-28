@@ -216,12 +216,14 @@ def index(request):
     ).aggregate(
         total_repasses=Sum('repasses')
     )['total_repasses'] or 0
-
+    
+    
     context['total_repasses_primeira_quinzena'] = Dado.objects.filter(
         dt_credito__range=[primeiro_dia_do_mes_atual - timedelta(days=1), decimo_quinto_dia_do_mes_atual]
     ).aggregate(
         total_repasses=Sum('repasses')
     )['total_repasses'] or 0
+    
     
     context['total_repasses_segunda_quinzena'] = Dado.objects.filter(
         dt_credito__range=[decimo_quinto_dia_do_mes_atual, ultimo_dia_do_mes_atual]
@@ -252,7 +254,7 @@ def index(request):
     somatorio_por_mes_repasses_aprovados = RepasseAprovado.objects.annotate(
         mes=TruncMonth('data_aprovado', output_field=DateField())
     ).values('mes').annotate(
-        total_repasses=Sum('repasses')
+        total_repasses=Sum('repasses__repasses')
     )
     somatorio_por_mes_creditos = Credito.objects.annotate(
         mes=TruncMonth('dt_creditado', output_field=DateField())
@@ -287,7 +289,7 @@ def index(request):
         # Verifique se a chave 'mes' existe e tem valor antes de continuar
             if 'mes' in item and item['mes']:
                 mes_do_ano = item['mes'].strftime('%B')  # Obtém o nome do mês (por extenso)
-                total_repasses = item[f'{nome_do_campo_total}']
+                total_repasses = item[nome_do_campo_total]
 
                 # Se ainda não existe a entrada para esse mês, crie-a
                 if mes_do_ano not in tabela_valores[nome_da_consulta]:
@@ -298,7 +300,7 @@ def index(request):
 
         # Adicione outros meses com valor zero caso não existam dados para esses meses
         for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']:
-            if month not in tabela_valores[f'{nome_da_consulta}']:
+            if month not in tabela_valores[nome_da_consulta]:
                 tabela_valores[nome_da_consulta][month] = 0
         return tabela_valores
     
@@ -332,9 +334,8 @@ def index(request):
             tabelas_valores['repasses_aprovados'][month] = 0 """
 
     # Adicione o dicionário tabelas_valores ao contexto
-    context = {
-        'tabelas_valores': tabelas_valores
-    }
+    context['tabelas_valores'] = tabelas_valores
+    
     if request.method == 'POST':
         if 'filtrar-valores' in request.POST:
             return HttpResponse('Filtrar valores')
