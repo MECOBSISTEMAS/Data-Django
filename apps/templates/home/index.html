@@ -1,6 +1,7 @@
 {% extends "layouts/base.html" %} {% block title %} Dashboard {% endblock %}
 
 {% load static %}
+{% load humanize %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}{% endblock stylesheets %} {% block content %}
@@ -27,7 +28,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %}R$ {% if total_repasses_diario %} {{total_repasses_diario}} {% else %} 0 {% endif %}
+                          ></i> {% endcomment %}R$ {{total_repasses_diario|intcomma}} 
                         </h3>
                       </div>
 
@@ -59,7 +60,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-down text-c-red f-30 m-r-10"
-                          ></i> {% endcomment %}R$ {{total_repasses_semanais}}
+                          ></i> {% endcomment %}R$ {{total_repasses_semanais|intcomma}}
                         </h3>
                       </div>
                       {% comment %} <div class="col-3 text-right">
@@ -89,7 +90,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %} R$ {{total_repasses_primeira_quinzena}}
+                          ></i> {% endcomment %} R$ {{total_repasses_primeira_quinzena|intcomma}}
                         </h3>
                       </div>
 
@@ -121,7 +122,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %} R$ {{total_repasses_segunda_quinzena}}
+                          ></i> {% endcomment %} R$ {{total_repasses_segunda_quinzena|intcomma}}
                         </h3>
                       </div>
 
@@ -156,7 +157,7 @@
                         <h3 class="f-w-300 d-flex align-items-center m-b-0">
                           {% comment %} <i
                             class="feather icon-arrow-up text-c-green f-30 m-r-10"
-                          ></i> {% endcomment %}R$ {{total_repasses_mensais}}
+                          ></i> {% endcomment %}R$ {{total_repasses_mensais|intcomma}}
                         </h3>
                       </div>
                       {% comment %} <div class="col-3 text-right">
