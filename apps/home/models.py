@@ -254,7 +254,7 @@ class RepasseAprovado(models.Model):
     parcelas_taxas = models.ManyToManyField("home.ParcelaTaxa", verbose_name=_("parcelas_taxas"))
     data_inicial = models.DateField(_(""), blank=True, null=True)
     data_final = models.DateField(_(""), blank=True, null=True)
-    data_aprovado = models.DateTimeField(_(""), blank=True, null=True, auto_now_add=True)
+    data_aprovado = models.DateField(_(""), blank=True, null=True, auto_now_add=True)
     
     def total_repasses_retidos(self):
         return self.repasses_retidos.aggregate(Sum('vlr_rep_retido'))['vlr_rep_retido__sum'] or 0

@@ -15,6 +15,8 @@ from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
+#importe a função time do proprio django
+from django.utils import timezone
 import random
 import tempfile
 import os
@@ -285,6 +287,7 @@ def index(request):
         tabela_valores:dict = {
             nome_da_consulta: {}
         }
+
         for item in queryset:
         # Verifique se a chave 'mes' existe e tem valor antes de continuar
             if 'mes' in item and item['mes']:
@@ -292,17 +295,20 @@ def index(request):
                 total_repasses = item[nome_do_campo_total]
 
                 # Se ainda não existe a entrada para esse mês, crie-a
-                if mes_do_ano not in tabela_valores[nome_da_consulta]:
+                tabela_valores[nome_da_consulta][mes_do_ano] = total_repasses
+                """ if mes_do_ano not in tabela_valores[nome_da_consulta]:
                     tabela_valores[nome_da_consulta] = {mes_do_ano:total_repasses}
                 else:
                     # Se já existe, some o valor ao total existente
-                    tabela_valores[nome_da_consulta][mes_do_ano] += total_repasses
+                    tabela_valores[nome_da_consulta][mes_do_ano] = total_repasses """
 
         # Adicione outros meses com valor zero caso não existam dados para esses meses
         for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']:
             if month not in tabela_valores[nome_da_consulta]:
                 tabela_valores[nome_da_consulta][month] = 0
+                
         return tabela_valores
+    
     
 
     # Crie um dicionário vazio para tabelas_valores e inicialize a chave 'repasses_aprovados'
