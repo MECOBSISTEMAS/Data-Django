@@ -283,7 +283,7 @@
                   <div class="card-block table-border-style" id="table-border-style-table-credito-nao-aprovadas">
                     <form method="post" id="form-filtrar-valores">
                       {% csrf_token %}
-                      Ano para filtrar: <input type="date" name="data" id="data">
+                      Ano para filtrar: <input type="number" name="data" id="data">
                       <button class="btn btn-primary" type="submit" name="filtrar-valores">filtrar</button>
                     </form>
                     {% include "home/components/_tabelas_valores.html" %}

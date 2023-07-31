@@ -258,25 +258,43 @@ def index(request):
     ).values('mes').annotate(
         total_repasses=Sum('repasses__repasses')
     )
-    somatorio_por_mes_creditos = Credito.objects.annotate(
+    
+    somatorio_por_mes_creditos = Credito.objects.filter(
+        aprovada=True,
+        aprovada_para_repasse=True,
+        #filtrar pelo o ano atual
+        dt_creditado__year=data_atual.year
+    ).annotate(
         mes=TruncMonth('dt_creditado', output_field=DateField())
     ).values('mes').annotate(
         total_credito=Sum('vl_credito')
     )
     
-    somotario_por_mes_debitos = Debito.objects.annotate(
+    somotario_por_mes_debitos = Debito.objects.filter(
+        aprovada=True,
+        aprovada_para_repasse=True,
+        dt_debitado__year=data_atual.year
+    ).annotate(
         mes=TruncMonth('dt_debitado', output_field=DateField())
     ).values('mes').annotate(
         total_debito=Sum('vl_debito')
     )
     
-    somotario_por_mes_repasses_retidos = RepasseRetido.objects.annotate(
+    somotario_por_mes_repasses_retidos = RepasseRetido.objects.filter(
+        aprovada=True,
+        aprovada_para_repasse=True,
+        dt_rep_retido__year=data_atual.year
+    ).annotate(
         mes=TruncMonth('dt_rep_retido', output_field=DateField())
     ).values('mes').annotate(
         total_repasse_retido=Sum('vlr_rep_retido')
     )
     
-    somatorio_por_mes_taxas_totais = Taxa.objects.annotate(
+    somatorio_por_mes_taxas_totais = Taxa.objects.filter(
+        aprovada=True,
+        aprovada_para_repasse=True,
+        dt_taxa__year=data_atual.year,
+    ).annotate(
         mes=TruncMonth('dt_taxa', output_field=DateField())
     ).values('mes').annotate(
         total_taxas=Sum('taxas')
