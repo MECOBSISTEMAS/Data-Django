@@ -296,7 +296,72 @@ def index(request):
         total_taxas=Sum('taxas')
     )
     
+    #?somatorio das taxas e seus tipos, encontrar uma forma melhor de fazer filtro e evitar repetição de codigo
     
+    somatorio_por_mes_taxas_tbb = Taxa.objects.filter(
+        tipo__icontains='TBB'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    somatorio_por_mes_taxas_tec = Taxa.objects.filter(
+        tipo__icontains='TEC'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    somatorio_por_mes_taxas_tac = Taxa.objects.filter(
+        tipo__icontains='TAC'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    somatorio_por_mes_taxas_tcc = Taxa.objects.filter(
+        tipo__icontains='TCC'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    somatorio_por_mes_taxas_spc = Taxa.objects.filter(
+        tipo__icontains='SPC'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    somatorio_por_mes_taxas_confeccao_judicial = Taxa.objects.filter(
+        tipo='Honorários Iniciais - Confecção de ação judicial'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    somatorio_por_mes_taxas_honorarios_direto = Taxa.objects.filter(
+        tipo='Honorários de recebimento direto'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
+    
+    
+    somatorio_por_mes_taxas_honorarios_judiciais = Taxa.objects.filter(
+        tipo='Honorários Judiciais'
+    ).annotate(
+        mes=TruncMonth('dt_taxa', output_field=DateField())
+    ).values('mes').annotate(
+        total_taxas=Sum('taxas')
+    )
     
     
     def somatorio_por_mes(queryset, nome_do_campo_total:str, nome_da_consulta:str):
@@ -337,6 +402,14 @@ def index(request):
     tabelas_valores.update(somatorio_por_mes(somotario_por_mes_debitos, 'total_debito', 'Debitos'))
     tabelas_valores.update(somatorio_por_mes(somotario_por_mes_repasses_retidos, 'total_repasse_retido', 'Repasse Retido'))
     tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_totais, 'total_taxas', 'Taxas Totais'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_tbb, 'total_taxas', 'Taxas TBB'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_tec, 'total_taxas', 'Taxas TEC'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_tac, 'total_taxas', 'Taxas TAC'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_tcc, 'total_taxas', 'Taxas TCC'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_spc, 'total_taxas', 'Taxas SPC'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_confeccao_judicial, 'total_taxas', 'Taxas Confeccao Judicial'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_honorarios_direto, 'total_taxas', 'Taxas Honorarios Direto'))
+    tabelas_valores.update(somatorio_por_mes(somatorio_por_mes_taxas_honorarios_judiciais, 'total_taxas', 'Taxas Honorarios Judiciais'))
     
 
     # Preencha o dicionário com os valores de repasses aprovados para cada mês do ano
