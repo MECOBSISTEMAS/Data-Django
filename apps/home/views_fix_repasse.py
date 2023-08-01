@@ -297,6 +297,8 @@ def index(request):
     )
     
     
+    
+    
     def somatorio_por_mes(queryset, nome_do_campo_total:str, nome_da_consulta:str):
         tabela_valores:dict = {
             nome_da_consulta: {}
@@ -307,9 +309,10 @@ def index(request):
             if 'mes' in item and item['mes']:
                 mes_do_ano = item['mes'].strftime('%B')  # Obtém o nome do mês (por extenso)
                 total_repasses = item[nome_do_campo_total]
+                mes_do_ano_int = item['mes'].month
 
                 # Se ainda não existe a entrada para esse mês, crie-a
-                tabela_valores[nome_da_consulta][mes_do_ano] = total_repasses
+                tabela_valores[nome_da_consulta][mes_do_ano_int] = total_repasses
                 """ if mes_do_ano not in tabela_valores[nome_da_consulta]:
                     tabela_valores[nome_da_consulta] = {mes_do_ano:total_repasses}
                 else:
@@ -317,10 +320,12 @@ def index(request):
                     tabela_valores[nome_da_consulta][mes_do_ano] = total_repasses """
 
         # Adicione outros meses com valor zero caso não existam dados para esses meses
-        for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']:
+        #for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']:
+        for month in range(1, 13):
             if month not in tabela_valores[nome_da_consulta]:
                 tabela_valores[nome_da_consulta][month] = 0
-                
+        #organize as chaves do menor para o maior
+        tabela_valores[nome_da_consulta] = dict(sorted(tabela_valores[nome_da_consulta].items()))
         return tabela_valores
     
     
