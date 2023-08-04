@@ -287,10 +287,34 @@
                       <button class="btn btn-primary" type="submit" name="filtrar-valores">filtrar</button>
                     </form>
                     {% include "home/components/_tabelas_valores.html" %}
-                    <h4>Quantidade de vendas</h4>
-                    <canvas id="firstChart" width="400" height="100"></canvas>
-                    <h4>Numero de vendas</h4>
-                    <canvas id="secondChart" width="400" height="100"></canvas>
+                    {% comment %} PRIMEIRO GRAFICO <h4>Quantidade de vendas</h4>
+                    <canvas id="firstChart" width="400" height="100"></canvas> {% endcomment %}
+                    <h4>Repasses Aprovados</h4>
+                    <canvas id="repasses_aprovados_chart" width="400" height="100"></canvas>
+                    <h4>Creditos</h4>
+                    <canvas id="creditos_chart" width="400" height="100"></canvas>
+                    <h4>Debitos</h4>
+                    <canvas id="debitos_chart" width="400" height="100"></canvas>
+                    <h4>Repasses Retidos</h4>
+                    <canvas id="repasses_retidos_chart" width="400" height="100"></canvas>
+                    <h4>Taxas Totais</h4>
+                    <canvas id="taxas_totais_chart" width="400" height="100"></canvas>
+                    <h4>Taxas TBB</h4>
+                    <canvas id="taxas_tbb_chart" width="400" height="100"></canvas>
+                    <h4>Taxas TEC</h4>
+                    <canvas id="taxas_tec_chart" width="400" height="100"></canvas>
+                    <h4>Taxas TAC</h4>
+                    <canvas id="taxas_tac_chart" width="400" height="100"></canvas>
+                    <h4>Taxas TCC</h4>
+                    <canvas id="taxas_tcc_chart" width="400" height="100"></canvas>
+                    <h4>Taxas SPC</h4>
+                    <canvas id="taxas_spc_chart" width="400" height="100"></canvas>
+                    <h4>Taxas Confeccao Judicial</h4>
+                    <canvas id="taxas_confeccao_judicial_chart" width="400" height="100"></canvas>
+                    <h4>Taxas Honorarios Direto</h4>
+                    <canvas id="taxas_honorarios_direto_chart" width="400" height="100"></canvas>
+                    <h4>Taxas Honorarios Judiciais</h4>
+                    <canvas id="taxas_honorarios_judiciais_chart" width="400" height="100"></canvas>
                     <div class="d-flex p-4 justify-content-between">
                       <div class="first-chart flex-row">
                         <h4>Categorias e vendas</h4>

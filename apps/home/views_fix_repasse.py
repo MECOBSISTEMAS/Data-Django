@@ -364,7 +364,7 @@ def index(request):
     )
     
     
-    def somatorio_por_mes(queryset, nome_do_campo_total:str, nome_da_consulta:str):
+    def somatorio_por_mes(queryset, nome_do_campo_total:str, nome_da_consulta:str) -> dict:
         tabela_valores:dict = {
             nome_da_consulta: {}
         }
@@ -437,11 +437,19 @@ def index(request):
     if request.method == 'POST':
         if 'filtrar-valores' in request.POST:
             return HttpResponse('Filtrar valores')
+    elif request.method == 'GET':
+        if 'construir-dashs-ajax' in request.GET:
+            return JsonResponse(
+                data={
+                    'message':'success',
+                    'status': 200,
+                    'table_values': json.dumps(tabelas_valores, cls=CustomJSONEncoder)
+                }, safe=False, status=200)
+        html_template = loader.get_template('home/index.html')
+        return HttpResponse(html_template.render(context, request))
+        
     
     
-
-    html_template = loader.get_template('home/index.html')
-    return HttpResponse(html_template.render(context, request))
 
 
 
