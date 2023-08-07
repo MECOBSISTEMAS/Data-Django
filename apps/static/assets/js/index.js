@@ -199,7 +199,6 @@ function buildDashe(element, label, labels, data, responsive = true) {
 //quando a pagina estiver devidamente carregada, chame o getTableValues
 window.addEventListener("DOMContentLoaded", async () => {
   const data = await getTableValues();
-  console.log(JSON.parse(data.table_values));
   const mesesDoAno = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto','Setembro',  'Outubro', 'Novembro', 'Dezembro']
   const creditos_chart = window.document.querySelector("#creditos_chart").getContext("2d");
   const debitos_chart = window.document.querySelector("#debitos_chart").getContext("2d");
@@ -213,6 +212,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const taxas_confeccao_judicial_chart = window.document.querySelector("#taxas_confeccao_judicial_chart").getContext("2d");
   const taxas_honorarios_direto_chart = window.document.querySelector("#taxas_honorarios_direto_chart").getContext("2d");
   const taxas_honorarios_judiciais_chart = window.document.querySelector("#taxas_honorarios_judiciais_chart").getContext("2d");
+  
   buildDashe(
     repasses_aprovados_chart, 
     'Repasses Aprovados', 

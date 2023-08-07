@@ -447,10 +447,6 @@ def index(request):
                 }, safe=False, status=200)
         html_template = loader.get_template('home/index.html')
         return HttpResponse(html_template.render(context, request))
-        
-    
-    
-
 
 
 @login_required(login_url="/login/")
