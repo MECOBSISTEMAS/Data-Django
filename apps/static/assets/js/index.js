@@ -52,7 +52,7 @@ const repasses_aprovados_chart = window.document.querySelector("#repasses_aprova
   },
 }); */
 
-const ctx3 = window.document.querySelector("#thirdChart").getContext("2d");
+/* const ctx3 = window.document.querySelector("#thirdChart").getContext("2d");
 
 new Chart(ctx3, {
   type: "doughnut",
@@ -120,7 +120,7 @@ new Chart(ctx5, {
       },
     },
   },
-});
+}); */
 
 const tabelas_valores = window.document.querySelector("#tabelas-valores");
 
