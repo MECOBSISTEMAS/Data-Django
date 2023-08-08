@@ -1,6 +1,7 @@
 {% load static %}
 {% load humanize %}
 {% load unicorn %}
+{% load utils %}
 <div class="col-xl-12">
     <div class="card">
       <div class="card-header">
@@ -94,7 +95,7 @@
                   <th>{{taxa.cliente_id}}</th>
                   <th>{{taxa.cliente.nome}}</th>
                   <th>{{taxa.dt_taxa|date:'d/m/y'}}</th>
-                  <th>{{taxa.taxas|intcomma}}</th>
+                  <th>{{taxa.taxas|intcomma|custom_number_format}}</th>
                   <th>{{taxa.tipo}}</th>
                   <th>{{taxa.descricao}}</th>
                 </tr>
