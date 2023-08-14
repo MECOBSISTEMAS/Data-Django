@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch, DateField
+from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch, DateField, QuerySet
 from django.db.models.functions import Coalesce, Cast, TruncMonth
 from django.template import loader
 from django.urls import reverse
@@ -364,7 +364,7 @@ def index(request):
     )
     
     
-    def somatorio_por_mes(queryset, nome_do_campo_total:str, nome_da_consulta:str) -> dict:
+    def somatorio_por_mes(queryset:QuerySet, nome_do_campo_total:str, nome_da_consulta:str) -> dict:
         tabela_valores:dict = {
             nome_da_consulta: {}
         }
