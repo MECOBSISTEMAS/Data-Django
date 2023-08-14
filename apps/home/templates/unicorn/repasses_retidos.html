@@ -1,5 +1,6 @@
 {% load static %}
 {% load humanize %}
+{% load utils %}
 <div class="col-xl-12">
     <div class="card">
       <div class="card-header">
@@ -9,13 +10,7 @@
 					data fim: <input required unicorn:model.defer="data_fim" type="date" name="data-fim" id="data-fim">
 					<button unicorn:click="filtrar_repasses_retidos" name="filtrar-repasses-retidos" class="btn btn-primary btn-sm" type="submit">Filtrar</button>
 				</form>
-				<h6>{% if mensagem_error_novo_repasse_retido %}
-					<ul class="messages">
-							{% for message in mensagem_error_novo_repasse_retido %}
-									<li>{{ message }}</li>
-							{% endfor %}
-					</ul>
-			{% endif %}</h6>
+				<h6> {{mensagem_error_novo_repasse_retido}}</h6>
         <form unicorn:submit.prevent.defer="novo_repasse_retido" class="form w-100" name="novo_repasse_retido" id="novo_repasse_retido">
           <input unicorn:model.defer="id_pessoa" required type="text" name="cliente" class="form-control" placeholder="ID Cliente">
           <input unicorn:model.defer="valor" required type="number" step="0.01" name="valor" class="form-control" placeholder="Valor do Repasse Retido">

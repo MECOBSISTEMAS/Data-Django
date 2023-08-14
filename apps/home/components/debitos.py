@@ -31,7 +31,7 @@ class DebitosView(UnicornView):
     descricao:str = ""
     
     #? campo para adicionar mensagem de erro ao adicionar novo debito
-    mensagem_error_novo_debito:list = []
+    mensagem_error_novo_debito:str = ""
     
     def filtrar_debitos(self):
         self.debitos_nao_aprovadas = Debito.objects.filter(aprovada=False, dt_debitado__range=[self.data_inicio, self.data_fim])
@@ -83,9 +83,9 @@ class DebitosView(UnicornView):
                     descricao=self.descricao,
                     dt_creditado=self.data_debito,
                 )
-            self.mensagem_error_novo_debito.append('Debito adicionado com sucesso')
+            self.mensagem_error_novo_debito = 'Debito adicionado com sucesso'
         except Pessoas.DoesNotExist:
-            self.mensagem_error_novo_debito.append('Pagador ou Credor não encontrado')
+            self.mensagem_error_novo_debito = 'Pagador ou Credor não encontrado'
         self.filtrar_debitos()
         
     def aprovar_debito(self, id_debito):

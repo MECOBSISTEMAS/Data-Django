@@ -6,8 +6,8 @@
       <div class="card-header">
         <h5>Credito</h5>
         <form unicorn:submit.prevent.defer="filtrar_creditos">
-					data inicio: <input unicorn:model.lazy="data_inicio" required type="date" name="data-inicio" id="data-inicio">
-					data fim: <input unicorn:model.lazy="data_fim" required type="date" name="data-fim" id="data-fim">
+					data inicio: <input unicorn:model.defer="data_inicio" required type="date" name="data-inicio" id="data-inicio">
+					data fim: <input unicorn:model.defer="data_fim" required type="date" name="data-fim" id="data-fim">
 					<button 
 					unicorn:click="filtrar_creditos"
 					id="filtrar-creditos" 
@@ -15,13 +15,7 @@
 					type="submit" 
 					class="btn btn-primary btn-sm">Filtrar</button>
 				</form>
-				<h6>{% if mensagem_error_novo_credito %}
-					<ul class="messages">
-							{% for message in mensagem_error_novo_credito %}
-									<li>{{ message }}</li>
-							{% endfor %}
-					</ul>
-			{% endif %}</h6>
+				<h6>{{ mensagem_error_novo_credito }}</h6>
         <form unicorn:submit.prevent.defer="novo_credito" class="form w-100" name="form-criar-novo-credito">
           <input unicorn:model.defer="id_credor" required type="text" name="credor" class="form-control" placeholder="ID do Credor">
           <input unicorn:model.defer="id_pagador" type="text" name="pagador" class="form-control" placeholder="ID do Pagador (Opcional)">
