@@ -1,0 +1,126 @@
+{% extends "layouts/base.html" %} 
+{% block title %} UI Forms {% endblock %}
+{% load widget_tweaks %}
+{% load utils %}
+{% load humanize %}
+{% load static %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Registro de novos Contratos</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Tabelas & Formulários</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Registro</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Regitrar Contratos</h5>
+            </div>
+            
+            <div class="card-block table-border-style">
+              {% comment %} <form method="post">
+                {% csrf_token %}
+                Data Início <input type="date" id="data_inicio" name="data_inicio" required {% if data_inicio %} value={{data_inicio}} {% endif %}>
+                Data Fim <input type="date" id="data_fim" name="data_fim" required {% if data_fim %} value={{data_fim}} {% endif %}>
+                <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
+              </form> {% endcomment %}
+              <h3>Novo Contrato (Suporta Condominio)</h3>
+              <form class="form w-100">
+                <input required type="number" name="cliente" class="form-control" placeholder="ID do Contrato">
+                <input required type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)">
+                <input required type="number" name="me" step="0.01" class="form-control" placeholder="ME">
+                <input required type="number" name="op" step="0.01" class="form-control" placeholder="OP">
+                <input required type="number" name="comissionado" class="form-control" placeholder="ID do Comissionado">
+                <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
+                {% comment %} <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa"> {% endcomment %}
+                <div class="form-group">
+                  <br>
+                  <label for="selecionar-tipo-taxa">É um condominio ?</label>
+                  <select class="form-control" name="sim-nao" id="sim-nao-condominio">
+                    <option value="sim">Sim</option>
+                    <option value="nao">Não</option>
+                  </select>
+                </div>
+
+                <div class="container">
+                  <div class="row mt-3">
+                      <div class="col-md-6">
+                          <h4>Adicionar Vendedor</h4>
+                          <ul class="list-group">
+                              <!-- Itens da lista podem ser adicionados aqui -->
+                              <input type="number" class="form-control" placeholder="ID Pessoa/Vendedor">
+                          </ul>
+                      </div>
+                      <div class="col-md-6">
+                        <li class="list-group-item">João <input type="number" name="peso" id="peso" placeholder="peso"></li>
+                        <li class="list-group-item">Marcelo <input type="number" name="peso" id="peso" placeholder="peso"></li>
+                        <li class="list-group-item">Pedro <input type="number" name="peso" id="peso" placeholder="peso"></li>
+                      </div>
+                  </div>
+              </div>
+                <div class="container pt-2">
+                {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
+                <button class="btn btn-primary" unicorn:click="nova_taxa" id="nova-taxa" type="submit" name="nova-taxa">Novo Contrato</button>
+              {% else %}
+                <button class="btn btn-primary disabled" type="button" name="nova-taxa">Novo Contrato</button>
+              {% endif %}
+                </div>
+              </form>
+              <!-- <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
+                <button type="submit" class="btn btn-success">Enviar Planilha</button>
+              </form> -->
+              <div class="table-responsive">
+                <table id="table-cob" class="table table-hover"></table>
+              </div>
+            </div>
+          </div>
+        </div>    
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="{% static 'assets/js/registrar_contratos.js' %}"></script>
+<script>
+  {% comment %} $(document).ready(function(){
+    $('#table-cad-cliente').DataTable();
+    $('#table-cob').DataTable();
+  }) {% endcomment %}
+</script>
+{% endblock javascripts %}
