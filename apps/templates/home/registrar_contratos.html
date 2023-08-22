@@ -55,7 +55,15 @@
               </form> {% endcomment %}
               <h3>Novo Contrato (Suporta Condominio)</h3>
               <form class="form w-100">
-                <input required type="number" name="cliente" class="form-control" placeholder="ID do Contrato">
+                <div class="row mt-3">
+                  <div class="col-md-6 align-center align-baseline">
+                    {% comment %} <label for="cliente">ID do Cliente/Pessoa</label> {% endcomment %}
+                    <input required type="number" name="cliente" id="cliente" class="form-control" placeholder="ID do Contrato">
+                  </div>
+                  <div class="col-md-6">
+                    <button type="button" class="btn btn-primary">Checar</button>
+                  </div>
+                </div>
                 <input required type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)">
                 <input required type="number" name="me" step="0.01" class="form-control" placeholder="ME">
                 <input required type="number" name="op" step="0.01" class="form-control" placeholder="OP">
@@ -78,6 +86,10 @@
                           <ul class="list-group">
                               <!-- Itens da lista podem ser adicionados aqui -->
                               <input type="number" class="form-control" placeholder="ID Pessoa/Vendedor">
+                              <div class="row justify-content-around">
+                                <button class="btn btn-success" type="button">Adicionar</button>
+                                <button class="btn btn-primary" type="button">Checar</button>
+                              </div>
                           </ul>
                       </div>
                       <div class="col-md-6">
