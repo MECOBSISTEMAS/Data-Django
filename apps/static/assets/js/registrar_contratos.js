@@ -50,8 +50,9 @@ function listnerButtonContractCheck() {
   });
 }
 
-function addPersonToList() {
-  return "";
+function addPersonToList(pessoa) {
+  const listaVendedores = window.document.querySelector("div#lista-vendedores");  
+  listaVendedores.innerHTML += `<li class="list-group-item">${pessoa.fields.nome} <input type="number" name="peso" id="peso" placeholder="peso"> <input type="hidden" name="pessoa_id" value="${pessoa.fields.id}"> <button type="button" class="btn btn-danger btn-sm" id="del-vendedor">DEL</button> </li>`;
 }
 
 function removePersonAtList() {
@@ -61,6 +62,8 @@ function removePersonAtList() {
 async function verifyPerson() {
   const personId = window.document.querySelector("input#pessoa_id").value
   const currentURL = new URL(window.location.href)
+  const title = window.document.querySelector("h4#adicionar-vendedor-titulo");
+  const buttonAddSeller =  window.document.querySelector("button#adicionar-vendedor");
   try {
     const response = await fetch(currentURL.href, {
       headers: {
@@ -73,16 +76,21 @@ async function verifyPerson() {
         "buscar-vendedor": true,
       })
     })
-
+    
+    const data = await response.json();
     if (response.ok) {
-      const data = await response.json();
       const pessoa = JSON.parse(data.pessoa)[0];
-      const listaVendedores = window.document.querySelector("div#lista-vendedores");
-      //coloque a nova pessoa na lista-vendedores
-      listaVendedores.innerHTML += `<li class="list-group-item">${pessoa.fields.nome} <input type="number" name="peso" id="peso" placeholder="peso"> <input type="hidden" name="pessoa_id" value="${pessoa.fields.id}"> <button type="button" class="btn btn-danger btn-sm" id="del-vendedor">DEL</button> </li>`;
-      console.log(`REQUISIÇÃO FEITA COM SUCESSO, \n DADOS: ${Object.entries(data)} \n pessoa: ${pessoa}`);
+      //addPersonToList(pessoa);
+      //caso a pessoa exista, coloque esse titulo html em verde: <h4 id="adicionar-vendedor-titulo">Adicionar Vendedor</h4>
+      //e habilite  o botão de adicionar vendedor
+      title.style.color = "green";
+      buttonAddSeller.disabled = false;
+
+      console.log(`REQUISIÇÃO FEITA COM SUCESSO, \n DADOS: ${Object.entries(data)}`);
       return data;
     } else {
+      title.style.color = "red";
+      buttonAddSeller.disabled = true;
       throw new Error(`Erro ao fazer a requisição, \n STATUS: ${response.status}`);
     }
   } catch(error) {
