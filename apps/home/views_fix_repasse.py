@@ -15,8 +15,8 @@ from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
-#importe a função time do proprio django
 from django.utils import timezone
+from django.core import serializers
 import random
 import tempfile
 import os
@@ -684,6 +684,30 @@ def pages(request):
                             'repasses', 'comissao', 'total_repasse', 'id'))
                 request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
         
+        elif load_template == 'registrar_contratos.html':
+            if request.method == 'POST':
+                if request.headers.get('Content-Type') == 'application/json':
+                    body:dict = json.loads(request.body)
+                    if 'buscar-vendedor' in body:
+                        pessoa_id:int = body.get('pessoa_id', None)
+                        try:    
+                            pessoa = Pessoas.objects.get(id=pessoa_id)
+                            print(f"POST: {request.POST} \nBODY: {body} \n{pessoa_id}")
+                            return JsonResponse(
+                                data={
+                                'pessoa': serializers.serialize('json', [pessoa, ]),
+                                },
+                                status=200,
+                            )
+                        except Exception as error:
+                            return JsonResponse(
+                                data={
+                                    'message': 'error',
+                                    'error': str(error),
+                                },
+                                status=404,
+                            )
+            pass
 
         elif load_template == 'tbl_bootstrap.html':
             if request.method == 'POST':

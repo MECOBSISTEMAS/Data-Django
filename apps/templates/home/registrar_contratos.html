@@ -58,10 +58,10 @@
                 <div class="row mt-3">
                   <div class="col-md-6 align-center align-baseline">
                     {% comment %} <label for="cliente">ID do Cliente/Pessoa</label> {% endcomment %}
-                    <input required type="number" name="cliente" id="cliente" class="form-control" placeholder="ID do Contrato">
+                    <input required type="number" name="contrato_id" id="contrato_id" class="form-control" placeholder="ID do Contrato">
                   </div>
                   <div class="col-md-6">
-                    <button type="button" class="btn btn-primary">Checar</button>
+                    <button type="button" name="checar_contrato_id" id="checar_contrato_id" class="btn btn-primary">Checar</button>
                   </div>
                 </div>
                 <input required type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)">
@@ -85,17 +85,26 @@
                           <h4>Adicionar Vendedor</h4>
                           <ul class="list-group">
                               <!-- Itens da lista podem ser adicionados aqui -->
-                              <input type="number" class="form-control" placeholder="ID Pessoa/Vendedor">
-                              <div class="row justify-content-around">
+                              <input type="number" class="form-control" id="pessoa_id" placeholder="ID Pessoa/Vendedor">
+                              <div class="row justify-content-around pt-1">
                                 <button class="btn btn-success" type="button">Adicionar</button>
-                                <button class="btn btn-primary" type="button">Checar</button>
+                                <button class="btn btn-primary" href="#" id="checar_pessoa_id" type="button">Checar</button>
                               </div>
                           </ul>
                       </div>
-                      <div class="col-md-6">
-                        <li class="list-group-item">João <input type="number" name="peso" id="peso" placeholder="peso"> <button type="button" class="btn btn-danger btn-sm">DEL</button> </li>
+                      <div class="col-md-6" id="lista-vendedores">
+                        {% comment %} <li class="list-group-item">João 
+                          <input type="number" 
+                            name="peso" 
+                            id="peso" 
+                            placeholder="peso"
+                          > <input type="hidden" name="pessoa_id" value="">
+                          <button type="button" 
+                            class="btn btn-danger btn-sm"
+                            id="del-vendedor"
+                            >DEL</button> </li>
                         <li class="list-group-item">Marcelo <input type="number" name="peso" id="peso" placeholder="peso"> <button type="button" class="btn btn-danger btn-sm">DEL</button></li>
-                        <li class="list-group-item">Pedro <input type="number" name="peso" id="peso" placeholder="peso"> <button type="button" class="btn btn-danger btn-sm">DEL</button></li>
+                        <li class="list-group-item">Pedro <input type="number" name="peso" id="peso" placeholder="peso"> <button type="button" class="btn btn-danger btn-sm">DEL</button></li> {% endcomment %}
                       </div>
                   </div>
               </div>
