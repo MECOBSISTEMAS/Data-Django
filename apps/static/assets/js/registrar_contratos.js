@@ -1,3 +1,5 @@
+var listPersonsHasAdded = [];
+
 function getCookie(cookieName="") {
   const cookie = window.document.cookie
   .split(';')
@@ -79,13 +81,10 @@ async function verifyPerson() {
     
     const data = await response.json();
     if (response.ok) {
-      const pessoa = JSON.parse(data.pessoa)[0];
-      //addPersonToList(pessoa);
       //caso a pessoa exista, coloque esse titulo html em verde: <h4 id="adicionar-vendedor-titulo">Adicionar Vendedor</h4>
       //e habilite  o botão de adicionar vendedor
       title.style.color = "green";
       buttonAddSeller.disabled = false;
-
       console.log(`REQUISIÇÃO FEITA COM SUCESSO, \n DADOS: ${Object.entries(data)}`);
       return data;
     } else {
@@ -114,5 +113,23 @@ function listnerButtonPersonCheck() {
   });
 }
 
+function listnerButtonAddPerson() {
+  const buttonAddSeller =  window.document.querySelector("button#adicionar-vendedor");
+  buttonAddSeller.addEventListener('click', async(event) => {
+    event.preventDefault();
+    /* enquanto a requsição estiver em andamento desabilitar o botão de checar */
+    buttonAddSeller.disabled = true;
+    try {
+      const data = await verifyPerson();
+      const pessoa = JSON.parse(data.pessoa)[0];
+      addPersonToList(pessoa);
+    } catch (error) {
+      console.error(error);
+    }
+    buttonAddSeller.disabled = false;
+  });
+}
+
 listnerButtonContractCheck();
 listnerButtonPersonCheck();
+listnerButtonAddPerson();
