@@ -9,6 +9,7 @@ from django.template import loader
 from django.urls import reverse
 from django.shortcuts import render
 from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
+from django.contrib.humanize.templatetags.humanize import intcomma
 import random
 import ast
 import tempfile
@@ -74,8 +75,11 @@ class TaxasView(UnicornView):
             tbody += f"<td>{taxa['cliente_id']}</td>"
             tbody += f"<td>{taxa['cliente__nome']}</td>"
             for dia in self.taxas_dias:
-                tbody += f"<td>{taxa[dia]}</td>"
-            tbody += f"<td>{taxa['total_taxa']}</td>"
+                formatted_taxa_dia = intcomma(taxa[dia]) #if isinstance(taxa[dia], int) else taxa[dia]
+                tbody += f"<td>{formatted_taxa_dia}</td>"
+            #tbody += f"<td>{taxa['total_taxa']}</td>"
+            formated_total_taxa = intcomma(taxa['total_taxa'])
+            tbody += f"<td>{formated_total_taxa}</td>"
             tbody += "</tr>"
         self.tbody = tbody
 
