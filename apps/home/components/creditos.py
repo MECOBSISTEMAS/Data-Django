@@ -3,6 +3,7 @@ from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, 
 from django.db.models.functions import Coalesce, Cast
 from decimal import Decimal
 from django_unicorn.components import UnicornView, QuerySetType
+from django.contrib.humanize.templatetags.humanize import intcomma
 
 from apps.home.models import Credito, Debito
 from apps.home.existing_models import Pessoas
@@ -61,8 +62,8 @@ class CreditosView(UnicornView):
             tbody += f"<td>{credito['cliente_id']}</td>"
             tbody += f"<td>{credito['cliente__nome']}</td>"
             for dia in self.creditos_dias:
-                tbody += f"<td>{credito[dia]}</td>"
-            tbody += f"<td>{credito['total_credito']}</td>"
+                tbody += f"<td>{intcomma(credito[dia])}</td>"
+            tbody += f"<td>{intcomma(credito['total_credito'])}</td>"
             tbody += "</tr>"
         self.tbody = tbody
         

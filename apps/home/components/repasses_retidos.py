@@ -4,7 +4,7 @@ from django.db.models.functions import Coalesce, Cast
 from decimal import Decimal
 from django_unicorn.components import UnicornView, QuerySetType
 from django.contrib import messages
-
+from django.contrib.humanize.templatetags.humanize import intcomma
 
 from apps.home.models import RepasseRetido
 from apps.home.existing_models import Pessoas
@@ -66,8 +66,8 @@ class RepassesRetidosView(UnicornView):
             tbody += f"<td>{repasse_retido['cliente_id']}</td>"
             tbody += f"<td>{repasse_retido['cliente__nome']}</td>"
             for dia in self.repasses_retidos_dias:
-                tbody += f"<td>{repasse_retido[dia]}</td>"
-            tbody += f"<td>{repasse_retido['total_repasse_retido']}</td>"
+                tbody += f"<td>{intcomma(repasse_retido[dia])}</td>"
+            tbody += f"<td>{intcomma(repasse_retido['total_repasse_retido'])}</td>"
             tbody += "</tr>"
         self.tbody = tbody
         self.total_repasses_retidos_aprovadas = RepasseRetido.objects.filter(aprovada=True, dt_rep_retido__range=[self.data_inicio, self.data_fim]).aggregate(total=Sum('vlr_rep_retido'))['total']

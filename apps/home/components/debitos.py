@@ -6,6 +6,7 @@ from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
 from django_unicorn.components import UnicornView, QuerySetType
+from django.contrib.humanize.templatetags.humanize import intcomma
 
 from apps.home.models import Debito, Credito
 from apps.home.existing_models import Pessoas
@@ -61,8 +62,8 @@ class DebitosView(UnicornView):
             tbody += f"<td>{debito['cliente_id']}</td>"
             tbody += f"<td>{debito['cliente__nome']}</td>"
             for dia in self.debitos_dias:
-                tbody += f"<td>{debito[dia]}</td>"
-            tbody += f"<td>{debito['total_debito']}</td>"
+                tbody += f"<td>{intcomma(debito[dia])}</td>"
+            tbody += f"<td>{intcomma(debito['total_debito'])}</td>"
             tbody += "</tr>"
         self.tbody = tbody
     
