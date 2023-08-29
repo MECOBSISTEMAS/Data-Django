@@ -44,10 +44,10 @@
                     <h4 id="adicionar-vendedor-titulo">Adicionar Vendedor</h4>
                     <ul class="list-group">
                         <!-- Itens da lista podem ser adicionados aqui -->
-                        <input type="number" class="form-control" id="pessoa_id" placeholder="ID Pessoa/Vendedor">
+                        <input unicorn:model.defer="id_pessoa" type="number" class="form-control" id="pessoa_id" placeholder="ID Pessoa/Vendedor">
                         <div class="row justify-content-around pt-1">
-                          <button class="btn btn-success" type="button" id="adicionar-vendedor" disabled="true">Adicionar</button>
-                          <button class="btn btn-primary" href="#" id="checar_pessoa_id" type="button">Checar</button>
+                          <button class="btn btn-success" type="button" id="adicionar-vendedor" {% if not pessoa_existe %} disabled="true" {% endif %}>Adicionar</button>
+                          <button unicorn:click="checar_pessoa" class="btn btn-primary" href="#" id="checar_pessoa_id" type="button">Checar</button>
                         </div>
                     </ul>
                 </div>
@@ -69,7 +69,7 @@
         </div>
           <div class="container pt-2">
           {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
-          <button class="btn btn-primary" unicorn:click="nova_taxa" id="nova-taxa" type="submit" name="nova-taxa">Novo Contrato</button>
+          <button class="btn btn-primary" unicorn:click="novo_contrato" id="nova-taxa" type="submit" name="nova-taxa">Novo Contrato</button>
         {% else %}
           <button class="btn btn-primary disabled" type="button" name="nova-taxa">Novo Contrato</button>
         {% endif %}

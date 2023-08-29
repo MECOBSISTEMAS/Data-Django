@@ -2,7 +2,6 @@
 
 {% load utils %}
 {% load humanize %}
-
 {% load static %}
 
 <!-- Specific CSS goes HERE -->
@@ -97,11 +96,11 @@
                     </div>
                     
                     
-                    <h6>Total Crédito: R${{total_credito}}</h6>
-                    <h6>Total Débito: R${{total_debito}}</h6>
-                    <h6>Total Repasse Retido: R${{total_repasse_retido}}</h6>
-                    <h6>Total Taxas: R${{total_taxas}}</h6>
-                    <h6>Total Repasses: R${{total_repasses}}</h6>
+                    <h6>Total Crédito: R${{total_credito|intcomma}}</h6>
+                    <h6>Total Débito: R${{total_debito|intcomma}}</h6>
+                    <h6>Total Repasse Retido: R${{total_repasse_retido|intcomma}}</h6>
+                    <h6>Total Taxas: R${{total_taxas|intcomma}}</h6>
+                    <h6>Total Repasses: R${{total_repasses|intcomma}}</h6>
                   </div>
                 </div>
               </div>
