@@ -17,16 +17,16 @@
           <div class="row mt-3">
             <div class="col-md-6 align-center align-baseline">
               {% comment %} <label for="cliente">ID do Cliente/Pessoa</label> {% endcomment %}
-              <input required type="number" name="contrato_id" id="contrato_id" class="form-control" placeholder="ID do Contrato">
+              <input unicorn:model.defer="id_contrato" type="number" name="contrato_id" id="contrato_id" class="form-control" placeholder="ID do Contrato">
             </div>
             <div class="col-md-6">
-              <button type="button" name="checar_contrato_id" id="checar_contrato_id" class="btn btn-primary">Checar</button>
+              <button unicorn:click="checar_contrato" type="button" name="checar_contrato_id" id="checar_contrato_id" class="btn btn-primary">Checar</button>
             </div>
           </div>
-          <input required type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)">
-          <input required type="number" name="me" step="0.01" class="form-control" placeholder="ME">
-          <input required type="number" name="op" step="0.01" class="form-control" placeholder="OP">
-          <input required type="number" name="comissionado" class="form-control" placeholder="ID do Comissionado">
+          <input type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)">
+          <input type="number" name="me" step="0.01" class="form-control" placeholder="ME">
+          <input type="number" name="op" step="0.01" class="form-control" placeholder="OP">
+          <input type="number" name="comissionado" class="form-control" placeholder="ID do Comissionado">
           <input type="text" name="descricao" class="form-control" placeholder="Descrição do taxa">
           {% comment %} <input type="text" name="tipo" class="form-control" placeholder="Tipo do taxa"> {% endcomment %}
           <div class="form-group">
@@ -42,16 +42,41 @@
             <div class="row mt-3">
                 <div class="col-md-6">
                     <h4 id="adicionar-vendedor-titulo">Adicionar Vendedor</h4>
+                    <h4 id="nome-vendedor">{{pessoa.nome}}</h4>
                     <ul class="list-group">
                         <!-- Itens da lista podem ser adicionados aqui -->
                         <input unicorn:model.defer="id_pessoa" type="number" class="form-control" id="pessoa_id" placeholder="ID Pessoa/Vendedor">
+                        <input unicorn:model.defer="peso" step="0.01" type="number" class="form-control" {% if not pessoa_existe %} disabled="true" {% endif %} id="peso_pessoa" placeholder="peso">
                         <div class="row justify-content-around pt-1">
-                          <button class="btn btn-success" type="button" id="adicionar-vendedor" {% if not pessoa_existe %} disabled="true" {% endif %}>Adicionar</button>
+                          <button unicorn:click="adicionar_pessoa" class="btn btn-success" type="button" id="adicionar-vendedor" {% if not pessoa_existe %} disabled="true" {% endif %}>Adicionar</button>
                           <button unicorn:click="checar_pessoa" class="btn btn-primary" href="#" id="checar_pessoa_id" type="button">Checar</button>
                         </div>
                     </ul>
                 </div>
-                <div class="col-md-6" id="lista-vendedores">
+                <div class="col-md-6" id="lista-vendedores" unicorn:key="lista-vendedores">
+                  {% for pessoa in listas_pessoas %}
+                  {% comment %} {'341': {'nome': 'José Raniere Custodio Pontes de Azevedo Filho', 'peso': '61612'}} {% endcomment %}
+                    <ul>
+                      <li class="list-group-item" 
+                      id="lista-pessoa-{{pessoa.id}}"
+                      unicorn:key="lista-pessoa-{{pessoa.id}}"
+                      > {{pessoa.nome}} - {{pessoa.peso}}
+                      <br>  
+                      {% comment %} <input type="number" 
+                        name="peso" 
+                        id="peso-{{pessoa.id}}" 
+                        required="true"
+                        placeholder="peso"
+                        unicorn:key="peso-{{pessoa.id}}"
+                        > {% endcomment %}
+                        <button type="button" 
+                        class="btn btn-danger btn-sm"
+                        id="del-vendedor-{{pessoa.id}}"
+                        unicorn:key="del-vendedor-{{pessoa.id}}"
+                        >DEL</button>
+                       </li>
+                    </ul>
+                  {% endfor %}
                   {% comment %} <li class="list-group-item">João 
                     <input type="number" 
                       name="peso" 
@@ -71,7 +96,7 @@
           {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
           <button class="btn btn-primary" unicorn:click="novo_contrato" id="nova-taxa" type="submit" name="nova-taxa">Novo Contrato</button>
         {% else %}
-          <button class="btn btn-primary disabled" type="button" name="nova-taxa">Novo Contrato</button>
+          <button class="btn btn-primary disabled" unicorn:click="novo_contrato" type="button" name="nova-taxa">Novo Contrato</button>
         {% endif %}
           </div>
         </form>
