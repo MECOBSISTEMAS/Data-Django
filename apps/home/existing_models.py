@@ -9,18 +9,21 @@ from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
-""" class Perfil(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    descricao = models.CharField(unique=True, max_length=45)
-    dt_atualizacao = models.DateTimeField()
-    fixo = models.CharField(max_length=1)
+class Peso(models.Model):
+    pessoa = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=False)
+    parcela = models.ForeignKey('ContratoParcelas', models.CASCADE, blank=True, null=True, related_name='pesos')
+    valor = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    adi = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    me = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    op = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    def __str__(self):
+        return f'pessoa: {self.pessoa}, nu_parcela: {self.parcela.nu_parcela}, peso: {self.valor}'
 
     class Meta:
-        managed= True
-        db_table = 'perfil'
-        
-    def __str__(self):
-        return f'{self.descricao}' """
+        db_table = 'pesos'
+        managed = True
+        verbose_name = 'Peso'
+        verbose_name_plural = 'Pesos'
 
 class Perfil(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -152,12 +155,13 @@ class Contratos(models.Model):
     dt_contrato = models.DateField(blank=True, null=True)
     vl_contrato = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     vendedor = models.ForeignKey(Pessoas, models.DO_NOTHING, blank=True, null=True, related_name='contratos_como_vendedor')
+    vendedores = models.ManyToManyField(Pessoas, blank=True, related_name='contratos_como_vendedores')
     comprador = models.ForeignKey(Pessoas, models.DO_NOTHING, blank=True, null=True, related_name='contratos_como_comprador')
     nu_parcelas = models.IntegerField(blank=True, null=True)
     vl_entrada = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    eventos = models.ForeignKey(Eventos, models.DO_NOTHING)
+    eventos = models.ForeignKey(Eventos, models.DO_NOTHING, blank=True, null=True)
     tp_contrato = models.CharField(max_length=50, blank=True, null=True)
-    pessoas_id_inclusao = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_inclusao')
+    pessoas_id_inclusao = models.ForeignKey(Pessoas, models.DO_NOTHING, db_column='pessoas_id_inclusao', blank=True, null=True)
     dt_inclusao = models.DateTimeField(blank=True, null=True)
     honor_adimp = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     honor_inadimp = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
@@ -187,6 +191,8 @@ class Contratos(models.Model):
     status_antes_acordo = models.CharField(max_length=45, blank=True, null=True)
     fiador = models.TextField(blank=True, null=True)
     animal = models.TextField(blank=True, null=True)
+    #* Novos campos
+    eh_condominio = models.BooleanField(default=False)
     
     
     def __str__(self):
@@ -283,6 +289,7 @@ class Teds(models.Model):
 
 class ContratoParcelas(models.Model):
     id = models.BigAutoField(primary_key=True)
+    #peso = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     contratos = models.ForeignKey(Contratos, models.DO_NOTHING, blank=True, null=True, related_name='parcelas')
     nu_parcela = models.IntegerField(blank=True, null=True)
     dt_vencimento = models.DateField(blank=True, null=True)
@@ -314,6 +321,10 @@ class ContratoParcelas(models.Model):
     fl_acao_judicial = models.CharField(max_length=45, blank=True, null=True)
     boletos_avulso = models.ForeignKey(BoletosAvulso, models.DO_NOTHING, blank=True, null=True)
     dt_atualizacao_monetaria = models.DateField(blank=True, null=True)
+    #?campos para indentificar a aprovação
+    aprovada = models.BooleanField(default=False)
+    aprovada_para_repasse = models.BooleanField(default=False)
+    data_aprovada = models.DateField(auto_now_add=True, blank=True, null=True)
     
     def __str__(self):
         return f'n°: {self.nu_parcela}, parcela: {self.vl_parcela}, vencimento: {self.dt_vencimento}'
@@ -321,7 +332,6 @@ class ContratoParcelas(models.Model):
     class Meta:
         managed= True
         db_table = 'contrato_parcelas'
-
 
 
 class DadosArquivoRetorno(models.Model):

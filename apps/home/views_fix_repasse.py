@@ -667,22 +667,7 @@ def pages(request):
                     }
 
             
-        elif load_template == 'form_elements.html':
-            if request.method == "POST":
-                data_inicio = request.POST.get('data_inicio')  # 2022-08-01:str
-                data_fim = request.POST.get('data_fim')  # 2022-08-21:str
-                context['sql'] =  list(Dado.objects \
-                    .filter(dt_credito__range=(data_inicio, data_fim)) \
-                    .values('id_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador',
-                            'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco', 
-                            'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op', 
-                            'repasses', 'comissao') \
-                    .annotate(total_repasse=Sum('repasses')) \
-                    .values('id_vendedor', 'id_contrato', 'vendedor', 'id_comprador', 'comprador', 
-                            'parcelas_contrato', 'vl_pago', 'dt_vencimento', 'dt_credito', 'banco', 
-                            'contrato', 'evento', 'deposito', 'calculo', 'taxas', 'adi', 'me', 'op', 
-                            'repasses', 'comissao', 'total_repasse', 'id'))
-                request.session['serialized_data'] = json.dumps(context['sql'], cls=CustomJSONEncoder)
+        
         
         elif load_template == 'registrar_contratos.html':
             if request.method == 'POST':

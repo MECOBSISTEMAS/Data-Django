@@ -1,0 +1,87 @@
+{% load static %}
+{% load unicorn %}
+<div class="col-xl-12">
+  <div class="card">
+		<div class="card-header">
+			<h5>Filtre os créditos recebidos por período</h5>
+		</div>
+        
+		<div class="card-block table-border-style">
+			<form method="post" unicorn:submit.prevent.defer="filtrar_parcelas">
+				Data Início: <input unicorn:model.defer="data_inicio" type="date" id="data_inicio" name="data_inicio">
+				Data Fim: <input unicorn:model.defer="data_fim" type="date" id="data_fim" name="data_fim">
+				Contrato ID: <input unicorn:model.defer="contrato_id" type="number" id="contrato-id" >
+				<button unicorn:click="filtrar_parcelas" type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
+			</form>
+			<a name="exportar-consulta" id="exportar-consulta" class="btn btn-info disabled" href="{% url 'home:download_planilha_cob' %}" role="button">Exportar Consulta .xlsx</a>
+			<!-- <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
+				{% csrf_token %}
+				<input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
+				<button type="submit" class="btn btn-success">Enviar Planilha</button>
+			</form> -->
+			<div class="table-responsive" unicorn:key="table-cob">
+				<table id="table-cob" class="table table-hover">
+					<thead>
+						<tr>
+							<th>Ações</th>
+							<th>Vendedor ID</th>
+							<th>Contrato ID</th>
+							<th>Vendedor</th>
+							<th>Comprador ID</th>
+							<th>Comprador</th>
+							<th>Parcelas Contrato</th>
+							<th>Valor Pago</th>
+							<th>Data Vencimento</th>
+							<th>Data Crédito</th>
+							<th>Contrato</th>
+							<th>Cálculo</th>
+							<th>Taxas</th>
+							<th>ADI</th>
+							<th>ME</th>
+							<th>OP</th>
+							<th>Repasses</th>
+							<th>Comissão</th>
+							<th>Total repasse</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for parcela in parcelas %}
+							<tr id="parcela-{{parcela.id}}"
+									unicorn:key="parcela-{{parcela.id}}">
+								<th>
+									<button 
+										type="button" 
+										name="aprovar-parcela"
+										id="aprovar-parcela-{{parcela.id}}"
+										unicorn:key="aprovar-parcela-{{parcela.id}}"
+										class="btn btn-success">Aprovar</button>
+								</th>
+								<th>{{parcela.contratos.vendedor.id}}</th>
+								<th>{{parcela.contratos.id}}</th>
+								<th>{{parcela.contratos.vendedor.nome}}</th>
+								<th>{{parcela.contratos.comprador.id}}</th>
+								<th>{{parcela.contratos.comprador.nome}}</th>
+								<th>{{parcela.nu_parcela}}|{{parcela.contratos.nu_parcelas}}</th>
+								<th>{{parcela.vl_pagto}}</th>
+								<th>{{parcela.dt_vencimento}}</th>
+								<th>{{parcela.dt_credito}}</th>
+								<th>{{parcela.contrato.descricao}}</th>
+								<th>Cálculo</th>
+								<th>{{parcela.vl_taxa}}</th>
+								<th>{{p.pesos.first.adi}}</th>
+								<th>{{p.pesos.first.me}}</th>
+								<th>{{p.pesos.first.op}}</th>
+								<th>{{parcela.vl_pagto}}</th>
+								<th>Comissão</th>
+								<th>{{parcela.vl_pagto}}</th>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+  </div>
+	<script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="https://cdn.datatables.net/v/dt/dt-1.13.2/datatables.min.js"></script>
+	<script src="{% static 'assets/js/cob_diario/cob_diario_unicorn.js' %}"></script>
+</div> <!-- LAST DIV -->
