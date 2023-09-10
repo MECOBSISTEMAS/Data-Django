@@ -28,10 +28,20 @@ class CobDiarioView(UnicornView):
             self.parcelas = ContratoParcelas.objects.filter(
                 contratos__id=self.contrato_id,
                 dt_pagto__range=[self.data_inicio, self.data_fim],
+                aprovada=False,
+                aprovada_para_repasse=False,
             )
         else:
             print("NÃO POSSUI DATAS, IREI FILTARR SOMENTE PELO ID")
             if self.contrato_id:
                 self.parcelas = ContratoParcelas.objects.filter(
-                    contratos__id=self.contrato_id
+                    contratos__id=self.contrato_id,
+                    aprovada=False,
+                    aprovada_para_repasse=False,
                 ).select_related("contratos")
+                
+    def aprovar_parcela(self, parcela_id):
+        parcela = ContratoParcelas.objects.get(id=parcela_id)
+        parcela.aprovada = True
+        parcela.save()
+        self.filtrar_parcelas()

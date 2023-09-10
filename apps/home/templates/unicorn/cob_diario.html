@@ -54,7 +54,9 @@
 										name="aprovar-parcela"
 										id="aprovar-parcela-{{parcela.id}}"
 										unicorn:key="aprovar-parcela-{{parcela.id}}"
-										class="btn btn-success">Aprovar</button>
+										class="btn btn-success"
+										unicorn:click="aprovar_parcela({{ parcela.id }})"
+										>Aprovar</button>
 								</th>
 								<th>{{parcela.contratos.vendedor.id}}</th>
 								<th>{{parcela.contratos.id}}</th>
@@ -68,9 +70,9 @@
 								<th>{{parcela.contrato.descricao}}</th>
 								<th>Cálculo</th>
 								<th>{{parcela.vl_taxa}}</th>
-								<th>{{p.pesos.first.adi}}</th>
-								<th>{{p.pesos.first.me}}</th>
-								<th>{{p.pesos.first.op}}</th>
+								<th>{{parcela.pesos.first.adi}}</th>
+								<th>{{parcela.pesos.first.me}}</th>
+								<th>{{parcela.pesos.first.op}}</th>
 								<th>{{parcela.vl_pagto}}</th>
 								<th>Comissão</th>
 								<th>{{parcela.vl_pagto}}</th>
