@@ -1232,14 +1232,14 @@ def upload_planilha_dados_brutos(request):
             banco = row[9]
             contrato = row[10]
             evento = row[11]
-            deposito = row[12]
-            calc = row[13]
-            taxas = row[14]
-            adi = row[15]
-            me = row[16]
-            op = row[17]
-            repasses = row[18]
-            comissao = row[19]
+            #deposito = row[12]
+            calc = row[12]
+            taxas = row[13]
+            adi = row[14]
+            me = row[15]
+            op = row[16]
+            repasses = row[17]
+            comissao = row[18]
             
             try:
                 dado = Dado.objects.get(
@@ -1260,7 +1260,7 @@ def upload_planilha_dados_brutos(request):
                 dado.banco = banco
                 #dado.contrato = contrato
                 #dado.evento = evento
-                dado.deposito = deposito
+                #dado.deposito = deposito
                 dado.calculo = calc
                 dado.taxas = taxas
                 dado.adi = adi
@@ -1285,7 +1285,7 @@ def upload_planilha_dados_brutos(request):
                 banco=banco,
                 contrato=contrato,
                 evento=evento,
-                deposito=deposito,
+                #deposito=deposito,
                 calculo=calc,
                 taxas=taxas,
                 adi=adi,
