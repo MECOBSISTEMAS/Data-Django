@@ -10,12 +10,12 @@ from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 
 class Peso(models.Model):
-    pessoa = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=False)
-    parcela = models.ForeignKey('ContratoParcelas', models.CASCADE, blank=True, null=True, related_name='pesos')
+    pessoa = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=True)
+    parcela = models.OneToOneField('ContratoParcelas', models.CASCADE, blank=True, null=True, related_name='peso')
     valor = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    adi = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    me = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
-    op = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    adi = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, default=0)
+    me = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, default=0)
+    op = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True, default=0)
     def __str__(self):
         return f'pessoa: {self.pessoa}, nu_parcela: {self.parcela.nu_parcela}, peso: {self.valor}'
 
@@ -321,13 +321,31 @@ class ContratoParcelas(models.Model):
     fl_acao_judicial = models.CharField(max_length=45, blank=True, null=True)
     boletos_avulso = models.ForeignKey(BoletosAvulso, models.DO_NOTHING, blank=True, null=True)
     dt_atualizacao_monetaria = models.DateField(blank=True, null=True)
+    #?campos para calcular os repasses e o rateio
+    vl_repasse = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    rateio = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    comissao = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     #?campos para indentificar a aprovação
     aprovada = models.BooleanField(default=False)
     aprovada_para_repasse = models.BooleanField(default=False)
-    data_aprovada = models.DateField(auto_now_add=True, blank=True, null=True)
+    data_aprovada = models.DateField(blank=True, null=True)
     
     def __str__(self):
         return f'n°: {self.nu_parcela}, parcela: {self.vl_parcela}, vencimento: {self.dt_vencimento}'
+    
+    def calcular_rateio(self):
+        porcentual = self.peso.valor
+        rateio = self.vl_parcela * (porcentual/100)
+        """ if self.peso.adi != 0:
+            rateio = rateio - (rateio * (self.peso.adi/100)) """
+        repasse = rateio - (self.peso.pessoa.cliente.sim or 0)
+        return [rateio, repasse]
+    
+    @property
+    def rateio_calculado(self):
+        return self.vl_parcela * (self.peso.valor/100)
+    
+    """ ao salvar a parcela preencher os campos de rateio e repasse com seus rescpectivos calculos """
 
     class Meta:
         managed= True

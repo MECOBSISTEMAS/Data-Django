@@ -172,7 +172,7 @@ class RegistrarContratosView(UnicornView):
                         boletos_avulso=parcela['boletos_avulso'],
                         dt_atualizacao_monetaria=parcela['dt_atualizacao_monetaria'],
                     )
-                    Peso.objects.create(
+                    peso = Peso.objects.create(
                         pessoa=pessoa_objeto,
                         valor=pessoa['peso'],
                         parcela=parcela,
@@ -180,6 +180,8 @@ class RegistrarContratosView(UnicornView):
                         me=self.me,
                         op=self.op,
                     )
+                    """ parcela.rateio = parcela.vl_parcela * (float(peso.valor)/100)
+                    parcela.vl_repasse = parcela.rateio - (peso.pessoa.cliente.sim or 0) """
 
             
             self.id_contrato = None

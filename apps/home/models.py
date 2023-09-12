@@ -20,7 +20,7 @@ ou seja, sempre que uma pessoa (que esteja no banco de dados cadastrado na tabel
 realizar uma venda ela é adicionada na tabela CadCliente"""
 
 class CadCliente(models.Model):
-    vendedor = models.ForeignKey('Pessoas', on_delete=models.CASCADE, null=True, related_name='cliente')
+    vendedor = models.OneToOneField('Pessoas', on_delete=models.CASCADE, null=True, related_name='cliente')
     codigo = models.IntegerField(blank=True, null=True)
 
     taxas = models.DecimalField("Taxas", max_digits=5, decimal_places=2, blank=True, null=True)

@@ -4,6 +4,7 @@ from django.db.models.functions import Coalesce, Cast
 from decimal import Decimal
 from django_unicorn.components import UnicornView, QuerySetType
 from django.contrib.humanize.templatetags.humanize import intcomma
+import datetime
 
 from apps.home.models import Credito, Debito
 from apps.home.existing_models import Pessoas
@@ -43,5 +44,6 @@ class CobDiarioView(UnicornView):
     def aprovar_parcela(self, parcela_id):
         parcela = ContratoParcelas.objects.get(id=parcela_id)
         parcela.aprovada = True
+        parcela.data_aprovada = datetime.datetime.now()
         parcela.save()
         self.filtrar_parcelas()

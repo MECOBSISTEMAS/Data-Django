@@ -58,22 +58,22 @@
 										unicorn:click="aprovar_parcela({{ parcela.id }})"
 										>Aprovar</button>
 								</th>
-								<th>{{parcela.contratos.vendedor.id}}</th>
+								<th>{{parcela.peso.pessoa.id}}</th>
 								<th>{{parcela.contratos.id}}</th>
-								<th>{{parcela.contratos.vendedor.nome}}</th>
+								<th>{{parcela.peso.pessoa.nome}}</th>
 								<th>{{parcela.contratos.comprador.id}}</th>
 								<th>{{parcela.contratos.comprador.nome}}</th>
-								<th>{{parcela.nu_parcela}}|{{parcela.contratos.nu_parcelas}}</th>
+								<th>{{parcela.nu_parcela}}</th>
 								<th>{{parcela.vl_pagto}}</th>
-								<th>{{parcela.dt_vencimento}}</th>
-								<th>{{parcela.dt_credito}}</th>
+								<th>{{parcela.dt_vencimento|date:'d/m/y'}}</th>
+								<th>{{parcela.dt_credito|date:'d/m/y'}}</th>
 								<th>{{parcela.contrato.descricao}}</th>
-								<th>Cálculo</th>
+								<th>{{parcela.rateio_calculado}}</th>
 								<th>{{parcela.vl_taxa}}</th>
-								<th>{{parcela.pesos.first.adi}}</th>
-								<th>{{parcela.pesos.first.me}}</th>
-								<th>{{parcela.pesos.first.op}}</th>
-								<th>{{parcela.vl_pagto}}</th>
+								<th>{{parcela.peso.adi}}</th>
+								<th>{{parcela.peso.me}}</th>
+								<th>{{parcela.peso.op}}</th>
+								<th>{{parcela.vl_parcela}}</th>
 								<th>Comissão</th>
 								<th>{{parcela.vl_pagto}}</th>
 							</tr>
