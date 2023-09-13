@@ -1,0 +1,138 @@
+{% extends "layouts/base.html" %} 
+{% block title %} UI Forms {% endblock %}
+{% load widget_tweaks %}
+{% load utils %}
+{% load humanize %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                
+                <div class="page-header-title">
+                  <h5 class="m-b-10">COB Diário (Créditos Recebidos)</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Tabelas & Formulários</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">COB</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-xl-12">
+          <div class="card">
+            <div class="card-header">
+              <h5>Filtre os créditos recebidos por período</h5>
+            </div>
+            
+            <div class="card-block table-border-style">
+              <form method="post">
+                {% csrf_token %}
+                Data Início <input type="date" id="data_inicio" name="data_inicio" required {% if data_inicio %} value={{data_inicio}} {% endif %}>
+                Data Fim <input type="date" id="data_fim" name="data_fim" required {% if data_fim %} value={{data_fim}} {% endif %}>
+                <button type="submit" name="btn-submit" id="btn-submit" class="btn btn-primary">Filtrar</button>
+                <button type="button" name="btn-clear-fields" id="btn-clear-fields" class="btn btn-danger">Limpar</button>
+              </form>
+              <a name="exportar-consulta" id="exportar-consulta" class="btn btn-info" href="{% url 'home:download_planilha_cob' %}" role="button">Exportar Consulta .xlsx</a>
+              <!-- <form action="{% url 'home:upload_planilha_cob' %}" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input required type="file" class="" name="docpicker" id="docpicker" value="Importar Planilha">
+                <button type="submit" class="btn btn-success">Enviar Planilha</button>
+              </form> -->
+              <div class="table-responsive">
+                <table id="table-cob" class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Vendedor ID</th>
+                      <th>Contrato ID</th>
+                      <th>Vendedor</th>
+                      <th>Comprador ID</th>
+                      <th>Comprador</th>
+                      <th>Parcelas Contrato</th>
+                      <th>Valor Pago</th>
+                      <th>Data Vencimento</th>
+                      <th>Data Crédito</th>
+                      <th>Banco</th>
+                      <th>Contrato</th>
+                      <th>Evento</th>
+                      <th>Depósito</th>
+                      <th>Cálculo</th>
+                      <th>Taxas</th>
+                      <th>ADI</th>
+                      <th>ME</th>
+                      <th>OP</th>
+                      <th>Repasses</th>
+                      <th>Comissão</th>
+                      <th>Total repasse</th>
+                      <th>Dado ID</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for querie in sql %}
+                    <tr>
+                      <th>{{querie.id_vendedor}}</th>
+                      <th>{{querie.id_contrato}}</th>
+                      <td>{{querie.vendedor}}</td>
+                      <td>{{querie.id_comprador}}</td>
+                      <td>{{querie.comprador}}</td>
+                      <td>{{querie.parcelas_contrato}}</td>
+                      <td>{{querie.vl_pago}}</td>
+                      <td>{{querie.dt_vencimento|date:'d/m/y'}}</td>
+                      <td>{{querie.dt_credito|date:'d/m/y'}}</td>
+                      <td>{{querie.banco}}</td>
+                      <td>{{querie.contrato}}</td>
+                      <td>{{querie.evento}}</td>
+                      <td>{{querie.deposito}}</td>
+                      <td>{{querie.calculo}}</td>
+                      <td>{{querie.taxas}}</td>
+                      <td>{{querie.adi}}</td>
+                      <td>{{querie.me}}</td>
+                      <td>{{querie.op}}</td>
+                      <td>{{querie.repasses}}</td>
+                      <td>{{querie.comissao}}</td>
+                      <td>{{querie.total_repasse|intcomma}}</td>
+                      <td>{{querie.id}}</td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>    
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#table-cad-cliente').DataTable();
+    $('#table-cob').DataTable();
+  })
+</script>
+{% endblock javascripts %}
