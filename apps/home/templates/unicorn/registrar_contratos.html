@@ -42,7 +42,15 @@
               <button unicorn:click="checar_contrato" type="button" name="checar_contrato_id" id="checar_contrato_id" class="btn btn-primary">Checar</button>
             </div>
           </div>
-          <input unicorn:model.defer="adi" type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)">
+          <label for="adi">ADI</label>
+          <select 
+            unicorn:model.defer="adi"
+            name="adi" id="adi" 
+            class="form-control">
+            <option value="sim">Sim</option>
+            <option value="nao">Não</option>
+          </select>
+          {% comment %} <input unicorn:model.defer="adi" type="number" name="adi" step="0.01" class="form-control" placeholder="ADI (não colocar o simbolo)"> {% endcomment %}
           <input unicorn:model.defer="me" type="number" name="me" step="0.01" class="form-control" placeholder="ME">
           <input unicorn:model.defer="op" type="number" name="op" step="0.01" class="form-control" placeholder="OP">
           <input type="number" name="comissionado" class="form-control" placeholder="ID do Comissionado">

@@ -325,6 +325,7 @@ class ContratoParcelas(models.Model):
     vl_repasse = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     rateio = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     comissao = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    eh_adi = models.BooleanField(default=False, blank=True, null=True)
     #?campos para indentificar a aprovação
     aprovada = models.BooleanField(default=False)
     aprovada_para_repasse = models.BooleanField(default=False)
@@ -332,14 +333,6 @@ class ContratoParcelas(models.Model):
     
     def __str__(self):
         return f'n°: {self.nu_parcela}, parcela: {self.vl_parcela}, vencimento: {self.dt_vencimento}'
-    
-    def calcular_rateio(self):
-        porcentual = self.peso.valor
-        rateio = self.vl_parcela * (porcentual/100)
-        """ if self.peso.adi != 0:
-            rateio = rateio - (rateio * (self.peso.adi/100)) """
-        repasse = rateio - (self.peso.pessoa.cliente.sim or 0)
-        return [rateio, repasse]
     
     @property
     def rateio_calculado(self):

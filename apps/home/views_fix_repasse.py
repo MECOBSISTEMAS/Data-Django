@@ -1226,6 +1226,7 @@ def upload_planilha_dados_brutos(request):
         dados_criados = 0
         linhas = 0
         erros:list[str] = []
+        lista_de_dados_que_serao_criados:list = []
         for row in cob.iter_rows(values_only=True):
             if linhas < 1:
                 linhas += 1
@@ -1288,7 +1289,7 @@ def upload_planilha_dados_brutos(request):
                 dado.save()
                 dados_modificados += 1
             except Dado.DoesNotExist:
-                Dado.objects.create(
+                lista_de_dados_que_serao_criados.append(Dado(
                 id_vendedor=vendedor_id,
                 id_contrato=contrato_id,
                 vendedor=nome_vendedor,
@@ -1309,14 +1310,14 @@ def upload_planilha_dados_brutos(request):
                 op=op,
                 repasses=repasses,
                 comissao=comissao
-            )
+            ))
                 dados_criados += 1
             except Dado.MultipleObjectsReturned:
                 erros.append(f"Foi encontrado mais de um dado com os mesmos dados na linha {linhas}\n chaves primarias de busca são: id_vendedor={vendedor_id}, id_contrato={contrato_id}, comprador={comprador}, vl_pago={valor}")
             except Exception as e:
                 erros.append(f"Erro na linha {linhas}, Exception Error:{e}")
             
-            
+        Dado.objects.bulk_create(lista_de_dados_que_serao_criados)
         erros_html = "<ul>"
         for erro in erros:
             erros_html += f"<li>{erro}</li>"

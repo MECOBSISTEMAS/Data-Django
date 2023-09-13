@@ -34,7 +34,7 @@ class RegistrarContratosView(UnicornView):
     id_pessoa:int = None
     peso:float = 0
     id_contrato:int = None
-    adi:int = None
+    adi:str = "sim"
     me:int = None
     op:int = None
     id_comissionado:int = None
@@ -180,8 +180,8 @@ class RegistrarContratosView(UnicornView):
                         me=self.me,
                         op=self.op,
                     )
-                    """ parcela.rateio = parcela.vl_parcela * (float(peso.valor)/100)
-                    parcela.vl_repasse = parcela.rateio - (peso.pessoa.cliente.sim or 0) """
+                    """ parcela.rateio = Decimal(parcela.vl_parcela) * (Decimal(peso.valor)/100)
+                    parcela.vl_repasse = parcela.rateio - (Decimal(peso.pessoa.cliente.sim or 0)) """
 
             
             self.id_contrato = None
