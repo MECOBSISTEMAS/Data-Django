@@ -171,18 +171,16 @@ class RegistrarContratosView(UnicornView):
                         fl_acao_judicial=parcela['fl_acao_judicial'],
                         boletos_avulso=parcela['boletos_avulso'],
                         dt_atualizacao_monetaria=parcela['dt_atualizacao_monetaria'],
+                        #eh_adi= True if self.adi == 'sim' else False,
                     )
-                    peso = Peso.objects.create(
+                    Peso.objects.create(
                         pessoa=pessoa_objeto,
                         valor=pessoa['peso'],
                         parcela=parcela,
-                        adi=self.adi,
+                        #adi=self.adi,
                         me=self.me,
                         op=self.op,
                     )
-                    """ parcela.rateio = Decimal(parcela.vl_parcela) * (Decimal(peso.valor)/100)
-                    parcela.vl_repasse = parcela.rateio - (Decimal(peso.pessoa.cliente.sim or 0)) """
-
             
             self.id_contrato = None
             self.contrato_existe = False
