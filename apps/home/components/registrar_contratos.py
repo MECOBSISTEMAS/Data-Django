@@ -171,7 +171,7 @@ class RegistrarContratosView(UnicornView):
                         fl_acao_judicial=parcela['fl_acao_judicial'],
                         boletos_avulso=parcela['boletos_avulso'],
                         dt_atualizacao_monetaria=parcela['dt_atualizacao_monetaria'],
-                        #eh_adi= True if self.adi == 'sim' else False,
+                        eh_adi= True if self.adi == 'sim' else False,
                     )
                     Peso.objects.create(
                         pessoa=pessoa_objeto,
