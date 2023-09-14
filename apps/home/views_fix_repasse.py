@@ -24,6 +24,7 @@ import json
 import openpyxl
 import asyncio
 import calendar
+import celery
 
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
@@ -34,6 +35,8 @@ from . import funcoes
 from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 #from .forms import CAD_ClienteForm, Calculo_RepasseForm
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado, RepasseAprovado, ParcelaTaxa
+
+from .tasks import criar_dados
 
 def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
@@ -207,6 +210,8 @@ def pegar_pessoa(pessoa_id):
 
 @login_required(login_url="/login/")
 def index(request):
+    task = criar_dados.delay()
+    celery.result.AsyncResult(task.id)
     context = {'segment': 'index'}
     
     primeiro_dia_do_mes_atual = datetime.now().replace(day=1)
