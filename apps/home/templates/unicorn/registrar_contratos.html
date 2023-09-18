@@ -58,12 +58,13 @@
           <div class="form-group">
             <br>
             <label for="selecionar-tipo-taxa">É um condominio ?</label>
-            <select unicorn:model.defer="eh_condominio" class="form-control" name="sim-nao" id="sim-nao-condominio">
+            <select unicorn:model="eh_condominio" class="form-control" name="sim-nao" id="sim-nao-condominio">
               <option value="sim">Sim</option>
               <option value="nao">Não</option>
             </select>
           </div>
 
+          {% if eh_condominio == "sim" and contrato_existe %}
           <div class="container">
             <div class="row mt-3">
                 <div class="col-md-6">
@@ -88,13 +89,6 @@
                       unicorn:key="lista-pessoa-{{pessoa.id}}"
                       > {{pessoa.nome}} - {{pessoa.peso}}
                       <br>  
-                      {% comment %} <input type="number" 
-                        name="peso" 
-                        id="peso-{{pessoa.id}}" 
-                        required="true"
-                        placeholder="peso"
-                        unicorn:key="peso-{{pessoa.id}}"
-                        > {% endcomment %}
                         <button type="button" 
                         class="btn btn-danger btn-sm"
                         id="del-vendedor-{{pessoa.id}}"
@@ -104,28 +98,23 @@
                        </li>
                     </ul>
                   {% endfor %}
-                  {% comment %} <li class="list-group-item">João 
-                    <input type="number" 
-                      name="peso" 
-                      id="peso" 
-                      placeholder="peso"
-                    > <input type="hidden" name="pessoa_id" value="">
-                    <button type="button" 
-                      class="btn btn-danger btn-sm"
-                      id="del-vendedor"
-                      >DEL</button> </li>
-                  <li class="list-group-item">Marcelo <input type="number" name="peso" id="peso" placeholder="peso"> <button type="button" class="btn btn-danger btn-sm">DEL</button></li>
-                  <li class="list-group-item">Pedro <input type="number" name="peso" id="peso" placeholder="peso"> <button type="button" class="btn btn-danger btn-sm">DEL</button></li> {% endcomment %}
                 </div>
             </div>
         </div>
+          {% endif %}
           <div class="container pt-2">
           {% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
           <button class="btn btn-primary" 
             unicorn:click="novo_contrato" 
             id="nova-taxa" type="submit" 
             name="nova-taxa"
-            {% if  listas_pessoas|length < 1 or not contrato_existe %} disabled="true" {% endif %}
+            {% if not contrato_existe %}   
+                disabled="true" 
+            {% else %}
+              {% if eh_condominio == "sim" and listas_pessoas|length < 1 %}
+                  disabled="true" 
+                {% endif %}
+            {% endif %}
             >Novo Contrato</button>
         {% else %}
           <button class="btn btn-primary disabled" unicorn:click="novo_contrato" type="button" name="nova-taxa">Novo Contrato</button>
