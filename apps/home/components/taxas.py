@@ -35,7 +35,7 @@ class TaxasView(UnicornView):
     
     
     #!campos para adicionar nova taxa
-    cliente_id:str = ""
+    cliente_id:int = None
     valor:float = None
     data_taxa:str = ""
     descricao:str = ""
@@ -103,7 +103,7 @@ class TaxasView(UnicornView):
         self.filtrar_taxas()
         
     def nova_taxa(self):
-        try:    
+        try:
             pessoa = Pessoas.objects.get(id=self.cliente_id)
             taxa = Taxa.objects.create(
                 cliente=pessoa,
@@ -115,6 +115,8 @@ class TaxasView(UnicornView):
             self.mensagem_error_nova_taxa = "Taxa adicionada com sucesso"
         except Pessoas.DoesNotExist:
             self.mensagem_error_nova_taxa = "Cliente não encontrado"
+        except Exception as e:
+            print(e)
         self.filtrar_taxas()
     
     """ def __del__(self):

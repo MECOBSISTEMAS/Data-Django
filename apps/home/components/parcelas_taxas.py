@@ -30,11 +30,12 @@ class ParcelasTaxasView(UnicornView):
             query_params['dt_vencimento__gte'] = self.data_vencimento_inicio
         if self.data_vencimento_fim:
             query_params['dt_vencimento__lte'] = self.data_vencimento_fim
-        self.parcelas_taxas = ParcelaTaxa.objects.filter(
-            **query_params,
-            aprovada=False,
-            aprovada_para_repasse=False,
-        )
+        if len(query_params) > 0:
+            self.parcelas_taxas = ParcelaTaxa.objects.filter(
+                **query_params,
+                aprovada=False,
+                aprovada_para_repasse=False,
+            )
         
     def aprovar_parcela_taxas(self, parcela_taxa_id:int):
         parcela_taxa = ParcelaTaxa.objects.get(id=parcela_taxa_id)
