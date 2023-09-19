@@ -849,16 +849,6 @@ def pages(request):
                     tbody += "</tr>"
                 context['tbody_honorarios'] = tbody
                     
-
-        elif load_template == 'tbl_parcela_taxas.html':
-            if request.method == 'POST':
-                if 'filtrar-parcela-taxa' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')
-                    data_fim = request.POST.get('data-fim')
-                    context['data_inicio'] = data_inicio
-                    context['data_fim'] = data_fim
-                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim), aprovada=False)
-                    
         elif load_template == 'tbl_taxas_aprovadas.html':
             if request.method == 'POST':
                 if 'filtrar-parcela-taxa-aprovada' in request.POST:

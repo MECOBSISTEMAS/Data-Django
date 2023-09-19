@@ -180,6 +180,9 @@ class RegistrarContratosView(UnicornView):
                             me=self.me,
                             op=self.op,
                         )
+                        """ parcela.vl_repasse = parcela.repasse_calculado
+                        parcela.rateio = parcela.rateio_calculado
+                        parcela.save() """
             else:
                 pass
             self.id_contrato = None
