@@ -77,17 +77,11 @@
 								<tr>
 									<th>
 										<button 
-											unicorn:click="aprovar_parcela_taxas({{ parcela_taxa.id }})"
+											unicorn:click="restaurar_parcela_taxa({{ parcela_taxa.id }})"
 											class="btn btn-success"
-											id="aprovar-parcela-taxa-{{ parcela_taxa.id }}"
-											name="aprovar-parcela-taxa-{{ parcela_taxa.id }}"
-											>Aprovar</button>
-											<button
-												unicorn:click="deletar_parcela_taxas({{ parcela_taxa.id }})"
-												class="btn btn-warning"
-												id="deletar-parcela-taxa-{{ parcela_taxa.id }}"
-												name="deletar-parcela-taxa-{{ parcela_taxa.id }}"
-											>Del.</button>
+											id="restaurar-parcela-taxa-{{ parcela_taxa.id }}"
+											name="restaurar-parcela-taxa-{{ parcela_taxa.id }}"
+											>Restaurar</button>
 									</th>
 									<td>{{parcela_taxa.id_contrato}}</td>
 									<td>{{parcela_taxa.comprador}}</td>

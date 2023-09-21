@@ -78,7 +78,8 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     id_vendedor=OuterRef('vendedor__id'),
                     data_aprovada__range=[data_inicio, data_fim],
                     aprovada=True,
-                    aprovada_para_repasse=False
+                    aprovada_para_repasse=False,
+                    deletada=False
                 ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
                 output_field=DecimalField(max_digits=8, decimal_places=2),
             ),
@@ -142,7 +143,8 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     id_comprador=OuterRef('vendedor__id'),
                     data_aprovada__range=(data_inicio, data_fim),
                     aprovada=True,
-                    aprovada_para_repasse=False
+                    aprovada_para_repasse=False,
+                    deletada=False
                 ).values('id').annotate(total=Sum('desconto_total')).values('total')[:1],
                 output_field=DecimalField(max_digits=8, decimal_places=2),
         ),

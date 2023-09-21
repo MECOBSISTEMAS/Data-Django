@@ -11,7 +11,7 @@ from apps.home.existing_models import Pessoas
 from django_unicorn.components import UnicornView, QuerySetType
 
 
-class ParcelasTaxasView(UnicornView):
+class ParcelasDeletadasView(UnicornView):
     #?campos do formulario
     data_vencimento_inicio:str = ""
     data_vencimento_fim:str = ""
@@ -19,6 +19,7 @@ class ParcelasTaxasView(UnicornView):
     nome_comprador:str = ""
     #?campos para listar
     parcelas_taxas:QuerySetType[ParcelaTaxa] = ParcelaTaxa.objects.none()
+    
     
     def filtrar_parcelas_taxas(self):
         query_params = {}
@@ -35,18 +36,12 @@ class ParcelasTaxasView(UnicornView):
                 **query_params,
                 aprovada=False,
                 aprovada_para_repasse=False,
-                deletada=False,
+                deletada=True,
             )
-        
-    def aprovar_parcela_taxas(self, parcela_taxa_id:int):
+            
+    def restaurar_parcela_taxa(self, parcela_taxa_id:int):
         parcela_taxa = ParcelaTaxa.objects.get(id=parcela_taxa_id)
-        parcela_taxa.aprovada = True
-        parcela_taxa.data_aprovada = datetime.now()
+        parcela_taxa.deletada = False
         parcela_taxa.save()
         self.filtrar_parcelas_taxas()
         
-    def deletar_parcela_taxas(self, parcela_taxa_id:int):
-        parcela_taxa = ParcelaTaxa.objects.get(id=parcela_taxa_id)
-        parcela_taxa.deletada = True
-        parcela_taxa.save()
-        self.filtrar_parcelas_taxas()
