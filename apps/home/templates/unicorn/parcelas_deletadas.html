@@ -37,18 +37,6 @@
 							unicorn:click="filtrar_parcelas_taxas">Filtrar</button>
 				</p>
 			</form>
-			<div class="d-flex">
-			</div>
-			<h4>Importar Planilha Parcelas</h4>
-			{% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
-			<form action="{% url 'home:upload_planilha_parcelas_taxas' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
-				{% csrf_token %}
-				<input type="file" name="docpicker">
-				<button type="submit" class="btn btn-primary">Enviar planilha</button>
-			</form>
-			{% else %}
-			<p>Sem permissão para enviar planilha ({{user.acesso.permissao}}).</p>
-			{% endif %}
 		</div>
 
 		<div class="card-block table-border-style">
