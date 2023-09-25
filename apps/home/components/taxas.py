@@ -88,12 +88,14 @@ class TaxasView(UnicornView):
     def aprovar_taxa(self, id_taxa):
         taxa = Taxa.objects.get(id=id_taxa)
         taxa.aprovada = True
+        taxa.data_aprovada = datetime.now()
         taxa.save()
         self.filtrar_taxas()
         
     def desaprovar_taxa(self, id_taxa):
         taxa = Taxa.objects.get(id=id_taxa)
         taxa.aprovada = False
+        taxa.data_aprovada = None
         taxa.save()
         self.filtrar_taxas()
         
