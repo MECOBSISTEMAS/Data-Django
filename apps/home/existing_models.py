@@ -337,7 +337,7 @@ class ContratoParcelas(models.Model):
     
     @property
     def rateio_calculado(self):
-        return self.vl_parcela * (decimal.Decimal(self.peso.valor)/100)
+        return self.vl_pagto * (self.peso.valor/100)
     
     @property
     def repasse_calculado(self):
