@@ -942,6 +942,36 @@ def download_planilha_cob(request, *args, **kwargs):
             response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
             return response
 
+def download_planilha_taxas_aprovadas(request, *args, **kwargs):
+    taxas = Taxa.objects.filter(
+        dt_taxa__range=[request.POST.get('data_inicio'), request.POST.get('data_fim')],
+        aprovada=True,
+    )
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filepath = os.path.join(tmpdirname, f'planilha_consulta_cob_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        cabecalho = ['Cliente', 'Data', 'Descrição', 'Valor', 'Tipo', 'Data de aprovação']
+        
+        for i, cab in enumerate(cabecalho):
+            sheet.cell(row=1, column=i+1).value = cab
+            
+        row = 2  # Comece da segunda linha (após o cabeçalho)
+        for taxa in taxas:
+            sheet.cell(row=row, column=1, value= taxa.cliente.nome)
+            sheet.cell(row=row, column=2, value = taxa.dt_taxa.strftime('%Y-%m-%d') if taxa.dt_taxa else '')
+            sheet.cell(row=row, column=3, value = taxa.descricao if taxa.descricao else '')
+            sheet.cell(row=row, column=4, value = str(taxa.taxas) if taxa.taxas else '')
+            sheet.cell(row=row, column=5, value = taxa.tipo if taxa.tipo else '')
+            sheet.cell(row=row, column=6, value = taxa.data_aprovada.strftime('%Y-%m-%d') if taxa.data_aprovada else '')
+            row += 1
+
+        workbook.save(filepath)
+        with open(filepath, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
+
 def upload_planilha_cob(request, *args, **kwargs):
     if request.method == 'POST':
         planilha = request.FILES.get('docpicker')

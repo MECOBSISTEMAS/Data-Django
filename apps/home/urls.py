@@ -91,6 +91,7 @@ urlpatterns = [
          views_fix_repasse.desaprovar_repasse_retido, name='desaprovar_repasse_retido'),
     path('download-planilha-repasses-aprovados/<data_inicio>/<data_fim>',
          views_fix_repasse.download_planilha_repasses_aprovados, name='download_planilha_repasses_aprovados'),
+    path('download-planilha-taxas-aprovadas>', views_fix_repasse.download_planilha_taxas_aprovadas, name='download_planilha_taxas_aprovadas'),
     # Matches any html file
     re_path(r'^.*\.*', views_fix_repasse.pages, name='pages'),
 

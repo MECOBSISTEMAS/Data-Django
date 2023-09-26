@@ -12,15 +12,28 @@
             data fim: <input type="date" unicorn:model.defer="data_fim" name="data_fim" id="data_fim" required>
           <button unicorn:click="filtrar_taxas" unicorn:key="filtrar_taxa" class="btn btn-primary" type="submit" name="filtrar_taxa">Filtrar</button>
           </form>
-          <form>
+          <form method="post" action="{% url "home:download_planilha_taxas_aprovadas" %}">
+            {% csrf_token %}
+            <h6>Exportar Taxas aprovadas</h6>
+            data inicio :<input type="date" name="data_inicio" id="data_inicio" required>
+            data fim: <input type="date" name="data_fim" id="data_fim" required>
+            <button 
+              type="submit"
+              class="btn btn-primary"
+              name="exportar-planilha"
+              >Exportar</button>
+          </form>
+          {% comment %} fazer um form para importar planilha {% endcomment %}
+          <form 
+            enctype="multipart/form-data">
             <div>
-              <h6>Exportar Taxas aprovadas</h6>
+              <h6>Importar Taxas</h6>
+              <input type="file" name="file" id="file" required>
               <button 
                 type="submit"
                 class="btn btn-primary"
-                >Exportar</button>
+                >Importar</button>
             </div>
-          </form>
         </div>
         <h6>
 					{{ mensagem_error_nova_taxa }}

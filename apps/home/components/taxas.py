@@ -120,6 +120,8 @@ class TaxasView(UnicornView):
         except Exception as e:
             print(e)
         self.filtrar_taxas()
+        
+                
     
     """ def __del__(self):
         self.taxas_aprovadas = Taxa.objects.none()
