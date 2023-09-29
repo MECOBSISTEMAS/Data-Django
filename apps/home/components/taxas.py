@@ -24,6 +24,7 @@ from apps.home.models import Taxa
 from apps.home.existing_models import Pessoas
 
 class TaxasView(UnicornView):
+    datas_disponiveis:list = []
     data_inicio:str = "" #? esse campo serve para armazenar a data do input data_inicio
     data_fim:str = "" #? esse campo serve para armazenar a data do input data_fim
     taxas_nao_aprovadas:QuerySetType(Taxa) = Taxa.objects.none()#? esse campo serve para armazenar as taxas não aprovadas
@@ -84,6 +85,10 @@ class TaxasView(UnicornView):
         self.tbody = tbody
 
         
+    def mount(self):
+        queryset = Taxa.objects.dates('data_aprovada', 'year', order='DESC')
+        for query in queryset:
+            self.datas_disponiveis.append(query.year)        
     
     def aprovar_taxa(self, id_taxa):
         taxa = Taxa.objects.get(id=id_taxa)

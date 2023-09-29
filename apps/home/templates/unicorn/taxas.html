@@ -23,7 +23,46 @@
               name="exportar-planilha"
               >Exportar</button>
           </form>
-          {% comment %} fazer um form para importar planilha {% endcomment %}
+          <h6>Exportar Taxas aprovadas V2</h6>
+          <form class="d-flex" method="post" action="{% url "home:download_planilha_taxas_aprovadas_quinzena" %}">
+            {% csrf_token %}
+            <select name="ano" id="ano" class="form-control">
+              {% for data_disponivel in datas_disponiveis %}
+                <option value="{{data_disponivel}}">{{data_disponivel}}</option>
+              {% endfor %}
+            </select>
+            <select name="mes" id="mes" class="form-control">
+              <option value="1">Janeiro</option>
+              <option value="2">Fervereiro</option>
+              <option value="3">Março</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="quinzena" id="exampleRadios1" value="1" checked>
+              <label class="form-check-label" for="exampleRadios1">
+                1° Quinzena
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="quinzena" id="exampleRadios2" value="2">
+              <label class="form-check-label" for="exampleRadios2">
+                2° Quinzena
+              </label>
+            </div>
+            <button 
+              type="submit"
+              class="btn btn-primary"
+              name="exportar-planilha"
+              >Exportar</button>
+          </form>
           <form 
             enctype="multipart/form-data">
             <div>

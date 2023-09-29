@@ -944,11 +944,66 @@ def download_planilha_cob(request, *args, **kwargs):
 
 def download_planilha_taxas_aprovadas(request, *args, **kwargs):
     taxas = Taxa.objects.filter(
-        dt_taxa__range=[request.POST.get('data_inicio'), request.POST.get('data_fim')],
+        data_aprovada__range=[request.POST.get('data_inicio'), request.POST.get('data_fim')],
         aprovada=True,
     )
     with tempfile.TemporaryDirectory() as tmpdirname:
-        filepath = os.path.join(tmpdirname, f'planilha_consulta_cob_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        filepath = os.path.join(tmpdirname, f'planilha_relatorio_parcelas_aprovadas_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        cabecalho = ['Cliente', 'Data', 'Descrição', 'Valor', 'Tipo', 'Data de aprovação']
+        
+        for i, cab in enumerate(cabecalho):
+            sheet.cell(row=1, column=i+1).value = cab
+            
+        row = 2  # Comece da segunda linha (após o cabeçalho)
+        for taxa in taxas:
+            sheet.cell(row=row, column=1, value= taxa.cliente.nome)
+            sheet.cell(row=row, column=2, value = taxa.dt_taxa.strftime('%Y-%m-%d') if taxa.dt_taxa else '')
+            sheet.cell(row=row, column=3, value = taxa.descricao if taxa.descricao else '')
+            sheet.cell(row=row, column=4, value = str(taxa.taxas) if taxa.taxas else '')
+            sheet.cell(row=row, column=5, value = taxa.tipo if taxa.tipo else '')
+            sheet.cell(row=row, column=6, value = taxa.data_aprovada.strftime('%Y-%m-%d') if taxa.data_aprovada else '')
+            row += 1
+
+        workbook.save(filepath)
+        with open(filepath, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
+def download_planilha_taxas_aprovadas_quinzena(request, *args, **kwargs):
+    """ <QueryDict: {
+        'csrfmiddlewaretoken':
+        ['Lgk7KvAiy1KBmZmHRPvTtXEX2I7zS3XBfy0Mxcft8elbdSbUbdrzJk2C3rzEdsab'], 
+        'ano': ['2023'], 
+        'mes': ['1'], #janeiro
+        'quinzena': ['2'], 
+        'exportar-planilha': ['']}> """
+    #primeira quinzena: 1° ate o 14° dia do mes
+    #segunda quinzena: 15° ate o ultimo dia do mes
+    
+    ano = int(request.POST.get('ano'))
+    mes = int(request.POST.get('mes'))
+    quinzena = int(request.POST.get('quinzena'))
+
+    # Defina o primeiro dia do mês
+    primeiro_dia_mes = date(ano, mes, 1)
+
+    if quinzena == 1:
+        # Primeira quinzena: 1° até o 14° dia do mês
+        data_inicial = primeiro_dia_mes
+        data_final = primeiro_dia_mes + timedelta(days=13)
+    else:
+        # Segunda quinzena: 15° até o último dia do mês
+        ultimo_dia_mes = date(ano, mes % 12 + 1, 1) - timedelta(days=1)
+        data_inicial = primeiro_dia_mes + timedelta(days=14)
+        data_final = ultimo_dia_mes
+    taxas = Taxa.objects.filter(
+        data_aprovada__range=[data_inicial, data_final],
+        aprovada=True,
+    )
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filepath = os.path.join(tmpdirname, f'planilha_relatorio_parcelas_aprovadas_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
         workbook = openpyxl.Workbook()
         sheet = workbook.active
         cabecalho = ['Cliente', 'Data', 'Descrição', 'Valor', 'Tipo', 'Data de aprovação']
