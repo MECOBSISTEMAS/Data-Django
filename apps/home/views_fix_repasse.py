@@ -72,6 +72,24 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
             ),
             0,
             output_field=DecimalField(max_digits=8, decimal_places=2)
+            ) + 
+            Coalesce(
+                Subquery(
+                    ContratoParcelas.objects.filter(
+                        contratos__dt_contrato__range=(data_inicio, data_fim),
+                        contratos__vendedores__id=OuterRef('vendedor__id'),
+                        aprovada=False,
+                        aprovada_para_repasse=False
+                    ).values(
+                        'contratos__vendedores__id',
+                    ).annotate(
+                        repasses_totais=Sum('repasse_calculado')
+                    ).values(
+                        'repasses_totais'
+                    ),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
         total_credito=Coalesce(
             Subquery(
