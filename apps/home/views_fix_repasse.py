@@ -67,7 +67,8 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     aprovada_para_repasse=False
                 ).values('id_vendedor').annotate(
                     repasses_totais=Sum('repasses')
-                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+                ).values('repasses_totais'), 
+                output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
             0,
             output_field=DecimalField(max_digits=8, decimal_places=2)

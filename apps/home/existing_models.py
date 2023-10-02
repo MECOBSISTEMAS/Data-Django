@@ -345,6 +345,7 @@ class ContratoParcelas(models.Model):
             return self.rateio_calculado - (self.rateio_calculado * 3/100)
         return self.rateio_calculado
     
+    
     """ ao salvar a parcela preencher os campos de rateio e repasse com seus rescpectivos calculos """
 
     class Meta:
