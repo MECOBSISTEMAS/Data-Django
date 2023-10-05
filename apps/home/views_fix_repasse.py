@@ -83,7 +83,7 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     ).values(
                         'contratos__vendedores__id',
                     ).annotate(
-                        repasses_totais=Sum('repasse_calculado')
+                        repasses_totais=Sum('vl_repasse')
                     ).values(
                         'repasses_totais'
                     ),
@@ -1307,6 +1307,53 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, <br> linhas lidas: {} , <br> criadas: {}, <br> erros: {}".format(linhas, parcelas_criadas, erros))
+
+def upload_planilha_taxas(request):
+    if request.method == "POST":
+        if not request.FILES.get('docpicker').name.endswith('.xlsx'):
+            return HttpResponse("Arquivo não é do tipo .xlsx")
+        linhas:int = 0
+        linhas_nulas:int = 0
+        taxas_criadas:int = 0
+        erros:list[str] = []
+        wb = openpyxl.load_workbook(request.FILES.get('docpicker'))
+        planilha = wb.active
+        for row in planilha.iter_rows(values_only=True):
+            if linhas < 1:
+                linhas += 1
+                continue
+            if row[0] == None or row[0] == '':
+                linhas_nulas += 1
+                if linhas_nulas > 1:
+                    break
+                continue
+            linhas += 1
+            id_vendedor = row[0]
+            nome_vendedor = row[1]
+            data_lancamento = row[2]
+            tipo = row[3]
+            valor = row[4]
+            try:
+                taxa = Taxa.objects.create(
+                    cliente=Pessoas.objects.get(id=id_vendedor),
+                    taxas=valor,
+                    dt_taxa=data_lancamento,
+                    tipo=tipo,
+                )
+                taxas_criadas += 1
+            except Pessoas.DoesNotExist:
+                erros.append(f"O vendedor {nome_vendedor} não existe, linha: {linhas}")
+                continue
+            except Exception as error:
+                erros.append(f"Erro na linha {linhas}, Exception Error:{error}")
+                continue
+        mensagem = f"""
+        Planilha Recebida com sucesso, <br>
+        Taxas criadas: {taxas_criadas}, <br>
+        erros: {erros}
+        """
+        return HttpResponse(mensagem)
+    return HttpResponse("TIPO GET ?")
 
 def upload_planilha_dados_brutos(request):
     if request.method == "POST":

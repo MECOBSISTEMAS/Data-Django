@@ -64,10 +64,13 @@
               >Exportar</button>
           </form>
           <form 
-            enctype="multipart/form-data">
+            enctype="multipart/form-data"
+            method="POST"
+            action="/upload-planilha-taxas/">
+            {% csrf_token %}
             <div>
               <h6>Importar Taxas</h6>
-              <input type="file" name="file" id="file" required>
+              <input type="file" name="docpicker" id="docpicker" required>
               <button 
                 type="submit"
                 class="btn btn-primary"
