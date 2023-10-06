@@ -1,0 +1,114 @@
+{% load static %}
+<div class="col-xl-12">
+	<div class="card">
+		<div class="card-header">
+			<h5>Contas a pagar (parcelas) deletadas</h5>
+			<form action="" method="post" unicorn:submit.prevent.defer="filtrar_parcelas_taxas">
+				<h6>filtrar pela data de vencimento da planilha</h6>
+				<p>
+					filtrar de
+					<input
+						type="date"
+						name="data-inicio"
+						id="data-inicio"
+						unicorn:model.defer="data_vencimento_inicio"
+					/>
+					até
+					<input 
+						type="date"
+						name="data-fim"
+						id="data-fim"
+						unicorn:model.defer="data_vencimento_fim" />
+						<input 
+							class="form-control w-50 m-2"
+							type="text"
+							name="nome-vendedor"
+							id="nome-vendedor"
+							placeholder="Nome vendedor">
+						<input 
+							class="form-control w-50 m-2" 
+							type="text" 
+							name="nome-comprador" 
+							id="nome-comprador" 
+							placeholder="Nome comprador">
+						<button 
+							class="btn btn-primary ml-2"
+							type="submit" 
+							unicorn:click="filtrar_parcelas_taxas"
+						>Filtrar</button>
+				</p>
+			</form>
+		</div>
+
+		<div class="card-block table-border-style">
+			<div class="table-responsive" unicorn:key="parcelas-taxas-table">
+				<table class="table table-hover" id="parcelas-taxas-table">
+					<thead>
+						<tr>
+							<th>Ações</th>
+							<th>ID Contrato</th>
+							<th>Comprador</th>
+							<th>ID Comprador</th>
+							<th>Vendedor</th>
+							<th>ID Vendedor</th>
+							<th>Parcela</th>
+							<th>Data Vencimento</th>
+							<th>Valor</th>
+							<th>TCC</th>
+							<th>Desconto Total</th>
+							<th>Honorarios</th>
+							<th>Repasse</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% if user.is_superuser %}
+							{% for parcela_taxa in parcelas_taxas %}
+								<tr>
+									<th>
+										<button 
+											unicorn:click="restaurar_parcela_taxa({{ parcela_taxa.id }})"
+											class="btn btn-success"
+											id="restaurar-parcela-taxa-{{ parcela_taxa.id }}"
+											name="restaurar-parcela-taxa-{{ parcela_taxa.id }}"
+											>Restaurar</button>
+									</th>
+									<td>{{parcela_taxa.id_contrato}}</td>
+									<td>{{parcela_taxa.comprador}}</td>
+									<td>{{parcela_taxa.id_comprador}}</td>
+									<td>{{parcela_taxa.vendedor}}</td>
+									<td>{{parcela_taxa.id_vendedor}}</td>
+									<td>{{parcela_taxa.parcela}}</td>
+									<td>{{parcela_taxa.dt_vencimento}}</td>
+									<td>{{parcela_taxa.valor}}</td>
+									<td>{{parcela_taxa.tcc}}</td>
+									<td>{{parcela_taxa.desconto_total}}</td>
+									<td>{{parcela_taxa.honorarios}}</td>
+									<td>{{parcela_taxa.repasse}}</td>
+								</tr>
+							{% endfor %}
+						{% else %}
+							{% for parcela_taxa in parcelas_taxas %}
+							<tr>
+								<th><a class="btn btn-success aprovar-parcela-taxa-btn disabled" href="#sem-autorizacao">Aprovar</a></th>
+								<td>{{parcela_taxa.id_contrato}}</td>
+								<td>{{parcela_taxa.comprador}}</td>
+								<td>{{parcela_taxa.id_comprador}}</td>
+								<td>{{parcela_taxa.vendedor}}</td>
+								<td>{{parcela_taxa.id_vendedor}}</td>
+								<td>{{parcela_taxa.parcela}}</td>
+								<td>{{parcela_taxa.dt_vencimento}}</td>
+								<td>{{parcela_taxa.valor}}</td>
+								<td>{{parcela_taxa.tcc}}</td>
+								<td>{{parcela_taxa.desconto_total}}</td>
+								<td>{{parcela_taxa.honorarios}}</td>
+								<td>{{parcela_taxa.repasse}}</td>
+							</tr>
+						{% endfor %}
+						{% endif %}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+</div>
+<script src="{% static 'assets/js/contas_a_pagar/scripts.js' %}"></script>

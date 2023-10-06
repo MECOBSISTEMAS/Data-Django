@@ -70,10 +70,29 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     aprovada_para_repasse=False
                 ).values('id_vendedor').annotate(
                     repasses_totais=Sum('repasses')
-                ).values('repasses_totais'), output_field=DecimalField(max_digits=8, decimal_places=2)
+                ).values('repasses_totais'), 
+                output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
             0,
             output_field=DecimalField(max_digits=8, decimal_places=2)
+            ) + 
+            Coalesce(
+                Subquery(
+                    ContratoParcelas.objects.filter(
+                        contratos__dt_contrato__range=(data_inicio, data_fim),
+                        contratos__vendedores__id=OuterRef('vendedor__id'),
+                        aprovada=False,
+                        aprovada_para_repasse=False
+                    ).values(
+                        'contratos__vendedores__id',
+                    ).annotate(
+                        repasses_totais=Sum('vl_repasse')
+                    ).values(
+                        'repasses_totais'
+                    ),
+                    output_field=DecimalField(max_digits=8, decimal_places=2)
+                ),
+                output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
         total_credito=Coalesce(
             Subquery(
@@ -81,7 +100,8 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     id_vendedor=OuterRef('vendedor__id'),
                     data_aprovada__range=[data_inicio, data_fim],
                     aprovada=True,
-                    aprovada_para_repasse=False
+                    aprovada_para_repasse=False,
+                    deletada=False
                 ).values('id_vendedor').annotate(total=Sum('repasse')).values('total'),
                 output_field=DecimalField(max_digits=8, decimal_places=2),
             ),
@@ -145,7 +165,8 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     id_comprador=OuterRef('vendedor__id'),
                     data_aprovada__range=(data_inicio, data_fim),
                     aprovada=True,
-                    aprovada_para_repasse=False
+                    aprovada_para_repasse=False,
+                    deletada=False
                 ).values('id').annotate(total=Sum('desconto_total')).values('total')[:1],
                 output_field=DecimalField(max_digits=8, decimal_places=2),
         ),
@@ -854,16 +875,6 @@ def pages(request):
                     tbody += "</tr>"
                 context['tbody_honorarios'] = tbody
                     
-
-        elif load_template == 'tbl_parcela_taxas.html':
-            if request.method == 'POST':
-                if 'filtrar-parcela-taxa' in request.POST:
-                    data_inicio = request.POST.get('data-inicio')
-                    data_fim = request.POST.get('data-fim')
-                    context['data_inicio'] = data_inicio
-                    context['data_fim'] = data_fim
-                    context['parcelas_taxas'] = ParcelaTaxa.objects.filter(dt_vencimento__range=(data_inicio,data_fim), aprovada=False)
-                    
         elif load_template == 'tbl_taxas_aprovadas.html':
             if request.method == 'POST':
                 if 'filtrar-parcela-taxa-aprovada' in request.POST:
@@ -949,6 +960,91 @@ def download_planilha_cob(request, *args, **kwargs):
             for j, header in enumerate(lista_header_consulta_sql):
                 value = row.get(header, '')  # obtém o valor do dicionário usando a chave do cabeçalho
                 sheet.cell(row=i+2, column=j+1, value=str(value))
+        workbook.save(filepath)
+        with open(filepath, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
+
+def download_planilha_taxas_aprovadas(request, *args, **kwargs):
+    taxas = Taxa.objects.filter(
+        data_aprovada__range=[request.POST.get('data_inicio'), request.POST.get('data_fim')],
+        aprovada=True,
+    )
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filepath = os.path.join(tmpdirname, f'planilha_relatorio_parcelas_aprovadas_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        cabecalho = ['Cliente', 'Data', 'Descrição', 'Valor', 'Tipo', 'Data de aprovação']
+        
+        for i, cab in enumerate(cabecalho):
+            sheet.cell(row=1, column=i+1).value = cab
+            
+        row = 2  # Comece da segunda linha (após o cabeçalho)
+        for taxa in taxas:
+            sheet.cell(row=row, column=1, value= taxa.cliente.nome)
+            sheet.cell(row=row, column=2, value = taxa.dt_taxa.strftime('%Y-%m-%d') if taxa.dt_taxa else '')
+            sheet.cell(row=row, column=3, value = taxa.descricao if taxa.descricao else '')
+            sheet.cell(row=row, column=4, value = str(taxa.taxas) if taxa.taxas else '')
+            sheet.cell(row=row, column=5, value = taxa.tipo if taxa.tipo else '')
+            sheet.cell(row=row, column=6, value = taxa.data_aprovada.strftime('%Y-%m-%d') if taxa.data_aprovada else '')
+            row += 1
+
+        workbook.save(filepath)
+        with open(filepath, 'rb') as f:
+            response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response['Content-Disposition'] = f'attachment; filename="{os.path.basename(filepath)}"'
+            return response
+def download_planilha_taxas_aprovadas_quinzena(request, *args, **kwargs):
+    """ <QueryDict: {
+        'csrfmiddlewaretoken':
+        ['Lgk7KvAiy1KBmZmHRPvTtXEX2I7zS3XBfy0Mxcft8elbdSbUbdrzJk2C3rzEdsab'], 
+        'ano': ['2023'], 
+        'mes': ['1'], #janeiro
+        'quinzena': ['2'], 
+        'exportar-planilha': ['']}> """
+    #primeira quinzena: 1° ate o 14° dia do mes
+    #segunda quinzena: 15° ate o ultimo dia do mes
+    
+    ano = int(request.POST.get('ano'))
+    mes = int(request.POST.get('mes'))
+    quinzena = int(request.POST.get('quinzena'))
+
+    # Defina o primeiro dia do mês
+    primeiro_dia_mes = date(ano, mes, 1)
+
+    if quinzena == 1:
+        # Primeira quinzena: 1° até o 14° dia do mês
+        data_inicial = primeiro_dia_mes
+        data_final = primeiro_dia_mes + timedelta(days=13)
+    else:
+        # Segunda quinzena: 15° até o último dia do mês
+        ultimo_dia_mes = date(ano, mes % 12 + 1, 1) - timedelta(days=1)
+        data_inicial = primeiro_dia_mes + timedelta(days=14)
+        data_final = ultimo_dia_mes
+    taxas = Taxa.objects.filter(
+        data_aprovada__range=[data_inicial, data_final],
+        aprovada=True,
+    )
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        filepath = os.path.join(tmpdirname, f'planilha_relatorio_parcelas_aprovadas_{slugify(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.xlsx')
+        workbook = openpyxl.Workbook()
+        sheet = workbook.active
+        cabecalho = ['Cliente', 'Data', 'Descrição', 'Valor', 'Tipo', 'Data de aprovação']
+        
+        for i, cab in enumerate(cabecalho):
+            sheet.cell(row=1, column=i+1).value = cab
+            
+        row = 2  # Comece da segunda linha (após o cabeçalho)
+        for taxa in taxas:
+            sheet.cell(row=row, column=1, value= taxa.cliente.nome)
+            sheet.cell(row=row, column=2, value = taxa.dt_taxa.strftime('%Y-%m-%d') if taxa.dt_taxa else '')
+            sheet.cell(row=row, column=3, value = taxa.descricao if taxa.descricao else '')
+            sheet.cell(row=row, column=4, value = str(taxa.taxas) if taxa.taxas else '')
+            sheet.cell(row=row, column=5, value = taxa.tipo if taxa.tipo else '')
+            sheet.cell(row=row, column=6, value = taxa.data_aprovada.strftime('%Y-%m-%d') if taxa.data_aprovada else '')
+            row += 1
+
         workbook.save(filepath)
         with open(filepath, 'rb') as f:
             response = HttpResponse(f.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -1216,6 +1312,53 @@ def upload_planilha_parcelas_taxas(request, *args, **kwargs):
             linhas += 1
         
         return HttpResponse("Planilha Recebida com sucesso, <br> linhas lidas: {} , <br> criadas: {}, <br> erros: {}".format(linhas, parcelas_criadas, erros))
+
+def upload_planilha_taxas(request):
+    if request.method == "POST":
+        if not request.FILES.get('docpicker').name.endswith('.xlsx'):
+            return HttpResponse("Arquivo não é do tipo .xlsx")
+        linhas:int = 0
+        linhas_nulas:int = 0
+        taxas_criadas:int = 0
+        erros:list[str] = []
+        wb = openpyxl.load_workbook(request.FILES.get('docpicker'))
+        planilha = wb.active
+        for row in planilha.iter_rows(values_only=True):
+            if linhas < 1:
+                linhas += 1
+                continue
+            if row[0] == None or row[0] == '':
+                linhas_nulas += 1
+                if linhas_nulas > 1:
+                    break
+                continue
+            linhas += 1
+            id_vendedor = row[0]
+            nome_vendedor = row[1]
+            data_lancamento = row[2]
+            tipo = row[3]
+            valor = row[4]
+            try:
+                taxa = Taxa.objects.create(
+                    cliente=Pessoas.objects.get(id=id_vendedor),
+                    taxas=valor,
+                    dt_taxa=data_lancamento,
+                    tipo=tipo,
+                )
+                taxas_criadas += 1
+            except Pessoas.DoesNotExist:
+                erros.append(f"O vendedor {nome_vendedor} não existe, linha: {linhas}")
+                continue
+            except Exception as error:
+                erros.append(f"Erro na linha {linhas}, Exception Error:{error}")
+                continue
+        mensagem = f"""
+        Planilha Recebida com sucesso, <br>
+        Taxas criadas: {taxas_criadas}, <br>
+        erros: {erros}
+        """
+        return HttpResponse(mensagem)
+    return HttpResponse("TIPO GET ?")
 
 def upload_planilha_dados_brutos(request):
     if request.method == "POST":

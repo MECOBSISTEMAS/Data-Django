@@ -1,0 +1,160 @@
+{% extends "layouts/base.html" %} 
+{% block title %} UI Forms {% endblock %}
+{% load widget_tweaks %}
+{% load utils %}
+{% load static %}
+{% load unicorn %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}{% endblock stylesheets %} 
+{% block content %}
+
+<!-- [ Main Content ] start -->
+<div class="pcoded-main-container">
+  <div class="pcoded-wrapper">
+    <div class="pcoded-content">
+      <div class="pcoded-inner-content">
+        <!-- [ breadcrumb ] start -->
+        <div class="page-header">
+          <div class="page-block">
+            <div class="row align-items-center">
+              <div class="col-md-12">
+                
+                <div class="page-header-title">
+                  <h5 class="m-b-10">Contas a pagar (parcelas) deletadas</h5>
+                </div>
+                <ul class="breadcrumb">
+                  <li class="breadcrumb-item">
+                    <a href="/"><i class="feather icon-home"></i></a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Tabelas & Formulários</a>
+                  </li>
+                  <li class="breadcrumb-item">
+                    <a href="javascript:">Contas a pagar (parcelas) deletadas</a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% unicorn 'parcelas_deletadas' %}
+        {% comment %} <div class="col-xl-12">
+					<div class="card">
+						<div class="card-header">
+							<h5>Contas a pagar (parcelas) deletadas</h5>
+							<form action="" method="post">
+								<h6>filtrar pela data de vencimento da planilha</h6>
+								{% csrf_token %}
+								<p>
+									filtrar de
+									<input
+										type="date"
+										name="data-inicio"
+										id="data-inicio"
+										{% if data_inicio %} value={{data_inicio}} {% endif %}
+									/>
+									até
+									<input type="date" name="data-fim" id="data-fim" {% if data_fim %} value={{data_fim}} {% endif %} />
+									<button class="btn btn-primary" type="submit" name="filtrar-parcela-taxa-vencimento">Filtrar</button>
+								</p>
+							</form>
+							<h6>filtrar pelos nomes</h6>
+							<div class="d-flex">
+								<input class="form-control w-25 m-2" type="text" name="nome-vendedor" id="nome-vendedor" placeholder="Nome vendedor">
+								<input class="form-control w-25 m-2" type="text" name="nome-comprador" id="nome-comprador" placeholder="Nome comprador">
+							</div>
+							<h4>Importar Planilha Parcelas</h4>
+							{% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
+							<form action="{% url 'home:upload_planilha_parcelas_taxas' %}" enctype="multipart/form-data" method="POST" name="upload-planilha">
+								{% csrf_token %}
+								<input type="file" name="docpicker">
+								<button type="submit" class="btn btn-primary">Enviar planilha</button>
+							</form>
+							{% else %}
+							<p>Sem permissão para enviar planilha ({{user.acesso.permissao}}).</p>
+							{% endif %}
+						</div>
+
+						<div class="card-block table-border-style">
+							<div class="table-responsive">
+								<table class="table table-hover" id="parcelas-taxas-table">
+									<thead>
+										<tr>
+											<th>Ações</th>
+											<th>ID Contrato</th>
+											<th>Comprador</th>
+											<th>ID Comprador</th>
+											<th>Vendedor</th>
+											<th>ID Vendedor</th>
+											<th>Parcela</th>
+											<th>Data Vencimento</th>
+											<th>Valor</th>
+											<th>TCC</th>
+											<th>Desconto Total</th>
+											<th>Honorarios</th>
+											<th>Repasse</th>
+										</tr>
+									</thead>
+									<tbody>
+										{% if user.is_superuser %}
+											{% for parcela_taxa in parcelas_taxas %}
+												<tr>
+													<th><a class="btn btn-success aprovar-parcela-taxa-btn" href="/aprovar_parcela_taxa/{{parcela_taxa.id}}/{{data_inicio}}/{{data_fim}}">Aprovar</a></th>
+													<td>{{parcela_taxa.id_contrato}}</td>
+													<td>{{parcela_taxa.comprador}}</td>
+													<td>{{parcela_taxa.id_comprador}}</td>
+													<td>{{parcela_taxa.vendedor}}</td>
+													<td>{{parcela_taxa.id_vendedor}}</td>
+													<td>{{parcela_taxa.parcela}}</td>
+													<td>{{parcela_taxa.dt_vencimento}}</td>
+													<td>{{parcela_taxa.valor}}</td>
+													<td>{{parcela_taxa.tcc}}</td>
+													<td>{{parcela_taxa.desconto_total}}</td>
+													<td>{{parcela_taxa.honorarios}}</td>
+													<td>{{parcela_taxa.repasse}}</td>
+												</tr>
+											{% endfor %}
+										{% else %}
+											{% for parcela_taxa in parcelas_taxas %}
+											<tr>
+												<th><a class="btn btn-success aprovar-parcela-taxa-btn disabled" href="#sem-autorizacao">Aprovar</a></th>
+												<td>{{parcela_taxa.id_contrato}}</td>
+												<td>{{parcela_taxa.comprador}}</td>
+												<td>{{parcela_taxa.id_comprador}}</td>
+												<td>{{parcela_taxa.vendedor}}</td>
+												<td>{{parcela_taxa.id_vendedor}}</td>
+												<td>{{parcela_taxa.parcela}}</td>
+												<td>{{parcela_taxa.dt_vencimento}}</td>
+												<td>{{parcela_taxa.valor}}</td>
+												<td>{{parcela_taxa.tcc}}</td>
+												<td>{{parcela_taxa.desconto_total}}</td>
+												<td>{{parcela_taxa.honorarios}}</td>
+												<td>{{parcela_taxa.repasse}}</td>
+											</tr>
+										{% endfor %}
+										{% endif %}
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
+				</div> {% endcomment %}
+      </div>
+    </div>
+  </div>
+</div>
+<!-- [ Main Content ] end -->
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script>
+  $(document).ready(function(){
+    $('#parcelas-taxas-table').DataTable();
+  })
+</script>
+<script src="{% static 'assets/js/contas_a_pagar/scripts.js' %}"></script>
+{% endblock javascripts %}

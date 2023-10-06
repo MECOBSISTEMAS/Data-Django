@@ -24,6 +24,7 @@ from apps.home.models import Taxa
 from apps.home.existing_models import Pessoas
 
 class TaxasView(UnicornView):
+    datas_disponiveis:list = []
     data_inicio:str = "" #? esse campo serve para armazenar a data do input data_inicio
     data_fim:str = "" #? esse campo serve para armazenar a data do input data_fim
     taxas_nao_aprovadas:QuerySetType(Taxa) = Taxa.objects.none()#? esse campo serve para armazenar as taxas não aprovadas
@@ -35,7 +36,7 @@ class TaxasView(UnicornView):
     
     
     #!campos para adicionar nova taxa
-    cliente_id:str = ""
+    cliente_id:int = None
     valor:float = None
     data_taxa:str = ""
     descricao:str = ""
@@ -84,16 +85,22 @@ class TaxasView(UnicornView):
         self.tbody = tbody
 
         
+    def mount(self):
+        queryset = Taxa.objects.dates('data_aprovada', 'year', order='DESC')
+        for query in queryset:
+            self.datas_disponiveis.append(query.year)        
     
     def aprovar_taxa(self, id_taxa):
         taxa = Taxa.objects.get(id=id_taxa)
         taxa.aprovada = True
+        taxa.data_aprovada = datetime.now()
         taxa.save()
         self.filtrar_taxas()
         
     def desaprovar_taxa(self, id_taxa):
         taxa = Taxa.objects.get(id=id_taxa)
         taxa.aprovada = False
+        taxa.data_aprovada = None
         taxa.save()
         self.filtrar_taxas()
         
@@ -103,7 +110,7 @@ class TaxasView(UnicornView):
         self.filtrar_taxas()
         
     def nova_taxa(self):
-        try:    
+        try:
             pessoa = Pessoas.objects.get(id=self.cliente_id)
             taxa = Taxa.objects.create(
                 cliente=pessoa,
@@ -115,7 +122,11 @@ class TaxasView(UnicornView):
             self.mensagem_error_nova_taxa = "Taxa adicionada com sucesso"
         except Pessoas.DoesNotExist:
             self.mensagem_error_nova_taxa = "Cliente não encontrado"
+        except Exception as e:
+            print(e)
         self.filtrar_taxas()
+        
+                
     
     """ def __del__(self):
         self.taxas_aprovadas = Taxa.objects.none()

@@ -117,6 +117,8 @@ class Taxa(models.Model):
     vl_pago = models.DecimalField(_(""), max_digits=12, decimal_places=2, blank=True, null=True)
     descricao = models.CharField(_(""), max_length=256, blank=True, null=True)
     dt_taxa = models.DateField(_(""), blank=True, null=True)
+    criada_em = models.DateField(_(""), auto_now_add=True, blank=True, null=True)
+    data_aprovada = models.DateField(_(""), auto_now=False, auto_now_add=False, blank=True, null=True)
     aprovada = models.BooleanField(_(""), default=False, blank=True, null=True)
     aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     
@@ -309,6 +311,7 @@ class ParcelaTaxa(models.Model):
     aprovada_para_repasse = models.BooleanField(_(""), default=False, blank=True, null=True)
     data_aprovada = models.DateField(_(""), blank=True, null=True)
     criado = models.DateTimeField(_(""), auto_now_add=True, blank=True, null=True)
+    deletada = models.BooleanField(_(""), default=False, blank=True, null=True)
     #ParcelaTaxa.objects.filter(data_criado=datetime.date.today())
     
     def __str__(self):

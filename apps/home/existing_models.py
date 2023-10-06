@@ -8,6 +8,7 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+import decimal
 
 class Peso(models.Model):
     pessoa = models.ForeignKey('Pessoas', models.DO_NOTHING, blank=True, null=True)
@@ -336,11 +337,15 @@ class ContratoParcelas(models.Model):
     
     @property
     def rateio_calculado(self):
-        return self.vl_parcela * (self.peso.valor/100)
+        return self.vl_pagto * (self.peso.valor/100)
     
     @property
     def repasse_calculado(self):
-        return self.rateio_calculado - (self.rateio_calculado * self.peso.pessoa.cliente.sim)
+        if self.eh_adi:
+            return self.rateio_calculado - (self.rateio_calculado * 3/100)
+        return self.rateio_calculado
+    
+    
     
     """ ao salvar a parcela preencher os campos de rateio e repasse com seus rescpectivos calculos """
 

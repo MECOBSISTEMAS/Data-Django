@@ -1,70 +1,43 @@
-{% extends "layouts/base.html" %} 
-{% block title %} UI Forms {% endblock %}
-{% load widget_tweaks %}
-{% load utils %}
 {% load static %}
-{% load unicorn %}
-
-<!-- Specific CSS goes HERE -->
-{% block stylesheets %}{% endblock stylesheets %} 
-{% block content %}
-
-<!-- [ Main Content ] start -->
-<div class="pcoded-main-container">
-  <div class="pcoded-wrapper">
-    <div class="pcoded-content">
-      <div class="pcoded-inner-content">
-        <!-- [ breadcrumb ] start -->
-        <div class="page-header">
-          <div class="page-block">
-            <div class="row align-items-center">
-              <div class="col-md-12">
-                
-                <div class="page-header-title">
-                  <h5 class="m-b-10">Contas a pagar (parcelas)</h5>
-                </div>
-                <ul class="breadcrumb">
-                  <li class="breadcrumb-item">
-                    <a href="/"><i class="feather icon-home"></i></a>
-                  </li>
-                  <li class="breadcrumb-item">
-                    <a href="javascript:">Tabelas & Formulários</a>
-                  </li>
-                  <li class="breadcrumb-item">
-                    <a href="javascript:">Contas a pagar (parcelas)</a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {% unicorn "parcelas_taxas" %}
-        {% comment %} 
-        <div class="col-xl-12">
+<div class="col-xl-12">
 	<div class="card">
 		<div class="card-header">
 			<h5>Contas a pagar (parcelas)</h5>
-			<form action="" method="post">
+			<form action="" method="post" unicorn:submit.prevent.defer="filtrar_parcelas_taxas">
 				<h6>filtrar pela data de vencimento da planilha</h6>
-				{% csrf_token %}
 				<p>
 					filtrar de
 					<input
 						type="date"
 						name="data-inicio"
 						id="data-inicio"
-						{% if data_inicio %} value={{data_inicio}} {% endif %}
+						unicorn:model.defer="data_vencimento_inicio"
 					/>
 					até
-					<input type="date" name="data-fim" id="data-fim" {% if data_fim %} value={{data_fim}} {% endif %} />
-					<button class="btn btn-primary" type="submit" name="filtrar-parcela-taxa-vencimento">Filtrar</button>
+					<input 
+						type="date" 
+						name="data-fim" 
+						id="data-fim" 
+						unicorn:model.defer="data_vencimento_fim" />
+						<input 
+							class="form-control w-50 m-2" 
+							type="text" 
+							name="nome-vendedor" 
+							id="nome-vendedor" 
+							placeholder="Nome vendedor">
+						<input 
+							class="form-control w-50 m-2" 
+							type="text" 
+							name="nome-comprador" 
+							id="nome-comprador" 
+							placeholder="Nome comprador">
+						<button 
+							class="btn btn-primary ml-2"
+							type="submit" 
+							unicorn:click="filtrar_parcelas_taxas">Filtrar</button>
 				</p>
 			</form>
-			<h6>filtrar pelos nomes</h6>
 			<div class="d-flex">
-				<input class="form-control w-25 m-2" type="text" name="nome-vendedor" id="nome-vendedor" placeholder="Nome vendedor">
-				<input class="form-control w-25 m-2" type="text" name="nome-comprador" id="nome-comprador" placeholder="Nome comprador">
 			</div>
 			<h4>Importar Planilha Parcelas</h4>
 			{% if user.is_superuser or user.acesso.permissao == 'alimentacao' %}
@@ -79,7 +52,7 @@
 		</div>
 
 		<div class="card-block table-border-style">
-			<div class="table-responsive">
+			<div class="table-responsive" unicorn:key="parcelas-taxas-table">
 				<table class="table table-hover" id="parcelas-taxas-table">
 					<thead>
 						<tr>
@@ -102,7 +75,20 @@
 						{% if user.is_superuser %}
 							{% for parcela_taxa in parcelas_taxas %}
 								<tr>
-									<th><a class="btn btn-success aprovar-parcela-taxa-btn" href="/aprovar_parcela_taxa/{{parcela_taxa.id}}/{{data_inicio}}/{{data_fim}}">Aprovar</a></th>
+									<th>
+										<button 
+											unicorn:click="aprovar_parcela_taxas({{ parcela_taxa.id }})"
+											class="btn btn-success"
+											id="aprovar-parcela-taxa-{{ parcela_taxa.id }}"
+											name="aprovar-parcela-taxa-{{ parcela_taxa.id }}"
+											>Aprovar</button>
+											<button
+												unicorn:click="deletar_parcela_taxas({{ parcela_taxa.id }})"
+												class="btn btn-warning"
+												id="deletar-parcela-taxa-{{ parcela_taxa.id }}"
+												name="deletar-parcela-taxa-{{ parcela_taxa.id }}"
+											>Del.</button>
+									</th>
 									<td>{{parcela_taxa.id_contrato}}</td>
 									<td>{{parcela_taxa.comprador}}</td>
 									<td>{{parcela_taxa.id_comprador}}</td>
@@ -142,21 +128,4 @@
 		</div>
 	</div>
 </div>
- {% endcomment %}
-      </div>
-    </div>
-  </div>
-</div>
-<!-- [ Main Content ] end -->
-
-{% endblock content %}
-
-<!-- Specific Page JS goes HERE  -->
-{% block javascripts %}
-<script>
-  $(document).ready(function(){
-    $('#parcelas-taxas-table').DataTable();
-  })
-</script>
 <script src="{% static 'assets/js/contas_a_pagar/scripts.js' %}"></script>
-{% endblock javascripts %}

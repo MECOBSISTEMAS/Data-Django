@@ -12,14 +12,76 @@
             data fim: <input type="date" unicorn:model.defer="data_fim" name="data_fim" id="data_fim" required>
           <button unicorn:click="filtrar_taxas" unicorn:key="filtrar_taxa" class="btn btn-primary" type="submit" name="filtrar_taxa">Filtrar</button>
           </form>
-          <form>
+          <form method="post" action="{% url "home:download_planilha_taxas_aprovadas" %}">
+            {% csrf_token %}
+            <h6>Exportar Taxas aprovadas</h6>
+            data inicio :<input type="date" name="data_inicio" id="data_inicio" required>
+            data fim: <input type="date" name="data_fim" id="data_fim" required>
+            <button 
+              type="submit"
+              class="btn btn-primary"
+              name="exportar-planilha"
+              >Exportar</button>
           </form>
+          <h6>Exportar Taxas aprovadas V2</h6>
+          <form class="d-flex" method="post" action="{% url "home:download_planilha_taxas_aprovadas_quinzena" %}">
+            {% csrf_token %}
+            <select name="ano" id="ano" class="form-control">
+              {% for data_disponivel in datas_disponiveis %}
+                <option value="{{data_disponivel}}">{{data_disponivel}}</option>
+              {% endfor %}
+            </select>
+            <select name="mes" id="mes" class="form-control">
+              <option value="1">Janeiro</option>
+              <option value="2">Fervereiro</option>
+              <option value="3">Março</option>
+              <option value="4">Abril</option>
+              <option value="5">Maio</option>
+              <option value="6">Junho</option>
+              <option value="7">Julho</option>
+              <option value="8">Agosto</option>
+              <option value="9">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="quinzena" id="exampleRadios1" value="1" checked>
+              <label class="form-check-label" for="exampleRadios1">
+                1° Quinzena
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="quinzena" id="exampleRadios2" value="2">
+              <label class="form-check-label" for="exampleRadios2">
+                2° Quinzena
+              </label>
+            </div>
+            <button 
+              type="submit"
+              class="btn btn-primary"
+              name="exportar-planilha"
+              >Exportar</button>
+          </form>
+          <form 
+            enctype="multipart/form-data"
+            method="POST"
+            action="/upload-planilha-taxas/">
+            {% csrf_token %}
+            <div>
+              <h6>Importar Taxas</h6>
+              <input type="file" name="docpicker" id="docpicker" required>
+              <button 
+                type="submit"
+                class="btn btn-primary"
+                >Importar</button>
+            </div>
         </div>
         <h6>
 					{{ mensagem_error_nova_taxa }}
 			</h6>
         <form class="form w-100" unicorn:submit.prevent.defer="nova_taxa">
-          <input required unicorn:model.defer="cliente_id" type="text" name="cliente" class="form-control" placeholder="ID Cliente">
+          <input required unicorn:model.defer="cliente_id" type="number" name="cliente" class="form-control" placeholder="ID Cliente">
           <input required unicorn:model.defer="valor" type="number" name="valor" step="0.01" class="form-control" placeholder="Valor a ser Taxado">
           <input required unicorn:model.defer="data_taxa" type="date" name="data-taxa" class="form-control" id="data-taxa" placeholder="Data a ser Taxado">
           <input type="text" unicorn:model.defer="descricao" name="descricao" class="form-control" placeholder="Descrição do taxa">
@@ -28,11 +90,11 @@
             <label for="selecionar-tipo-taxa">Tipo</label>
             <select unicorn:model.defer="tipo_taxa" class="form-control" name="selecionar-tipo-taxa" id="selecionar-tipo-taxa">
               <option value="TBB - Taxa de baixa de boleto">TBB - Taxa de baixa de boleto</option>
-              <option value="TEC - Taxa de elaboração de contrato ">TEC - Taxa de elaboração de contrato </option>
+              <option value="TEC - Taxa de elaboração de contrato">TEC - Taxa de elaboração de contrato </option>
               <option value="TAC - Taxa de análise de crédito">TAC - Taxa de análise de crédito</option>
               <option value="TCC - Taxa de controle de compra">TCC - Taxa de controle de compra</option>
               <option value="SPC - Restrição de CPF e/ou CNPJ">SPC - Restrição de CPF e/ou CNPJ</option>
-              <option value="Honorários Iniciais - Confecção de ação judicial ">Honorários Iniciais - Confecção de ação judicial </option>
+              <option value="Honorários Iniciais - Confecção de ação judicial">Honorários Iniciais - Confecção de ação judicial </option>
               <option value="Honorários Judiciais">Honorários Judiciais</option>
               <option value="Honorários de recebimento direto">Honorários de recebimento direto</option>
             </select>
