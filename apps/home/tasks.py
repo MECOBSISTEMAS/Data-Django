@@ -14,15 +14,20 @@ def criar_dados():
 
 
 @app.task
-def escrever_em_arquivo():
+def escrever_em_arquivo(mensagem:str, nome_arquivo:str="log.txt"):
     now = datetime.now()
     data_hora = now.strftime("%Y-%m-%d %H:%M:%S")
     
-    with open("log.txt", "a") as arquivo:  # O modo "a" permite adicionar ao arquivo existente
+    with open(nome_arquivo, "a") as arquivo:  # O modo "a" permite adicionar ao arquivo existente
+        if mensagem:
+            arquivo.write(mensagem + "\n")
         arquivo.write(data_hora + "\n")
 @app.task
 def atualizar_vl_pagto_das_parcelas():
     parcelas_sem_vl_pagto = ContratoParcelas.objects.filter(Q(vl_pagto=None) | Q(vl_pagto__lte=0))
+    escrever_em_arquivo(
+        mensagem="Atualizando {} parcelas".format(parcelas_sem_vl_pagto.count())
+    )
 
     for parcela in parcelas_sem_vl_pagto:
         try:
@@ -34,7 +39,7 @@ def atualizar_vl_pagto_das_parcelas():
                 resultado_da_requisicao = response.json()
                 
                 # Atualize a parcela com o valor obtido
-                parcela.vl_pagto = resultado_da_requisicao['vl_pagto']
+                parcela.vl_pagto = float(resultado_da_requisicao["vl_pagto"])
                 parcela.save()
             else:
                 # Registre ou notifique sobre o erro de solicitação HTTP
@@ -62,7 +67,7 @@ async def processar_parcelas_async():
     tasks = [processar_parcela(parcela) for parcela in parcelas_sem_vl_pagto]
     
     # Execute as tarefas paralelamente
-    await asyncio.gather(*tasks)
+    result_tasks = await asyncio.gather(*tasks)
     
 @app.task
 def executar_async():

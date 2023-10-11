@@ -28,8 +28,8 @@ app.autodiscover_tasks()
 
 app.conf.beat_schedule = {
     'agendar-escrever-em-arquivo': {
-        'task': 'apps.home.tasks.executar_async',
-        'schedule': crontab(minute="*"),
+        'task': 'apps.home.tasks.atualizar_vl_pagto_das_parcelas',
+        'schedule': crontab(minute=0, hour=5),
     }
 }
 
