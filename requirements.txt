@@ -1,3 +1,4 @@
+amqp
 anyio
 argon2-cffi
 argon2-cffi-bindings
@@ -8,11 +9,17 @@ attrs
 autopep8
 backcall
 beautifulsoup4
+billiard
 bleach
 cachetools
+celery
 certifi
 cffi
 charset-normalizer
+click
+click-didyoumean
+click-plugins
+click-repl
 colorama
 comm
 cryptography
@@ -53,6 +60,7 @@ jupyter_server
 jupyter_server_terminals
 jupyterlab-pygments
 jupyterlab-widgets
+kombu
 MarkupSafe
 matplotlib-inline
 mistune
@@ -86,8 +94,8 @@ python-dateutil
 python-json-logger
 python3-openid
 pytz
-#pywin32
-#pywinpty
+pywin32
+pywinpty
 PyYAML
 pyzmq
 qtconsole
@@ -112,6 +120,7 @@ traitlets
 tzdata
 uri-template
 urllib3
+vine
 wcwidth
 webcolors
 webencodings
