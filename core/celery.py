@@ -10,6 +10,8 @@ app = Celery('core', broker="amqp://localhost")
 
 app.conf.result_backend = 'rpc://'
 
+app.conf.timezone = 'America/Sao_Paulo'
+
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
 # - namespace='CELERY' means all celery-related configuration keys
