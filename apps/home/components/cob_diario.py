@@ -39,7 +39,7 @@ class CobDiarioView(UnicornView):
                     contratos__id=self.contrato_id,
                     aprovada=False,
                     aprovada_para_repasse=False,
-                ).select_related("contratos")
+                )
                 
     def aprovar_parcela(self, parcela_id):
         parcela = ContratoParcelas.objects.get(id=parcela_id)
