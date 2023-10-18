@@ -144,7 +144,7 @@ class RegistrarContratosView(UnicornView):
                     contrato.vendedores.add(pessoa_objeto)
                     for parcela in self.data['parcelas']:
                         parcela = ContratoParcelas.objects.create(
-                            #id=parcela['id'],
+                            id_original=parcela['id'],
                             contratos=contrato,
                             nu_parcela=parcela['nu_parcela'],
                             dt_vencimento=parcela['dt_vencimento'],

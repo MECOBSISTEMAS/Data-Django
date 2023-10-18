@@ -22,6 +22,7 @@ def escrever_em_arquivo(mensagem:str, nome_arquivo:str="log.txt"):
         if mensagem:
             arquivo.write(mensagem + "\n")
         arquivo.write(data_hora + "\n")
+
 @app.task
 def atualizar_vl_pagto_das_parcelas():
     parcelas_sem_vl_pagto = ContratoParcelas.objects.filter(Q(vl_pagto=None) | Q(vl_pagto__lte=0))
@@ -32,9 +33,8 @@ def atualizar_vl_pagto_das_parcelas():
     for parcela in parcelas_sem_vl_pagto:
         try:
             # Realize a solicitação HTTP para obter o vl_pagto
-            response = requests.get('http://82.208.22.228:8000/contrato_parcelas/{}/'.format(parcela.id))
+            response = requests.get('http://82.208.22.228:8000/contrato_parcelas/{}/'.format(parcela.id_original))
             
-            # Verifique se a solicitação foi bem-sucedida (status 200)
             if response.status_code == 200:
                 resultado_da_requisicao = response.json()
                 

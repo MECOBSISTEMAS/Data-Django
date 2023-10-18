@@ -291,6 +291,7 @@ class Teds(models.Model):
 
 class ContratoParcelas(models.Model):
     id = models.BigAutoField(primary_key=True)
+    id_original = models.IntegerField(blank=True, null=True)
     #peso = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     contratos = models.ForeignKey(Contratos, models.DO_NOTHING, blank=True, null=True, related_name='parcelas')
     nu_parcela = models.IntegerField(blank=True, null=True)
