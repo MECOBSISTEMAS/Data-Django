@@ -8,6 +8,7 @@
 from django.db import models
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
+from django.contrib.auth.models import User
 import decimal
 
 class Peso(models.Model):
@@ -326,6 +327,7 @@ class ContratoParcelas(models.Model):
     vl_repasse = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     rateio = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
     comissao = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    comissionado = models.ForeignKey(User, on_delete=models.CASCADE, blank=True, null=True)
     eh_adi = models.BooleanField(default=False, blank=True, null=True)
     #?campos para indentificar a aprovação
     aprovada = models.BooleanField(default=False)

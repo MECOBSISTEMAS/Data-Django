@@ -12,6 +12,7 @@ from django.shortcuts import render
 from django.core.paginator import Paginator, Page, PageNotAnInteger, EmptyPage
 from django.utils import timezone
 from django.core import serializers
+from django.contrib.auth.models import User
 
 from decimal import Decimal
 from openpyxl.utils import get_column_letter
@@ -39,6 +40,7 @@ class RegistrarContratosView(UnicornView):
     op:int = None
     id_comissionado:int = None
     eh_condominio:str = "sim"
+    comissionado:int = None
     #listas de objetos
     data:dict = None
     listas_pessoas:list = []
@@ -90,6 +92,10 @@ class RegistrarContratosView(UnicornView):
     
     def novo_contrato(self):
         if self.contrato_existe:
+            try:
+                comissionado = User.objects.get(id=self.id_comissionado)
+            except:
+                comissionado = None
             if self.eh_condominio == 'sim':
                 contrato = Contratos.objects.create(
                     id = self.data['id'],
@@ -171,6 +177,7 @@ class RegistrarContratosView(UnicornView):
                             boletos_avulso=parcela['boletos_avulso'],
                             dt_atualizacao_monetaria=parcela['dt_atualizacao_monetaria'],
                             eh_adi= True if self.adi == 'sim' else False,
+                            comissionado=comissionado,
                         )
                         peso = Peso.objects.create(
                             pessoa=pessoa_objeto,

@@ -25,7 +25,6 @@ class CobDiarioView(UnicornView):
     def filtrar_parcelas(self):
         print(self.contrato_id, self.data_inicio, self.data_fim)
         if self.data_inicio != "" and self.data_fim != "":
-            print("POSSUI DATA INICIO E FIM")
             self.parcelas = ContratoParcelas.objects.filter(
                 contratos__id=self.contrato_id,
                 dt_pagto__range=[self.data_inicio, self.data_fim],
@@ -33,7 +32,6 @@ class CobDiarioView(UnicornView):
                 aprovada_para_repasse=False,
             )
         else:
-            print("NÃO POSSUI DATAS, IREI FILTARR SOMENTE PELO ID")
             if self.contrato_id:
                 self.parcelas = ContratoParcelas.objects.filter(
                     contratos__id=self.contrato_id,
