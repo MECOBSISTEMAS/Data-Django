@@ -92,6 +92,7 @@ def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
                     ),
                     output_field=DecimalField(max_digits=8, decimal_places=2)
                 ),
+                0,
                 output_field=DecimalField(max_digits=8, decimal_places=2)
             ),
         total_credito=Coalesce(
