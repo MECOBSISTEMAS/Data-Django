@@ -91,6 +91,51 @@
 
 
             <div class="card-block table-border-style">
+              <h4>TBB's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TEC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TAC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
               <h4>TCC's</h4>
               <div class="table-responsive">
                 <table class="table table-hover" id="table-tcc">
@@ -104,6 +149,25 @@
                   </thead>
                   <tbody>
                     {{tbody_tcc|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>SPC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                      {% comment %} <th>Vendedor</th>
+                      {% for dia in financeiro_dias %}
+                      <th>{{dia}}</th>
+                      {% endfor %} {% endcomment %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% comment %} {{tbody_tcc|safe}} {% endcomment %}
                   </tbody>
                 </table>
               </div>
@@ -129,7 +193,7 @@
             </div>
 
             <div class="card-block table-border-style">
-              <h4>Honorários</h4>
+              <h4>Honorários Inicias</h4>
               <div class="table-responsive">
                 <table class="table table-hover" id="table-honorarios">
                   <thead>
@@ -142,6 +206,39 @@
                   </thead>
                   <tbody>
                     {{tbody_honorarios|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>Honorários Judiciais</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-honorarios">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            
+            
+            <div class="card-block table-border-style">
+              <h4>Honorários Honorários de recebimento direto</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-honorarios">
+                  <thead>
+                    <tr>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    
                   </tbody>
                 </table>
               </div>
