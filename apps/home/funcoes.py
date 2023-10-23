@@ -13,13 +13,28 @@ import os
 from .models import Debito, Credito, Taxa, Dado, RepasseRetido
 
 
-def construir_dias_filtro(data_inicio: str, data_fim: str, dt_vencimento, campo: str) -> dict:
+def construir_dias_filtro(data_inicio: str, data_fim: str, campo: str) -> dict:
     dias_context = {}
     for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
         data = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
         dias_context[f'{data.day}/{data.month}/{data.year}'] = Sum(
             Case(
                 When(dt_vencimento=data, then=F(campo)),
+                default=0,
+                output_field=DecimalField(
+                    decimal_places=2, max_digits=14, validators=[]),
+            ),
+        )
+    return dias_context
+
+
+def construir_dias_filtro_v2(data_inicio: str, data_fim: str, campo: str, data_filtro:str) -> dict:
+    dias_context = {}
+    for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+        data = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+        dias_context[f'{data.day}/{data.month}/{data.year}'] = Sum(
+            Case(
+                When(data_filtro=data, then=F(campo)),
                 default=0,
                 output_field=DecimalField(
                     decimal_places=2, max_digits=14, validators=[]),

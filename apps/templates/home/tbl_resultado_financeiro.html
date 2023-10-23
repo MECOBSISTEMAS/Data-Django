@@ -54,20 +54,18 @@
                   />
                   até
                   <input type="date" name="data-fim" id="data-fim" {% if data_fim %} value={{data_fim}} {% endif %} />
+                  <select name="aprovacao" id="aprovacao">
+                    <option value="aprovada">Aprovada</option>
+                    <option value="desaprovada">Desaprovada</option>
+                  </select>
                   <button class="btn btn-primary" type="submit" name="filtrar-taxa">Filtrar</button>
-                  <button
-                    type="button"
-                    name=""
-                    id=""
-                    class="btn btn-danger"
-                  >
-                    Limpar Filtro
-                  </button>
                 </p>
               </form>
             </div>
 
             <div class="card-block table-border-style">
+              <h5>Resumo das parcelas importadas pro sistema</h5>
+              <br>
               <h4>Repasses</h4>
               <div class="table-responsive">
                 <table class="table table-hover" id="table-repasses">
@@ -83,52 +81,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody_repasses|safe}}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-
-            <div class="card-block table-border-style">
-              <h4>TBB's</h4>
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
-                  <thead>
-                    <tr>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-
-            <div class="card-block table-border-style">
-              <h4>TEC's</h4>
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
-                  <thead>
-                    <tr>
-                    </tr>
-                  </thead>
-                  <tbody>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-
-            <div class="card-block table-border-style">
-              <h4>TAC's</h4>
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
-                  <thead>
-                    <tr>
-                    </tr>
-                  </thead>
-                  <tbody>
+                    {{tbody_repasses_parcelas|safe}}
                   </tbody>
                 </table>
               </div>
@@ -148,26 +101,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody_tcc|safe}}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <div class="card-block table-border-style">
-              <h4>SPC's</h4>
-              <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
-                  <thead>
-                    <tr>
-                      {% comment %} <th>Vendedor</th>
-                      {% for dia in financeiro_dias %}
-                      <th>{{dia}}</th>
-                      {% endfor %} {% endcomment %}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% comment %} {{tbody_tcc|safe}} {% endcomment %}
+                    {{tbody_tcc_parcelas|safe}}
                   </tbody>
                 </table>
               </div>
@@ -186,14 +120,14 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody_desconto_total|safe}}
+                    {{tbody_desconto_total_parcelas|safe}}
                   </tbody>
                 </table>
               </div>
             </div>
 
             <div class="card-block table-border-style">
-              <h4>Honorários Inicias</h4>
+              <h4>Honorários</h4>
               <div class="table-responsive">
                 <table class="table table-hover" id="table-honorarios">
                   <thead>
@@ -205,7 +139,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    {{tbody_honorarios|safe}}
+                    {{tbody_honorarios_parcelas|safe}}
                   </tbody>
                 </table>
               </div>
@@ -213,15 +147,129 @@
 
 
             <div class="card-block table-border-style">
+              <h4>Resumo das Taxas do sistema</h4>
+              <br>
+              <h4>TBB's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
+                  </thead>
+                  <tbody>
+                    {{tbody_taxa_tbb_filtro|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TEC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
+                  </thead>
+                  <tbody>
+                    {{tbody_taxa_tec_filtro|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TAC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
+                  </thead>
+                  <tbody>
+                    {{tbody_taxa_tac_filtro|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>TCC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
+                  </thead>
+                  <tbody>
+                    {{tbody_taxa_tcc_filtro|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card-block table-border-style">
+              <h4>SPC's</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-tcc">
+                  <thead>
+                    <tr>
+                      <th>Vendedor</th>
+                      {% for dia in taxas_dias %}
+                        <th>{{dia}}</th>
+                      {% endfor %}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{tbody_taxa_spc_filtro|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+
+            <div class="card-block table-border-style">
+              <h4>Honorários Iniciais - Confecção de ação judicial</h4>
+              <div class="table-responsive">
+                <table class="table table-hover" id="table-honorarios">
+                  <thead>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
+                  </thead>
+                  <tbody>
+                    {{tbody_taxa_honorarios_iniciais_filtro|safe}}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            
+            
+            <div class="card-block table-border-style">
               <h4>Honorários Judiciais</h4>
               <div class="table-responsive">
                 <table class="table table-hover" id="table-honorarios">
                   <thead>
-                    <tr>
-                    </tr>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
                   </thead>
                   <tbody>
-                    
+                    {{tbody_taxa_honorarios_judiciais_filtro|safe}}
                   </tbody>
                 </table>
               </div>
@@ -234,15 +282,18 @@
               <div class="table-responsive">
                 <table class="table table-hover" id="table-honorarios">
                   <thead>
-                    <tr>
-                    </tr>
+                    <th>Vendedor</th>
+                    {% for dia in taxas_dias %}
+                      <th>{{dia}}</th>
+                    {% endfor %}
                   </thead>
                   <tbody>
-                    
+                    {{tbody_taxa_honorarios_de_recebimento_direto_filtro|safe}}
                   </tbody>
                 </table>
               </div>
             </div>
+
 
 
             {% comment %} <div class="card-block table-border-style">

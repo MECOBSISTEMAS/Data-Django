@@ -579,7 +579,7 @@ def pages(request):
                 context['tcc_filtro'] = ParcelaTaxa.objects.filter(
                     data_aprovada__range=[data_inicio, data_fim], tcc__isnull=False, aprovada=False,
                     ).values('id_vendedor', 'vendedor').annotate(
-                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'tcc'),
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 'tcc'),
                     )
                 tbody = ""
                 for tcc in context['tcc_filtro']:
@@ -594,7 +594,7 @@ def pages(request):
                 context['desconto_total_filtro'] = ParcelaTaxa.objects.filter(
                     data_aprovada__range=[data_inicio, data_fim], desconto_total__isnull=False, aprovada=False,
                     ).values('id_comprador', 'comprador').annotate(
-                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'desconto_total'),
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 'desconto_total'),
                     )
                 tbody = ""
                 for desconto_total in context['desconto_total_filtro']:
@@ -609,7 +609,7 @@ def pages(request):
                 context['honorarios_filtro'] = ParcelaTaxa.objects.filter(
                     data_aprovada__range=[data_inicio, data_fim], honorarios__isnull=False, aprovada=False,
                     ).values('id_contrato', 'comprador', 'vendedor').annotate(
-                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'honorarios'),
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 'honorarios'),
                     )
                 tbody = ""
                 for honorarios in context['honorarios_filtro']:
@@ -786,6 +786,7 @@ def pages(request):
 
         elif load_template == 'tbl_resultado_financeiro.html':
             if request.method == 'POST':
+                aprovacao = request.POST.get('aprovacao') == "aprovada"
                 data_inicio = request.POST.get('data-inicio')
                 data_fim = request.POST.get('data-fim')
                 context['data_inicio'] = data_inicio
@@ -800,16 +801,38 @@ def pages(request):
                             output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
                         ),
                     )
-                context['dias'] = list(range(1, (datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 2))
+                    
+                taxas_dias = {}
+                for i in range((datetime.strptime(data_fim, '%Y-%m-%d') - datetime.strptime(data_inicio, '%Y-%m-%d')).days + 1):
+                    data = datetime.strptime(data_inicio, '%Y-%m-%d') + timedelta(days=i)
+                    taxas_dias[f'{data.day}/{data.month}/{data.year}'] = Sum(
+                        Case(
+                            When(dt_taxa=data, then=F('taxas')),
+                            default=0,
+                            output_field=DecimalField(decimal_places=2, max_digits=14, validators=[]),
+                        ),
+                    )
+                
+                def construir_tbody_dinamico(dicionario:dict, nome_do_campo:str, dias:dict):
+                    tbody = ""
+                    for item in dicionario:
+                        tbody += "<tr>"
+                        tbody += f"<td>{item[nome_do_campo]}</td>"
+                        for dia in dias:
+                            tbody += f"<td>{item[f'{dia}']}</td>"
+                        tbody += "</tr>"
+                    return tbody
+                
                 context['financeiro_dias'] = financeiro_dias
+                context['taxas_dias'] = taxas_dias
                 context['valores_financeiros'] = ParcelaTaxa.objects.filter(
                     data_aprovada__range=[data_inicio, data_fim],
-                    aprovada=True,
+                    aprovada=aprovacao,
                 ).values('id_vendedor', 'vendedor').annotate(
                     **financeiro_dias,
                 )
                 context['soma_valores_financeiro'] = ParcelaTaxa.objects.filter(
-                    data_aprovada__range=[data_inicio, data_fim], aprovada=True
+                    data_aprovada__range=[data_inicio, data_fim], aprovada=aprovacao
                 ).aggregate(
                     total_valor=Sum(Coalesce('valor', 0, output_field=DecimalField(decimal_places=2, max_digits=12))),
                     total_tcc=Sum(Coalesce('tcc', 0,output_field=DecimalField(decimal_places=2, max_digits=12))),
@@ -819,62 +842,98 @@ def pages(request):
                 )
                 context['valores_financeiro_filtro'] = ParcelaTaxa.objects.filter(dt_vencimento__range=[data_inicio, data_fim])
                 
-                tbody = ""
-                for valor_financeiro in context['valores_financeiros']:
-                    tbody += "<tr>"
-                    tbody += f"<td>{valor_financeiro['vendedor']}</td>"
-                    #tbody += "<td>Teste</td>"
-                    #!tbody += f"<td>{valor_financeiro['id_contrato']}</td>"
-                    for dia in financeiro_dias:
-                        valor_financeiro_dia = valor_financeiro[f'{dia}']
-                        tbody += f"<td>{valor_financeiro_dia}</td>"
-                    tbody += "</tr>"
-                context['tbody_repasses'] = tbody
+                        
+                
+                context['tbody_repasses_parcelas'] = construir_tbody_dinamico(context['valores_financeiros'], 'vendedor', financeiro_dias)
                 
                 context['tcc_filtro'] = ParcelaTaxa.objects.filter(
-                    data_aprovada__range=[data_inicio, data_fim], tcc__isnull=False, aprovada=True,
+                    data_aprovada__range=[data_inicio, data_fim], tcc__isnull=False, aprovada=aprovacao,
                     ).values('id_vendedor', 'vendedor').annotate(
-                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'tcc'),
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 'tcc'),
                     )
-                tbody = ""
-                for tcc in context['tcc_filtro']:
-                    tbody += "<tr>"
-                    tbody += f"<td>{tcc['vendedor']}</td>"
-                    for dia in financeiro_dias:
-                        tcc_dia = tcc[f'{dia}']
-                        tbody += f"<td>{tcc_dia}</td>"
-                    tbody += "</tr>"
-                context['tbody_tcc'] = tbody
+                context['tbody_tcc_parcelas'] = construir_tbody_dinamico(context['tcc_filtro'], 'vendedor', financeiro_dias)
                 
                 context['desconto_total_filtro'] = ParcelaTaxa.objects.filter(
-                    data_aprovada__range=[data_inicio, data_fim], desconto_total__isnull=False, aprovada=True,
+                    data_aprovada__range=[data_inicio, data_fim], desconto_total__isnull=False, aprovada=aprovacao,
                     ).values('id_comprador', 'comprador').annotate(
-                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'desconto_total'),
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 'desconto_total'),
                     )
-                tbody = ""
-                for desconto_total in context['desconto_total_filtro']:
-                    tbody += "<tr>"
-                    tbody += f"<td>{desconto_total['comprador']}</td>"
-                    for dia in financeiro_dias:
-                        desconto_total_dia = desconto_total[f'{dia}']
-                        tbody += f"<td>{desconto_total_dia}</td>"
-                    tbody += "</tr>"
-                context['tbody_desconto_total'] = tbody
+                context['tbody_desconto_total_parcelas'] = construir_tbody_dinamico(context['desconto_total_filtro'], 'comprador', financeiro_dias)
                 
                 context['honorarios_filtro'] = ParcelaTaxa.objects.filter(
-                    data_aprovada__range=[data_inicio, data_fim], honorarios__isnull=False, aprovada=True,
+                    data_aprovada__range=[data_inicio, data_fim], honorarios__isnull=False, aprovada=aprovacao,
                     ).values('id_contrato', 'comprador', 'vendedor').annotate(
-                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 0, 'honorarios'),
+                        **funcoes.construir_dias_filtro(data_inicio, data_fim, 'honorarios'),
                     )
-                tbody = ""
-                for honorarios in context['honorarios_filtro']:
-                    tbody += "<tr>"
-                    tbody += f"<td>{honorarios['vendedor']}</td>"
-                    for dia in financeiro_dias:
-                        honorarios_dia = honorarios[f'{dia}']
-                        tbody += f"<td>{honorarios_dia}</td>"
-                    tbody += "</tr>"
-                context['tbody_honorarios'] = tbody
+                context['tbody_honorarios_parcelas'] = construir_tbody_dinamico(context['honorarios_filtro'], 'vendedor', financeiro_dias)
+                
+                #filtro para as taxas
+                
+                context['taxa_tbb_filtro'] = Taxa.objects.filter(
+                    tipo__icontains='TBB', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                
+                context['tbody_taxa_tbb_filtro'] = construir_tbody_dinamico(context['taxa_tbb_filtro'], 'cliente__nome', taxas_dias)
+                
+                context['taxa_tec_filtro'] = Taxa.objects.filter(
+                    tipo__icontains='TEC', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                
+                context['tbody_taxa_tec_filtro'] = construir_tbody_dinamico(context['taxa_tec_filtro'], 'cliente__nome', taxas_dias)
+
+                
+                context['taxa_tac_filtro'] = Taxa.objects.filter(
+                    tipo__icontains='TAC', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                
+                context['tbody_taxa_tac_filtro'] = construir_tbody_dinamico(context['taxa_tac_filtro'], 'cliente__nome', taxas_dias)
+                
+                context['taxa_tcc_filtro'] = Taxa.objects.filter(
+                    tipo__icontains='TCC', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                context['tbody_taxa_tcc_filtro'] = construir_tbody_dinamico(context['taxa_tcc_filtro'], 'cliente__nome', taxas_dias)
+                
+                
+                context['taxa_spc_filtro'] = Taxa.objects.filter(
+                    tipo__icontains='SPC', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                context['tbody_taxa_spc_filtro'] = construir_tbody_dinamico(context['taxa_spc_filtro'], 'cliente__nome', taxas_dias)
+                
+                
+                context['taxa_honorarios_iniciais_filtro'] = Taxa.objects.filter(
+                    tipo='Honorários Iniciais - Confecção de ação judicial', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                
+                context['tbody_taxa_honorarios_iniciais_filtro'] = construir_tbody_dinamico(context['taxa_honorarios_iniciais_filtro'], 'cliente__nome', taxas_dias)
+                
+                context['taxa_honorarios_judiciais_filtro'] = Taxa.objects.filter(
+                    tipo='Honorários Judiciais', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                
+                context['tbody_taxa_honorarios_judiciais_filtro'] = construir_tbody_dinamico(context['taxa_honorarios_judiciais_filtro'], 'cliente__nome', taxas_dias)
+                
+                context['taxa_honorarios_de_recebimento_direto_filtro'] = Taxa.objects.filter(
+                    tipo='Honorários de recebimento direto', dt_taxa__range=[data_inicio, data_fim], aprovada=aprovacao,
+                ).values('cliente__nome').annotate(
+                    **taxas_dias,
+                )
+                
+                context['tbody_taxa_honorarios_de_recebimento_direto_filtro'] = construir_tbody_dinamico(context['taxa_honorarios_de_recebimento_direto_filtro'], 'cliente__nome', taxas_dias)
+                
                     
         elif load_template == 'tbl_taxas_aprovadas.html':
             if request.method == 'POST':
