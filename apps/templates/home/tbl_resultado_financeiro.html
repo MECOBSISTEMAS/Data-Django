@@ -151,7 +151,7 @@
               <br>
               <h4>TBB's</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
+                <table class="table table-hover" id="table-taxa-tbb">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -169,7 +169,7 @@
             <div class="card-block table-border-style">
               <h4>TEC's</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
+                <table class="table table-hover" id="table-taxa-tec">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -187,7 +187,7 @@
             <div class="card-block table-border-style">
               <h4>TAC's</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
+                <table class="table table-hover" id="table-taxa-tac">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -205,7 +205,7 @@
             <div class="card-block table-border-style">
               <h4>TCC's</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
+                <table class="table table-hover" id="table-taxa-tcc">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -222,7 +222,7 @@
             <div class="card-block table-border-style">
               <h4>SPC's</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-tcc">
+                <table class="table table-hover" id="table-taxa-spc">
                   <thead>
                     <tr>
                       <th>Vendedor</th>
@@ -242,7 +242,7 @@
             <div class="card-block table-border-style">
               <h4>Honorários Iniciais - Confecção de ação judicial</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-honorarios">
+                <table class="table table-hover" id="table-taxa-honorarios-iniciais">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -261,7 +261,7 @@
             <div class="card-block table-border-style">
               <h4>Honorários Judiciais</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-honorarios">
+                <table class="table table-hover" id="table-taxa-honorarios-judicias">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -280,7 +280,7 @@
             <div class="card-block table-border-style">
               <h4>Honorários Honorários de recebimento direto</h4>
               <div class="table-responsive">
-                <table class="table table-hover" id="table-honorarios">
+                <table class="table table-hover" id="table-taxa-honorarios-recebimento-direto">
                   <thead>
                     <th>Vendedor</th>
                     {% for dia in taxas_dias %}
@@ -342,6 +342,16 @@
     $('#table-desconto-totais').DataTable();
     $('#table-honorarios').DataTable();
     $('#table-valor').DataTable();
+
+    $('#table-taxa-tbb').DataTable();
+    $('#table-taxa-tec').DataTable();
+    $('#table-taxa-tac').DataTable();
+    $('#table-taxa-tcc').DataTable();
+    $('#table-taxa-spc').DataTable();
+    $('#table-taxa-honorarios-iniciais').DataTable();
+    $('#table-taxa-honorarios-judicias').DataTable();
+    $('#table-taxa-honorarios-recebimento-direto').DataTable();
+
   })
 </script>
 {% endblock javascripts %}
