@@ -8,7 +8,7 @@ from django.utils.text import slugify
 from datetime import datetime, date, timedelta
 from django import template
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse, HttpRequest
 from django.db.models import Case, Sum, When, F, Q, IntegerField, DecimalField, OuterRef, Subquery, Value, Max, Prefetch, DateField, QuerySet
 from django.db.models.functions import Coalesce, Cast, TruncMonth
 from django.template import loader
@@ -37,7 +37,7 @@ from .existing_models import Contratos, ContratoParcelas, Pessoas, Eventos
 from .models import Calculo_Repasse, CadCliente, Debito, Credito, Taxa, RepasseRetido, Dado, RepasseAprovado, ParcelaTaxa
 
 
-def filtrar_repasses(request:Request ,data_inicio:str, data_fim:str):
+def filtrar_repasses(request:HttpRequest ,data_inicio:str, data_fim:str):
     data_inicio_dt = datetime.strptime(data_inicio, '%Y-%m-%d')
     data_fim_dt = datetime.strptime(data_fim, '%Y-%m-%d')
     context:dict = {}
@@ -644,7 +644,7 @@ def pages(request):
                 elif 'exportar-pdf' in request.POST:
                     return funcoes.gerar_arquivo_pdf(request, context)
                 elif 'filtrar-prestacao-diaria' in request.POST:
-                    bancos = request.POST.get('bancos')
+                    bancos:str = request.POST.get('bancos')
                     data = request.POST.get('data')
                     context['data_consultada'] = data
                     context['repasses_semanais'] = CadCliente.objects.filter(
@@ -676,7 +676,7 @@ def pages(request):
                         
                     
                     context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                        banco=str(bancos).upper()).aggregate(
+                        banco=bancos.upper()).aggregate(
                             valores_pagos=Sum('vl_pago'),
                             honorarios=Sum('me')
                         )
@@ -685,15 +685,18 @@ def pages(request):
                         dt_credito=data,comissao__isnull=False
                         ).values('comissao').annotate(comissoes=Sum('op'))
                     
-                    context['repasses_geral'] = Dado.objects.filter(dt_credito=data,
-                        banco=str(bancos).upper()).aggregate(
+                    context['repasses_geral'] = Dado.objects.filter(
+                            dt_credito=data,
+                            banco=bancos.upper()
+                        ).aggregate(
                             repasses=Sum('repasses')
                         )
                         
                     context['taxas'] = float(Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(taxas=Sum('taxas'))['taxas'] or 0)
                     repasses_geral = float(context['repasses_geral']['repasses'] or 0)
-                    repasses_semanais_vendedores_totais = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
-                    repasses_geral_descontado =  repasses_semanais_vendedores_totais - repasses_geral
+                    context['repasses_semanais_vendedores_totais'] = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
+                    
+                    repasses_geral_descontado = repasses_geral - context['repasses_semanais_vendedores_totais']
                     
                     context['repasses_geral_descontado'] = float("{:.2f}".format(repasses_geral_descontado))
                     

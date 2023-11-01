@@ -84,7 +84,7 @@
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
-                        <input required type="date" name="data" id="data" {% if data_consultada %} value="data_consultada" {% endif %}>
+                        <input required type="date" name="data" id="data" {% if data_consultada %} value={{data_consultada}} {% endif %}>
                         <label for="bancos">banco :</label>
                         <select name="bancos" id="bancos">
                           <option value="bradesco" name="banco">Bradesco</option>
@@ -99,7 +99,6 @@
                       <button type="submit" name="exportar-xlsx" id="exportar-xlsx" class="btn btn-primary btn-sm">Exportar .xlsx</button>
                       <button type="button" name="exportar-pdf" id="exportar-pdf" class="btn btn-primary btn-sm disabled">Exportar PDF</button>
                     </form>
-                    <h6>Data Consultada: {{data_consultada}}</h6>
                       <h6>Valor pago: R${{valores_pagos_honorarios.valores_pagos|intcomma}} | Honorários: R${{valores_pagos_honorarios.honorarios|intcomma}} <h3/>
                   </div>
                   <div class="card-block table-border-style">
@@ -146,7 +145,9 @@
                     </div>
 
                     <br>
-                    <h5>Repasses Geral: R$ {{repasses_geral_descontado|intcomma}}, Taxas: {{taxas}}</h5>
+                    <h5>Repasses Geral Descontando (vendedores): R$ {{repasses_geral_descontado|intcomma}}, Taxas: {{taxas}}</h5>
+                    <h5>Repasses Semanais Vendedores: {{repasses_semanais_vendedores_totais|intcomma}}</h5>
+                    <h5>Repasses Geral: R$ {{repasses_geral.repasses|intcomma}}</h5>
                   </div>
                 </div>
               </div>
