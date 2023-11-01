@@ -84,7 +84,7 @@
                     <form action="" method="post">
                       {% csrf_token %}
                       <p>filtrar de 
-                        <input required type="date" name="data" id="data">
+                        <input required type="date" name="data" id="data" {% if data_consultada %} value="data_consultada" {% endif %}>
                         <label for="bancos">banco :</label>
                         <select name="bancos" id="bancos">
                           <option value="bradesco" name="banco">Bradesco</option>
