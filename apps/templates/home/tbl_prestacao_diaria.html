@@ -86,10 +86,10 @@
                       <p>filtrar de 
                         <input required type="date" name="data" id="data" {% if data_consultada %} value={{data_consultada}} {% endif %}>
                         <label for="bancos">banco :</label>
-                        <select name="bancos" id="bancos">
-                          <option value="bradesco" name="banco">Bradesco</option>
+                        {% comment %} <select name="bancos" id="bancos">
                           <option value="unicred" name="banco">Unicred</option>
-                        </select>
+                          <option value="bradesco" name="banco">Bradesco</option>
+                        </select> {% endcomment %}
                         <button class="btn btn-primary" type="submit" name="filtrar-prestacao-diaria">Filtrar</button> 
                         <button type="button" name="" id="" class="btn btn-danger">Limpar Filtro</button>
                       </p>

@@ -181,7 +181,8 @@ def filtrar_repasses(request:HttpRequest ,data_inicio:str, data_fim:str):
         ).order_by('vendedor__nome')
     context['dados_dias'] = dados_dias.keys()
     
-    tbody = "<tr>"
+    
+    """ tbody = "<tr>"
     for repasse_cliente in context['repasses_clientes']:
         #tbody += f"<td><a class='btn btn-success' href='aprovar_repasse/{repasse_cliente['vendedor__id']}/{data_inicio}/{data_fim}/{repasse_cliente['total_repasse_retido']}/{repasse_cliente['total_credito']}/{repasse_cliente['total_taxas']}/{repasse_cliente['total_debitos']}/{repasse_cliente['total_repasses']}/' name='aprovar-repasse' id='aprovar-repasse'>Aprovar Repasses</a></td>"
         if request.user.is_superuser:
@@ -192,8 +193,6 @@ def filtrar_repasses(request:HttpRequest ,data_inicio:str, data_fim:str):
         tbody += f"<td>{repasse_cliente['vendedor__id']}</td>"
         tbody += f"<td>{repasse_cliente['vendedor__nome']}</td>"
         tbody += f"<td>{repasse_cliente['total_repasse_retido']}</td>"
-        """for dia in dados_dias.keys():
-            tbody += f"<td>{dia}</td>" """
         tbody += f"<td>{repasse_cliente['todos_os_repasses']}</td>"
         tbody += f"<td>{repasse_cliente['total_credito']}</td>"
         tbody += f"<td>{repasse_cliente['total_taxas']}</td>"
@@ -201,7 +200,7 @@ def filtrar_repasses(request:HttpRequest ,data_inicio:str, data_fim:str):
         tbody += f"<td>{repasse_cliente['total_repasses']}</td>"
         #tbody += f"<td>Total Repasses</td>"
         tbody += "</tr>"
-    context['tbody'] = tbody
+    context['tbody'] = tbody """
     
     #faça o somatorio de creditos, debitos, repasses, taxas e repasses retidos e coloque no context como um subtotal
     context['total_credito'] = Decimal(sum([float(querie['total_credito']) for querie in context['repasses_clientes']])).quantize(Decimal('0.01'))
@@ -644,7 +643,7 @@ def pages(request):
                 elif 'exportar-pdf' in request.POST:
                     return funcoes.gerar_arquivo_pdf(request, context)
                 elif 'filtrar-prestacao-diaria' in request.POST:
-                    bancos:str = request.POST.get('bancos')
+                    #bancos:str = request.POST.get('bancos')
                     data = request.POST.get('data')
                     context['data_consultada'] = data
                     context['repasses_semanais'] = CadCliente.objects.filter(
@@ -666,7 +665,7 @@ def pages(request):
                     
                     context['repasses'] = (
                         Dado.objects
-                        .filter(dt_credito=data, banco=str(bancos).upper())
+                        .filter(dt_credito=data)
                         .values('id_contrato', 'vendedor')
                         .annotate(
                             repasses=Sum('repasses')
@@ -675,8 +674,7 @@ def pages(request):
                     )
                         
                     
-                    context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data, 
-                        banco=bancos.upper()).aggregate(
+                    context['valores_pagos_honorarios'] = Dado.objects.filter(dt_credito=data).aggregate(
                             valores_pagos=Sum('vl_pago'),
                             honorarios=Sum('me')
                         )
@@ -687,12 +685,11 @@ def pages(request):
                     
                     context['repasses_geral'] = Dado.objects.filter(
                             dt_credito=data,
-                            banco=bancos.upper()
                         ).aggregate(
                             repasses=Sum('repasses')
                         )
                         
-                    context['taxas'] = float(Dado.objects.filter(dt_credito=data, banco=str(bancos).upper()).aggregate(taxas=Sum('taxas'))['taxas'] or 0)
+                    context['taxas'] = float(Dado.objects.filter(dt_credito=data).aggregate(taxas=Sum('taxas'))['taxas'] or 0)
                     repasses_geral = float(context['repasses_geral']['repasses'] or 0)
                     context['repasses_semanais_vendedores_totais'] = (sum([float(querie['total_repasses']) for querie in context['repasses_semanais']]))
                     
@@ -822,6 +819,7 @@ def pages(request):
                             tbody += f"<td>{item[f'{dia}']}</td>"
                         tbody += "</tr>"
                     return tbody
+                
                 
                 context['financeiro_dias'] = financeiro_dias
                 context['taxas_dias'] = taxas_dias
@@ -1419,6 +1417,154 @@ def upload_planilha_taxas(request):
         """
         return HttpResponse(mensagem)
     return HttpResponse("TIPO GET ?")
+
+
+""" def upload_planilha_dados_brutos(request):
+    if request.method == "POST":
+        if request.FILES.get('docpicker') is None:
+            return HttpResponse("Nenhum arquivo selecionado")
+        if not request.FILES.get('docpicker').name.endswith('.xlsx'):
+            return HttpResponse("Arquivo não é do tipo xlsx")
+        planilha = request.FILES.get('docpicker')
+        wb = openpyxl.load_workbook(planilha)
+        cob = wb.active
+        dados_criados = 0
+        dados_modificados = 0
+        linhas = 0
+        erros = []
+
+        existing_data = {}
+        new_data = []
+        update_data = []
+
+        from datetime import datetime
+
+        for row in cob.iter_rows(values_only=True):
+            if linhas == 0:
+                linhas += 1
+                continue
+            if not any(row):
+                continue
+
+            vendedor_id, contrato_id, nome_vendedor, comprador, parcela_paga, parcelas_contrato, valor, data_vencimento, data_credito, banco, contrato, evento, calc, taxas, adi, me, op, repasses, comissao = row
+
+            if (
+                not vendedor_id
+                and not contrato_id
+                and not parcela_paga
+                and not comprador
+                and not valor
+                and not contrato
+                and not evento
+            ):
+                continue
+
+            if not all([vendedor_id, contrato_id, parcela_paga, comprador, valor, contrato, evento]):
+                continue
+
+            try:
+                # Verifique se data_credito é uma data válida no formato YYYY-MM-DD
+                data_credito = datetime.strptime(data_credito, "%Y-%m-%d")
+            except ValueError:
+                erros.append(f"Formato de data de crédito inválido na linha {linhas}: {data_credito}. Deve ser no formato YYYY-MM-DD.")
+                continue
+
+            key = (
+                vendedor_id,
+                contrato_id,
+                parcela_paga,
+                comprador,
+                valor,
+                contrato,
+                evento,
+                data_vencimento,
+                data_credito,
+            )
+
+            if key in existing_data:
+                dado = existing_data[key]
+                dado.parcelas_contrato = parcelas_contrato
+                dado.banco = banco
+                dado.calculo = calc
+                dado.taxas = taxas
+                dado.adi = adi
+                dado.me = me
+                dado.op = op
+                dado.repasses = repasses
+                dado.comissao = comissao
+                dado.vendedor = nome_vendedor
+                dados_modificados += 1
+            else:
+                try:
+                    dado = Dado.objects.get(
+                        id_vendedor=vendedor_id,
+                        id_contrato=contrato_id,
+                        nu_parcela=parcela_paga,
+                        comprador=comprador,
+                        vl_pago=valor,
+                        contrato=contrato,
+                        evento=evento,
+                        dt_vencimento=data_vencimento,
+                        dt_credito=data_credito,
+                    )
+                    dado.parcelas_contrato = parcelas_contrato
+                    dado.banco = banco
+                    dado.calculo = calc
+                    dado.taxas = taxas
+                    dado.adi = adi
+                    dado.me = me
+                    dado.op = op
+                    dado.repasses = repasses
+                    dado.comissao = comissao
+                    dado.vendedor = nome_vendedor
+                    dados_modificados += 1
+                except Dado.DoesNotExist:
+                    new_data.append(
+                        Dado(
+                            id_vendedor=vendedor_id,
+                            id_contrato=contrato_id,
+                            vendedor=nome_vendedor,
+                            comprador=comprador,
+                            nu_parcela=parcela_paga,
+                            parcelas_contrato=parcelas_contrato,
+                            vl_pago=valor,
+                            dt_vencimento=data_vencimento,
+                            dt_credito=data_credito,
+                            banco=banco,
+                            contrato=contrato,
+                            evento=evento,
+                            calculo=calc,
+                            taxas=taxas,
+                            adi=adi,
+                            me=me,
+                            op=op,
+                            repasses=repasses,
+                            comissao=comissao,
+                        )
+                    )
+                    dados_criados += 1
+
+            existing_data[key] = dado
+
+        if new_data:
+            Dado.objects.bulk_create(new_data)
+        if update_data:
+            Dado.objects.bulk_update(update_data, ["parcelas_contrato", "banco", "calculo", "taxas", "adi", "me", "op", "repasses", "comissao"])
+
+        erros_html = "<ul>"
+        for erro in erros:
+            erros_html += f"<li>{erro}</li>"
+        erros_html += "</ul>"
+
+        return HttpResponse(
+            "Planilha recebida com sucesso  <br> Dados Criados: {} <br> Dados Modificados: {} <br> Erros: {}".format(
+                dados_criados, dados_modificados, erros_html
+            )
+        )
+
+    return HttpResponse("HTTP REQUEST") """
+
+
 
 def upload_planilha_dados_brutos(request):
     if request.method == "POST":
